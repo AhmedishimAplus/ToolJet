@@ -57,12 +57,12 @@ export default class RedisQueryService implements QueryService {
       }
     }
 
-    return new Redis(port, host, {
+    return new Redis(parseInt(port), host, {
       maxRetriesPerRequest: 1,
       username,
       password,
       tls: tls,
-      ...(sourceOptions?.database && { db: sourceOptions.database }),
+      ...(sourceOptions?.database && { db: parseInt(sourceOptions.database) }),
     });
   }
 }
