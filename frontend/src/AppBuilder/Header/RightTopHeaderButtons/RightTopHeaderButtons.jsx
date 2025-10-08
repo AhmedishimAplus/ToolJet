@@ -9,6 +9,7 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import useStore from '@/AppBuilder/_stores/store';
 import { PromoteReleaseButton } from '@/modules/Appbuilder/components';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
+import KeyboardNavigationButton from '@/_components/KeyboardNavigationButton';
 
 const RightTopHeaderButtons = ({ isModuleEditor }) => {
   return (
@@ -71,6 +72,9 @@ const PreviewAndShareIcons = () => {
 
   return (
     <div className="preview-share-wrap navbar-nav flex-row" style={{ gap: '4px' }}>
+      <div className="nav-item">
+        <KeyboardNavigationButton darkMode={darkMode} />
+      </div>
       <div className="nav-item">
         {appId && (
           <ManageAppUsers

@@ -19,6 +19,14 @@ import { shallow } from 'zustand/shallow';
 
 import ArtifactPreview from './ArtifactPreview';
 
+// Keyboard Navigation imports
+import KeyboardNavigationManager from '@/_components/KeyboardNavigationManager';
+import KeyboardNavigatedTopBar from '@/_components/KeyboardNavigatedTopBar';
+import KeyboardNavigatedLeftSidebar from '@/_components/KeyboardNavigatedLeftSidebar';
+import KeyboardNavigatedCanvas from '@/_components/KeyboardNavigatedCanvas';
+import KeyboardNavigatedWidgetManager from '@/_components/KeyboardNavigatedWidgetManager';
+import KeyboardNavigatedQueryPanel from '@/_components/KeyboardNavigatedQueryPanel';
+
 // const EditorHeader = lazy(() => import('@/AppBuilder/Header'));
 // const LeftSidebar = lazy(() => import('@/AppBuilder/LeftSidebar'));
 // const AppCanvas = lazy(() => import('@/AppBuilder/AppCanvas'));
@@ -51,34 +59,46 @@ export const Editor = ({ id: appId, darkMode, moduleId = 'canvas', switchDarkMod
     );
   }
   return (
-    <div className={cx('wrapper', { editor: currentMode === 'edit' })}>
-      <ErrorBoundary>
-        <ModuleProvider moduleId={moduleId} appType={appType} isModuleMode={false} isModuleEditor={isModuleEditor}>
-          <Suspense fallback={<div>Loading...</div>}>
-            <EditorHeader darkMode={darkMode} isUserInZeroToOneFlow={isUserInZeroToOneFlow} />
+    <KeyboardNavigationManager>
+      <div className={cx('wrapper', { editor: currentMode === 'edit' })}>
+        <ErrorBoundary>
+          <ModuleProvider moduleId={moduleId} appType={appType} isModuleMode={false} isModuleEditor={isModuleEditor}>
+            <Suspense fallback={<div>Loading...</div>}>
+              <KeyboardNavigatedTopBar>
+                <EditorHeader darkMode={darkMode} isUserInZeroToOneFlow={isUserInZeroToOneFlow} />
+              </KeyboardNavigatedTopBar>
 
-            <LeftSidebar
-              switchDarkMode={changeToDarkMode}
-              darkMode={darkMode}
-              isUserInZeroToOneFlow={isUserInZeroToOneFlow}
-            />
-          </Suspense>
-          {isUserInZeroToOneFlow ? (
-            <ArtifactPreview darkMode={darkMode} isUserInZeroToOneFlow={isUserInZeroToOneFlow} />
-          ) : (
-            <>
-              {window?.public_config?.ENABLE_MULTIPLAYER_EDITING === 'true' && <RealtimeCursors />}
-              <DndProvider backend={HTML5Backend}>
-                <AppCanvas moduleId={moduleId} appId={appId} switchDarkMode={switchDarkMode} darkMode={darkMode} />
-                <QueryPanel darkMode={darkMode} />
-                <RightSidebarToggle darkMode={darkMode} />
-                <RightSideBar darkMode={darkMode} />
-              </DndProvider>
-              <Popups darkMode={darkMode} />
-            </>
-          )}
-        </ModuleProvider>
-      </ErrorBoundary>
-    </div>
+              <KeyboardNavigatedLeftSidebar>
+                <LeftSidebar
+                  switchDarkMode={changeToDarkMode}
+                  darkMode={darkMode}
+                  isUserInZeroToOneFlow={isUserInZeroToOneFlow}
+                />
+              </KeyboardNavigatedLeftSidebar>
+            </Suspense>
+            {isUserInZeroToOneFlow ? (
+              <ArtifactPreview darkMode={darkMode} isUserInZeroToOneFlow={isUserInZeroToOneFlow} />
+            ) : (
+              <>
+                {window?.public_config?.ENABLE_MULTIPLAYER_EDITING === 'true' && <RealtimeCursors />}
+                <DndProvider backend={HTML5Backend}>
+                  <KeyboardNavigatedCanvas>
+                    <AppCanvas moduleId={moduleId} appId={appId} switchDarkMode={switchDarkMode} darkMode={darkMode} />
+                  </KeyboardNavigatedCanvas>
+                  <KeyboardNavigatedQueryPanel>
+                    <QueryPanel darkMode={darkMode} />
+                  </KeyboardNavigatedQueryPanel>
+                  <RightSidebarToggle darkMode={darkMode} />
+                  <KeyboardNavigatedWidgetManager>
+                    <RightSideBar darkMode={darkMode} />
+                  </KeyboardNavigatedWidgetManager>
+                </DndProvider>
+                <Popups darkMode={darkMode} />
+              </>
+            )}
+          </ModuleProvider>
+        </ErrorBoundary>
+      </div>
+    </KeyboardNavigationManager>
   );
 };

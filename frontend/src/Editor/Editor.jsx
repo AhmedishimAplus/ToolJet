@@ -94,6 +94,13 @@ import {
 import { TJLoader } from '@/_ui/TJLoader/TJLoader';
 import cx from 'classnames';
 import { resolveReferences } from './CodeEditor/utils';
+import KeyboardNavigationManager from '@/_components/KeyboardNavigationManager';
+import KeyboardNavigatedTopBar from '@/_components/KeyboardNavigatedTopBar';
+import KeyboardNavigatedLeftSidebar from '@/_components/KeyboardNavigatedLeftSidebar';
+import KeyboardNavigatedCanvas from '@/_components/KeyboardNavigatedCanvas';
+import KeyboardNavigatedWidgetManager from '@/_components/KeyboardNavigatedWidgetManager';
+import KeyboardNavigatedQueryPanel from '@/_components/KeyboardNavigatedQueryPanel';
+import '@/_styles/keyboard-navigation.scss';
 
 setAutoFreeze(false);
 enablePatches();
@@ -2232,8 +2239,9 @@ const EditorComponent = (props) => {
 
   return (
     <HotkeysProvider initiallyActiveScopes={['editor']}>
-      <div className="editor wrapper">
-        {/* <GitSyncModal
+      <KeyboardNavigationManager>
+        <div className="editor wrapper">
+          {/* <GitSyncModal
           currentUser={currentUser}
           showGitSyncModal={showGitSyncModal}
           handleClose={toggleGitSyncModal}
@@ -2243,259 +2251,270 @@ const EditorComponent = (props) => {
           setAppDefinitionFromVersion={setAppDefinitionFromVersion}
           creationMode={creationMode}
         /> */}
-        <Confirm
-          show={queryConfirmationList?.length > 0}
-          message={`Do you want to run this query - ${queryConfirmationList[0]?.queryName}?`}
-          onConfirm={(queryConfirmationData) => onQueryConfirmOrCancel(getEditorRef(), queryConfirmationData, true)}
-          onCancel={() => onQueryConfirmOrCancel(getEditorRef(), queryConfirmationList[0])}
-          queryConfirmationData={queryConfirmationList[0]}
-          darkMode={props.darkMode}
-          key={queryConfirmationList[0]?.queryName}
-        />
-        <Confirm
-          show={showPageDeletionConfirmation?.isOpen ?? false}
-          title={'Delete Page'}
-          message={`Do you really want to delete ${showPageDeletionConfirmation?.pageName || 'this'} page?`}
-          confirmButtonLoading={isDeletingPage}
-          onConfirm={() => executeDeletepageRequest()}
-          onCancel={() => cancelDeletePageRequest()}
-          darkMode={props.darkMode}
-        />
-        {creationMode === 'GIT' && <FreezeVersionInfo info={'Apps imported from git repository cannot be edited'} />}
-        {isVersionReleased && <ReleasedVersionError />}
-        {!isVersionReleased && isEditorFreezed && isBannerMandatory && creationMode !== 'GIT' && <FreezeVersionInfo />}
-        <EditorContextWrapper handleYmapEventUpdates={handleYmapEventUpdates}>
-          <EditorHeader
+          <Confirm
+            show={queryConfirmationList?.length > 0}
+            message={`Do you want to run this query - ${queryConfirmationList[0]?.queryName}?`}
+            onConfirm={(queryConfirmationData) => onQueryConfirmOrCancel(getEditorRef(), queryConfirmationData, true)}
+            onCancel={() => onQueryConfirmOrCancel(getEditorRef(), queryConfirmationList[0])}
+            queryConfirmationData={queryConfirmationList[0]}
             darkMode={props.darkMode}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            handleUndo={handleUndo}
-            handleRedo={handleRedo}
-            onNameChanged={onNameChanged}
-            currentAppEnvironmentId={currentAppEnvironmentId}
-            setAppDefinitionFromVersion={setAppDefinitionFromVersion}
-            onVersionRelease={onVersionRelease}
-            saveEditingVersion={saveEditingVersion}
-            appEnvironmentChanged={appEnvironmentChanged}
-            isMaintenanceOn={isMaintenanceOn}
-            appName={appName}
-            appId={appId}
-            slug={slug}
-            toggleGitSyncModal={toggleGitSyncModal}
-            showGitSyncModal={showGitSyncModal}
-            setCurrentAppVersionPromoted={(isCurrentVersionPromoted) => setAppVersionPromoted(isCurrentVersionPromoted)}
-            isEditorFreezed={isEditorFreezed}
+            key={queryConfirmationList[0]?.queryName}
           />
-          <DndProvider backend={HTML5Backend}>
-            <div className="sub-section">
-              <LeftSidebar
-                currentAppEnvironmentId={currentAppEnvironmentId}
-                globalSettingsChanged={globalSettingsChanged}
-                appId={appId}
+          <Confirm
+            show={showPageDeletionConfirmation?.isOpen ?? false}
+            title={'Delete Page'}
+            message={`Do you really want to delete ${showPageDeletionConfirmation?.pageName || 'this'} page?`}
+            confirmButtonLoading={isDeletingPage}
+            onConfirm={() => executeDeletepageRequest()}
+            onCancel={() => cancelDeletePageRequest()}
+            darkMode={props.darkMode}
+          />
+          {creationMode === 'GIT' && <FreezeVersionInfo info={'Apps imported from git repository cannot be edited'} />}
+          {isVersionReleased && <ReleasedVersionError />}
+          {!isVersionReleased && isEditorFreezed && isBannerMandatory && creationMode !== 'GIT' && <FreezeVersionInfo />}
+          <EditorContextWrapper handleYmapEventUpdates={handleYmapEventUpdates}>
+            <KeyboardNavigatedTopBar>
+              <EditorHeader
                 darkMode={props.darkMode}
-                dataSourcesChanged={dataSourcesChanged}
-                dataQueriesChanged={dataQueriesChanged}
-                globalDataSourcesChanged={globalDataSourcesChanged}
-                onZoomChanged={onZoomChanged}
-                switchDarkMode={changeDarkMode}
-                appDefinition={{
-                  components: appDefinition?.pages[currentPageId]?.components ?? {},
-                  pages: appDefinition?.pages ?? {},
-                  homePageId: appDefinition?.homePageId ?? null,
-                  showViewerNavigation: appDefinition?.showViewerNavigation,
-                  globalSettings: appDefinition?.globalSettings ?? {},
-                }}
-                setSelectedComponent={setSelectedComponent}
-                removeComponent={removeComponent}
-                runQuery={(queryId, queryName, additionalArgs = {}) =>
-                  handleRunQuery(queryId, queryName, additionalArgs)
-                }
-                ref={dataSourceModalRef}
-                currentPageId={currentPageId}
-                addNewPage={addNewPage}
-                switchPage={switchPage}
-                deletePage={deletePageRequest}
-                renamePage={renamePage}
-                clonePage={clonePage}
-                hidePage={hidePage}
-                unHidePage={unHidePage}
-                disableEnablePage={disableEnablePage}
-                updateHomePage={updateHomePage}
-                updatePageHandle={updatePageHandle}
-                showHideViewerNavigationControls={showHideViewerNavigation}
-                updateOnSortingPages={updateOnSortingPages}
-                setEditorMarginLeft={handleEditorMarginLeftChange}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                handleUndo={handleUndo}
+                handleRedo={handleRedo}
+                onNameChanged={onNameChanged}
+                currentAppEnvironmentId={currentAppEnvironmentId}
+                setAppDefinitionFromVersion={setAppDefinitionFromVersion}
+                onVersionRelease={onVersionRelease}
+                saveEditingVersion={saveEditingVersion}
+                appEnvironmentChanged={appEnvironmentChanged}
                 isMaintenanceOn={isMaintenanceOn}
-                toggleAppMaintenance={toggleAppMaintenance}
+                appName={appName}
+                appId={appId}
+                slug={slug}
+                toggleGitSyncModal={toggleGitSyncModal}
+                showGitSyncModal={showGitSyncModal}
+                setCurrentAppVersionPromoted={(isCurrentVersionPromoted) => setAppVersionPromoted(isCurrentVersionPromoted)}
+                isEditorFreezed={isEditorFreezed}
               />
-              {!showComments && (
-                <EditorSelecto
-                  selectionRef={selectionRef}
-                  canvasContainerRef={canvasContainerRef}
-                  setSelectedComponent={setSelectedComponent}
-                  selectionDragRef={selectionDragRef}
-                  appDefinition={appDefinition}
-                  currentPageId={currentPageId}
-                />
-              )}
-              <div
-                className={`main main-editor-canvas ${isQueryPaneDragging || isDragging ? 'hide-scrollbar' : ''}`}
-                id="main-editor-canvas"
-              >
+            </KeyboardNavigatedTopBar>
+            <DndProvider backend={HTML5Backend}>
+              <div className="sub-section">
+                <KeyboardNavigatedLeftSidebar>
+                  <LeftSidebar
+                    currentAppEnvironmentId={currentAppEnvironmentId}
+                    globalSettingsChanged={globalSettingsChanged}
+                    appId={appId}
+                    darkMode={props.darkMode}
+                    dataSourcesChanged={dataSourcesChanged}
+                    dataQueriesChanged={dataQueriesChanged}
+                    globalDataSourcesChanged={globalDataSourcesChanged}
+                    onZoomChanged={onZoomChanged}
+                    switchDarkMode={changeDarkMode}
+                    appDefinition={{
+                      components: appDefinition?.pages[currentPageId]?.components ?? {},
+                      pages: appDefinition?.pages ?? {},
+                      homePageId: appDefinition?.homePageId ?? null,
+                      showViewerNavigation: appDefinition?.showViewerNavigation,
+                      globalSettings: appDefinition?.globalSettings ?? {},
+                    }}
+                    setSelectedComponent={setSelectedComponent}
+                    removeComponent={removeComponent}
+                    runQuery={(queryId, queryName, additionalArgs = {}) =>
+                      handleRunQuery(queryId, queryName, additionalArgs)
+                    }
+                    ref={dataSourceModalRef}
+                    currentPageId={currentPageId}
+                    addNewPage={addNewPage}
+                    switchPage={switchPage}
+                    deletePage={deletePageRequest}
+                    renamePage={renamePage}
+                    clonePage={clonePage}
+                    hidePage={hidePage}
+                    unHidePage={unHidePage}
+                    disableEnablePage={disableEnablePage}
+                    updateHomePage={updateHomePage}
+                    updatePageHandle={updatePageHandle}
+                    showHideViewerNavigationControls={showHideViewerNavigation}
+                    updateOnSortingPages={updateOnSortingPages}
+                    setEditorMarginLeft={handleEditorMarginLeftChange}
+                    isMaintenanceOn={isMaintenanceOn}
+                    toggleAppMaintenance={toggleAppMaintenance}
+                  />
+                </KeyboardNavigatedLeftSidebar>
+                {!showComments && (
+                  <EditorSelecto
+                    selectionRef={selectionRef}
+                    canvasContainerRef={canvasContainerRef}
+                    setSelectedComponent={setSelectedComponent}
+                    selectionDragRef={selectionDragRef}
+                    appDefinition={appDefinition}
+                    currentPageId={currentPageId}
+                  />
+                )}
                 <div
-                  className={cx(
-                    'canvas-container align-items-center page-container',
-                    { 'dark-theme theme-dark': isAppDarkMode },
-                    { 'hide-sidebar': !showLeftSidebar }
-                  )}
-                  style={{
-                    transform: `scale(${zoomLevel})`,
-                    borderLeft:
-                      (editorMarginLeft ? editorMarginLeft - 1 : editorMarginLeft) +
-                      `px solid ${computeCanvasBackgroundColor()}`,
-                    height: computeCanvasContainerHeight(),
-                    background: !isAppDarkMode ? '#EBEBEF' : '#2E3035',
-                  }}
-                  onMouseUp={handleCanvasContainerMouseUp}
-                  ref={canvasContainerRef}
-                  onScroll={() => {
-                    selectionRef.current.checkScroll();
-                  }}
+                  className={`main main-editor-canvas ${isQueryPaneDragging || isDragging ? 'hide-scrollbar' : ''}`}
+                  id="main-editor-canvas"
                 >
-                  <div style={{ minWidth: `calc((100vw - 300px) - 48px)` }} className={`app-${appId}`}>
-                    <div
-                      className={`canvas-area ${formCustomPageSelectorClass()}`}
-                      style={{
-                        width: currentLayout === 'desktop' ? '100%' : '450px',
-                        maxWidth:
-                          +appDefinition.globalSettings.canvasMaxWidth +
-                          appDefinition.globalSettings.canvasMaxWidthType,
+                  <div
+                    className={cx(
+                      'canvas-container align-items-center page-container',
+                      { 'dark-theme theme-dark': isAppDarkMode },
+                      { 'hide-sidebar': !showLeftSidebar }
+                    )}
+                    style={{
+                      transform: `scale(${zoomLevel})`,
+                      borderLeft:
+                        (editorMarginLeft ? editorMarginLeft - 1 : editorMarginLeft) +
+                        `px solid ${computeCanvasBackgroundColor()}`,
+                      height: computeCanvasContainerHeight(),
+                      background: !isAppDarkMode ? '#EBEBEF' : '#2E3035',
+                    }}
+                    onMouseUp={handleCanvasContainerMouseUp}
+                    ref={canvasContainerRef}
+                    onScroll={() => {
+                      selectionRef.current.checkScroll();
+                    }}
+                  >
+                    <div style={{ minWidth: `calc((100vw - 300px) - 48px)` }} className={`app-${appId}`}>
+                      <KeyboardNavigatedCanvas setSelectedComponent={setSelectedComponent}>
+                        <div
+                          className={`canvas-area ${formCustomPageSelectorClass()}`}
+                          style={{
+                            width: currentLayout === 'desktop' ? '100%' : '450px',
+                            maxWidth:
+                              +appDefinition.globalSettings.canvasMaxWidth +
+                              appDefinition.globalSettings.canvasMaxWidthType,
 
-                        backgroundColor: computeCanvasBackgroundColor(),
-                        transform: 'translateZ(0)', //Hack to make modal position respect canvas container, else it positions w.r.t window.
-                      }}
-                    >
-                      {window?.public_config?.ENABLE_MULTIPLAYER_EDITING === 'true' && (
-                        <RealtimeCursors editingVersionId={editingVersionId} editingPageId={currentPageId} />
-                      )}
-                      {isLoading && (
-                        <div className="apploader">
-                          <div className="col col-* editor-center-wrapper">
-                            <div className="editor-center">
-                              <div className="canvas">
-                                <div className="mt-5 d-flex flex-column">
-                                  <div className="mb-1">
-                                    <Skeleton width={'150px'} height={15} className="skeleton" />
+                            backgroundColor: computeCanvasBackgroundColor(),
+                            transform: 'translateZ(0)', //Hack to make modal position respect canvas container, else it positions w.r.t window.
+                          }}
+                        >
+                          {window?.public_config?.ENABLE_MULTIPLAYER_EDITING === 'true' && (
+                            <RealtimeCursors editingVersionId={editingVersionId} editingPageId={currentPageId} />
+                          )}
+                          {isLoading && (
+                            <div className="apploader">
+                              <div className="col col-* editor-center-wrapper">
+                                <div className="editor-center">
+                                  <div className="canvas">
+                                    <div className="mt-5 d-flex flex-column">
+                                      <div className="mb-1">
+                                        <Skeleton width={'150px'} height={15} className="skeleton" />
+                                      </div>
+                                      {Array.from(Array(4)).map((_item, index) => (
+                                        <Skeleton key={index} width={'300px'} height={10} className="skeleton" />
+                                      ))}
+                                      <div className="align-self-end">
+                                        <Skeleton width={'100px'} className="skeleton" />
+                                      </div>
+                                      <Skeleton className="skeleton mt-4" />
+                                      <Skeleton height={'150px'} className="skeleton mt-2" />
+                                    </div>
                                   </div>
-                                  {Array.from(Array(4)).map((_item, index) => (
-                                    <Skeleton key={index} width={'300px'} height={10} className="skeleton" />
-                                  ))}
-                                  <div className="align-self-end">
-                                    <Skeleton width={'100px'} className="skeleton" />
-                                  </div>
-                                  <Skeleton className="skeleton mt-4" />
-                                  <Skeleton height={'150px'} className="skeleton mt-2" />
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          )}
+                          {defaultComponentStateComputed && (
+                            <div>
+                              <Container
+                                widthOfCanvas={canvasWidth}
+                                socket={socket}
+                                appDefinitionChanged={appDefinitionChanged}
+                                snapToGrid={true}
+                                darkMode={isAppDarkMode}
+                                mode={
+                                  appDefinition.pages[currentPageId]?.autoComputeLayout && currentLayout === 'mobile'
+                                    ? 'view'
+                                    : 'edit'
+                                }
+                                zoomLevel={zoomLevel}
+                                appLoading={isLoading}
+                                onEvent={handleEvent}
+                                setSelectedComponent={setSelectedComponent}
+                                handleUndo={handleUndo}
+                                handleRedo={handleRedo}
+                                removeComponent={removeComponent}
+                                onComponentClick={noop} // Prop is used in Viewer hence using a dummy function to prevent error in editor
+                                currentPageId={currentPageId}
+                              />
+                              <CustomDragLayer
+                                snapToGrid={true}
+                                canvasWidth={canvasWidth}
+                                onDragging={(isDragging) => setIsDragging(isDragging)}
+                              />
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {defaultComponentStateComputed && (
-                        <div>
-                          <Container
-                            widthOfCanvas={canvasWidth}
-                            socket={socket}
-                            appDefinitionChanged={appDefinitionChanged}
-                            snapToGrid={true}
-                            darkMode={isAppDarkMode}
-                            mode={
-                              appDefinition.pages[currentPageId]?.autoComputeLayout && currentLayout === 'mobile'
-                                ? 'view'
-                                : 'edit'
-                            }
-                            zoomLevel={zoomLevel}
-                            appLoading={isLoading}
-                            onEvent={handleEvent}
-                            setSelectedComponent={setSelectedComponent}
-                            handleUndo={handleUndo}
-                            handleRedo={handleRedo}
-                            removeComponent={removeComponent}
-                            onComponentClick={noop} // Prop is used in Viewer hence using a dummy function to prevent error in editor
-                            currentPageId={currentPageId}
-                          />
-                          <CustomDragLayer
-                            snapToGrid={true}
-                            canvasWidth={canvasWidth}
-                            onDragging={(isDragging) => setIsDragging(isDragging)}
-                          />
-                        </div>
-                      )}
+                      </KeyboardNavigatedCanvas>
                     </div>
+                    <AutoLayoutAlert
+                      show={appDefinition.pages[currentPageId]?.autoComputeLayout && currentLayout === 'mobile'}
+                      onClick={turnOffAutoLayout}
+                    />
                   </div>
-                  <AutoLayoutAlert
-                    show={appDefinition.pages[currentPageId]?.autoComputeLayout && currentLayout === 'mobile'}
-                    onClick={turnOffAutoLayout}
+                  <KeyboardNavigatedQueryPanel>
+                    <QueryPanel
+                      onQueryPaneDragging={handleQueryPaneDragging}
+                      handleQueryPaneExpanding={handleQueryPaneExpanding}
+                      dataQueriesChanged={dataQueriesChanged}
+                      fetchDataQueries={fetchDataQueries}
+                      darkMode={props.darkMode}
+                      allComponents={appDefinition?.pages[currentPageId]?.components ?? {}}
+                      appId={appId}
+                      appDefinition={appDefinition}
+                      dataSourceModalHandler={dataSourceModalHandler}
+                      editorRef={getEditorRef()}
+                    />
+                  </KeyboardNavigatedQueryPanel>
+                  <ReactTooltip id="tooltip-for-add-query" className="tooltip" />
+                </div>
+                <div className={cx('editor-sidebar', { 'dark-theme theme-dark': props.darkMode })}>
+                  <EditorKeyHooks
+                    moveComponents={moveComponents}
+                    cloneComponents={cloningComponents}
+                    copyComponents={copyComponents}
+                    cutComponents={cutComponents}
+                    handleEditorEscapeKeyPress={handleEditorEscapeKeyPress}
+                    removeMultipleComponents={removeComponents}
+                  />
+                  <RightSidebarTabManager
+                    inspectorTab={
+                      <div className="pages-container">
+                        <Inspector
+                          moveComponents={moveComponents}
+                          componentDefinitionChanged={componentDefinitionChanged}
+                          removeComponent={removeComponent}
+                          allComponents={appDefinition?.pages[currentPageId]?.components}
+                          darkMode={props.darkMode}
+                          pages={getPagesWithIds()}
+                          cloneComponents={cloningComponents}
+                        />
+                      </div>
+                    }
+                    widgetManagerTab={
+                      <KeyboardNavigatedWidgetManager>
+                        <WidgetManager
+                          componentTypes={componentTypes}
+                          zoomLevel={zoomLevel}
+                          darkMode={props.darkMode}
+                          disabled={appDefinition.pages[currentPageId]?.autoComputeLayout && currentLayout === 'mobile'}
+                        />
+                      </KeyboardNavigatedWidgetManager>
+                    }
+                    allComponents={appDefinition.pages[currentPageId]?.components}
                   />
                 </div>
-                <QueryPanel
-                  onQueryPaneDragging={handleQueryPaneDragging}
-                  handleQueryPaneExpanding={handleQueryPaneExpanding}
-                  dataQueriesChanged={dataQueriesChanged}
-                  fetchDataQueries={fetchDataQueries}
-                  darkMode={props.darkMode}
-                  allComponents={appDefinition?.pages[currentPageId]?.components ?? {}}
-                  appId={appId}
-                  appDefinition={appDefinition}
-                  dataSourceModalHandler={dataSourceModalHandler}
-                  editorRef={getEditorRef()}
-                />
-                <ReactTooltip id="tooltip-for-add-query" className="tooltip" />
+                {config.COMMENT_FEATURE_ENABLE && showComments && (
+                  <div className={cx({ 'dark-theme theme-dark': props.darkMode })}>
+                    <CommentNotifications socket={socket} pageId={currentPageId} />
+                  </div>
+                )}
               </div>
-              <div className={cx('editor-sidebar', { 'dark-theme theme-dark': props.darkMode })}>
-                <EditorKeyHooks
-                  moveComponents={moveComponents}
-                  cloneComponents={cloningComponents}
-                  copyComponents={copyComponents}
-                  cutComponents={cutComponents}
-                  handleEditorEscapeKeyPress={handleEditorEscapeKeyPress}
-                  removeMultipleComponents={removeComponents}
-                />
-                <RightSidebarTabManager
-                  inspectorTab={
-                    <div className="pages-container">
-                      <Inspector
-                        moveComponents={moveComponents}
-                        componentDefinitionChanged={componentDefinitionChanged}
-                        removeComponent={removeComponent}
-                        allComponents={appDefinition?.pages[currentPageId]?.components}
-                        darkMode={props.darkMode}
-                        pages={getPagesWithIds()}
-                        cloneComponents={cloningComponents}
-                      />
-                    </div>
-                  }
-                  widgetManagerTab={
-                    <WidgetManager
-                      componentTypes={componentTypes}
-                      zoomLevel={zoomLevel}
-                      darkMode={props.darkMode}
-                      disabled={appDefinition.pages[currentPageId]?.autoComputeLayout && currentLayout === 'mobile'}
-                    />
-                  }
-                  allComponents={appDefinition.pages[currentPageId]?.components}
-                />
-              </div>
-              {config.COMMENT_FEATURE_ENABLE && showComments && (
-                <div className={cx({ 'dark-theme theme-dark': props.darkMode })}>
-                  <CommentNotifications socket={socket} pageId={currentPageId} />
-                </div>
-              )}
-            </div>
-          </DndProvider>
-        </EditorContextWrapper>
-        <ConfirmDialog confirmButtonText="Turn off" darkMode={props.darkMode} />
-      </div>
+            </DndProvider>
+          </EditorContextWrapper>
+          <ConfirmDialog confirmButtonText="Turn off" darkMode={props.darkMode} />
+        </div>
+      </KeyboardNavigationManager>
     </HotkeysProvider>
   );
 };
