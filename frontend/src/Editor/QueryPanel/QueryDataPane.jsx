@@ -115,6 +115,7 @@ export const QueryDataPane = ({ darkMode, fetchDataQueries, editorRef, appId, to
               data-tooltip-id="tooltip-for-query-panel-header-btn"
               data-tooltip-content="Open quick search"
               data-cy="query-search-button"
+              aria-label="Open quick search"
             >
               <Search width="14" height="14" fill="var(--icons-default)" />
             </button>
@@ -165,9 +166,8 @@ export const QueryDataPane = ({ darkMode, fetchDataQueries, editorRef, appId, to
           </div>
         ) : (
           <div
-            className={`query-list tj-scrollbar overflow-auto ${
-              filteredQueries.length === 0 ? 'flex-grow-1 align-items-center justify-content-center' : ''
-            }`}
+            className={`query-list tj-scrollbar overflow-auto ${filteredQueries.length === 0 ? 'flex-grow-1 align-items-center justify-content-center' : ''
+              }`}
           >
             <div>
               {filteredQueries.map((query) => (

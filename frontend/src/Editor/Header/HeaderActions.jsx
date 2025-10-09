@@ -50,6 +50,7 @@ function HeaderActions({
               role="tab"
               type="button"
               aria-selected="true"
+              aria-label="Switch to desktop layout"
               tabIndex="0"
               onClick={() => {
                 clearSelectionBorder();
@@ -73,6 +74,7 @@ function HeaderActions({
               type="button"
               style={{ height: 20 }}
               aria-selected="false"
+              aria-label="Switch to mobile layout"
               tabIndex="-1"
               onClick={() => {
                 clearSelectionBorder();
@@ -97,6 +99,9 @@ function HeaderActions({
             data-tooltip-id="tooltip-for-undo"
             data-tooltip-content="Undo"
             data-cy={`editor-undo-button`}
+            role="button"
+            aria-label="Undo"
+            tabIndex="0"
           >
             <SolidIcon
               width="16"
@@ -115,6 +120,9 @@ function HeaderActions({
             data-tooltip-id="tooltip-for-redo"
             data-tooltip-content="Redo"
             data-cy={`editor-redo-button`}
+            role="button"
+            aria-label="Redo"
+            tabIndex="0"
           >
             <SolidIcon
               width="16"

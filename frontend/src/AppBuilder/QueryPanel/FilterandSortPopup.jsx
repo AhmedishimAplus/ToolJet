@@ -211,6 +211,7 @@ const FilterandSortPopup = ({ darkMode, selectedDataSources, onFilterDatasources
           data-tooltip-id="tooltip-for-open-filter"
           data-tooltip-content="Show sort/filter"
           data-cy={`query-filter-button`}
+          aria-label="Show sort and filter options"
         >
           <Filter width="14" height="14" fill="var(--icons-default)" />
           {selectedDataSources.length > 0 && <div className="notification-dot"></div>}

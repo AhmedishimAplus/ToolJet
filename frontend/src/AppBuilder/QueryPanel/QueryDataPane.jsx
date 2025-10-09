@@ -122,6 +122,7 @@ export const QueryDataPane = ({ darkMode }) => {
               data-tooltip-id="tooltip-for-query-panel-header-btn"
               data-tooltip-content="Open quick search"
               data-cy="query-search-button"
+              aria-label="Open quick search"
             >
               <Search width="14" height="14" fill="var(--icons-default)" />
             </button>

@@ -72,6 +72,7 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
               role="tab"
               type="button"
               aria-selected="true"
+              aria-label="Switch to desktop layout"
               tabIndex="0"
               onClick={() => {
                 toggleCurrentLayout('desktop');
@@ -96,6 +97,7 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
               type="button"
               style={{ height: 20 }}
               aria-selected="false"
+              aria-label="Switch to mobile layout"
               tabIndex="-1"
               onClick={() => {
                 toggleCurrentLayout('mobile');
@@ -122,6 +124,7 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
             data-tooltip-id="tooltip-for-undo"
             data-tooltip-content="Undo"
             data-cy={`editor-undo-button`}
+            aria-label="Undo"
           >
             <SolidIcon
               width="16"
@@ -143,6 +146,7 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
             data-tooltip-id="tooltip-for-redo"
             data-tooltip-content="Redo"
             data-cy={`editor-redo-button`}
+            aria-label="Redo"
           >
             <SolidIcon
               width="16"
