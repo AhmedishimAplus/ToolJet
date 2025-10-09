@@ -384,7 +384,7 @@ class OrganizationLogin extends React.Component {
   ssoButtons = (type) => {
     return (
       <div className={`d-flex`}>
-        <img width="35px" src={`assets/images/sso-buttons/${type}.svg`} />
+        <img width="35px" src={`assets/images/sso-buttons/${type}.svg`} alt={`${type} SSO provider`} />
       </div>
     );
   };
@@ -473,11 +473,10 @@ class OrganizationLogin extends React.Component {
                   </div>
                 )}
                 <span
-                  className={`tj-text-xsm ${
-                    window.public_config?.ENABLE_WORKSPACE_LOGIN_CONFIGURATION === 'true'
+                  className={`tj-text-xsm ${window.public_config?.ENABLE_WORKSPACE_LOGIN_CONFIGURATION === 'true'
                       ? 'enabled-tag'
                       : 'inherited-tag'
-                  }`}
+                    }`}
                   data-cy="workspace-login-status-label"
                 >
                   {window.public_config?.ENABLE_WORKSPACE_LOGIN_CONFIGURATION === 'true'
@@ -536,12 +535,10 @@ class OrganizationLogin extends React.Component {
                             data-cy="workspace-login-url"
                             style={{ margin: 0, flexGrow: 1, minWidth: 0 }}
                           >
-                            {`${window.public_config?.TOOLJET_HOST}${
-                              window.public_config?.SUB_PATH ? window.public_config?.SUB_PATH : '/'
-                            }login/${
-                              authenticationService?.currentSessionValue?.current_organization_slug ||
+                            {`${window.public_config?.TOOLJET_HOST}${window.public_config?.SUB_PATH ? window.public_config?.SUB_PATH : '/'
+                              }login/${authenticationService?.currentSessionValue?.current_organization_slug ||
                               authenticationService?.currentSessionValue?.current_organization_id
-                            }`}
+                              }`}
                           </p>
                           <SolidIcon
                             name="copy"

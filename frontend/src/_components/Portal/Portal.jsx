@@ -105,6 +105,7 @@ const Modal = ({
               size="sm"
               classNames={`${loading ? (darkMode ? 'btn-loading' : 'button-loading') : ''}`}
               styles={{ width: '100%', fontSize: '12px', fontWeight: 500, borderColor: darkMode && 'transparent' }}
+              aria-label="Generate code"
             >
               <Button.Content title={'Generate code'} />
             </Button>
@@ -117,6 +118,7 @@ const Modal = ({
           darkMode={darkMode}
           size="sm"
           styles={{ width: '50px', padding: '2px' }}
+          aria-label="Close dialog"
         >
           <Button.Content
             iconSrc={'assets/images/icons/portal-close.svg'}

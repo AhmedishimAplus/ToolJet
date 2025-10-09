@@ -427,7 +427,12 @@ class BaseSSOConfigurationList extends React.Component {
           </Dropdown>
 
           <label className="switch" style={{ marginLeft: '95px' }} data-cy="instance-sso-toggle">
-            <input type="checkbox" checked={defaultSSO} onChange={this.toggleDefaultSSO} />
+            <input
+              type="checkbox"
+              checked={defaultSSO}
+              onChange={this.toggleDefaultSSO}
+              aria-label="Enable default SSO for this workspace"
+            />
             <span className="slider round"></span>
           </label>
         </div>

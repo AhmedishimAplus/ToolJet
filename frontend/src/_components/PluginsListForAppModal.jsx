@@ -47,7 +47,7 @@ export const PluginsListForAppModal = ({ dependentPlugins, dependentPluginsDetai
                 className="d-flex custom-gap-6 flex-row align-items-center"
                 style={{ padding: '8px 7px' }}
               >
-                <img height="15" width="15" src={iconSrc} />
+                <img height="15" width="15" src={iconSrc} alt={`${name} plugin icon`} />
                 <span className="tj-text-xsm text-default">{pluginsName}</span>
               </div>
             );

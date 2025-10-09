@@ -57,7 +57,7 @@ export const MarketplaceCard = ({ id, name, repo, description, version, isInstal
           <div className="row align-items-center">
             <div className="col-auto">
               <span className="text-white app-icon-main">
-                <img height="40" width="40" src={iconSrc} />
+                <img height="40" width="40" src={iconSrc} alt={`${name} plugin icon`} />
               </span>
             </div>
             <div className="col">

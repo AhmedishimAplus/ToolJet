@@ -285,7 +285,14 @@ class OpenapiComponent extends React.Component {
                     <div className="input-group-wrapper" key={param.name}>
                       <div className="input-group">
                         <div className="col-auto field field-width-179">
-                          <input type="text" value={param.name} className="form-control border-0" placeholder="key" />
+                          <input
+                            type="text"
+                            value={param.name}
+                            className="form-control border-0"
+                            placeholder="key"
+                            aria-label="Header parameter key"
+                            readOnly
+                          />
                         </div>
                         <div className="col field overflow-hidden">
                           <CodeHinter
@@ -330,7 +337,14 @@ class OpenapiComponent extends React.Component {
                     <div className="input-group-wrapper" key={param.name}>
                       <div className="input-group">
                         <div className="col-auto field field-width-179">
-                          <input type="text" value={param.name} className="form-control border-0" placeholder="key" />
+                          <input
+                            type="text"
+                            value={param.name}
+                            className="form-control border-0"
+                            placeholder="key"
+                            aria-label="Path parameter key"
+                            readOnly
+                          />
                         </div>
                         <div className="col field overflow-hidden">
                           <CodeHinter
@@ -417,9 +431,8 @@ class OpenapiComponent extends React.Component {
               <div className={`request-body-fields  `}>
                 <h5 className="text-heading">{this.props.t('globals.requestBody', 'REQUEST BODY')}</h5>
                 <div
-                  className={`${
-                    Object.keys(requestBody.schema.properties).length >= 1 && 'input-group-parent-container'
-                  }`}
+                  className={`${Object.keys(requestBody.schema.properties).length >= 1 && 'input-group-parent-container'
+                    }`}
                 >
                   {Object.keys(requestBody.schema.properties).map((param) => (
                     <div className="input-group-wrapper" key={param.name}>

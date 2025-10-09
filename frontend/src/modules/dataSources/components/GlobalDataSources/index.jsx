@@ -266,7 +266,7 @@ export const GlobalDataSources = ({ darkMode = false, updateSelectedDatasource }
               <div>
                 <p className="mt-2 tj-text-lg font-weight-500 tj-text">{`No results for "${queryString}"`}</p>
               </div>
-              <img src="assets/images/icons/no-results.svg" width="200" height="200" />
+              <img src="assets/images/icons/no-results.svg" width="200" height="200" alt="No results found" />
             </center>
           ) : (
             datasources.map((dataSource) => {

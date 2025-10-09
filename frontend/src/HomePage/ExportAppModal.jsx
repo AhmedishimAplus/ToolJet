@@ -152,9 +152,8 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
   return (
     <BootstrapModal
       onHide={() => closeModal(false)}
-      contentClassName={`home-modal-component home-version-modal-component ${
-        customClassName ? ` ${customClassName}` : ''
-      } ${darkMode && 'dark-theme'}`}
+      contentClassName={`home-modal-component home-version-modal-component ${customClassName ? ` ${customClassName}` : ''
+        } ${darkMode && 'dark-theme'}`}
       show={show}
       backdrop={true}
       keyboard={true}
@@ -223,7 +222,12 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
             </div>
           </BootstrapModal.Body>
           <div className="tj-version-wrap-sub-footer">
-            <input type="checkbox" checked={exportTjDb} onChange={() => setExportTjDb(!exportTjDb)} />
+            <input
+              type="checkbox"
+              checked={exportTjDb}
+              onChange={() => setExportTjDb(!exportTjDb)}
+              aria-label="Export ToolJet table schema"
+            />
             <p>Export ToolJet table schema</p>
           </div>
           <BootstrapModal.Footer className="export-app-modal-footer d-flex justify-content-end align-items-center ">

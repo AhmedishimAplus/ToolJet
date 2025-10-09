@@ -16,7 +16,7 @@ const WhiteLabellingFormWrapper = ({ children: components, whiteLabelFavIcon, is
     <div className="white-labelling-form-wrapper">
       <div className="tooljet-header cursor-pointer" onClick={redirectToLoginPage}>
         {window.location.pathname != '/setup' && isWhiteLabelApplied && whiteLabelFavIcon ? (
-          <img width={IMAGE_WIDTH} height={IMAGE_HEIGHT} src={whiteLabelFavIcon} />
+          <img width={IMAGE_WIDTH} height={IMAGE_HEIGHT} src={whiteLabelFavIcon} alt="White label favicon" />
         ) : (
           <Logo />
         )}

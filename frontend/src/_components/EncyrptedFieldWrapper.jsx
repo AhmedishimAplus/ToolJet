@@ -29,7 +29,7 @@ export default function EncryptedFieldWrapper({
   return (
     <>
       <div className="d-flex align-items-center mt-3">
-        <label className="form-label"  data-cy={`label-${String(label).toLowerCase().replace(/\s+/g, '-')}`}>{label}</label>
+        <label className="form-label" data-cy={`label-${String(label).toLowerCase().replace(/\s+/g, '-')}`}>{label}</label>
         <div className="mx-1 col">
           <ButtonSolid
             className="datasource-edit-btn mb-2"
@@ -45,7 +45,7 @@ export default function EncryptedFieldWrapper({
         </div>
         <div className="col-auto mb-2">
           <small className="text-green mx-2">
-            <img className="mx-2 encrypted-icon" src="assets/images/icons/padlock.svg" width="12" height="12" />
+            <img className="mx-2 encrypted-icon" src="assets/images/icons/padlock.svg" width="12" height="12" alt="Encrypted field" />
             Encrypted
           </small>
         </div>

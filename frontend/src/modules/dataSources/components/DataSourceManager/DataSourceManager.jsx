@@ -412,11 +412,11 @@ class DataSourceManagerComponent extends React.Component {
     this.setState({ validationMessages: errorMap });
     const filteredValidationBanner = interactedFields
       ? Object.keys(this.state.validationMessages)
-          .filter((key) => interactedFields.has(key))
-          .reduce((result, key) => {
-            result.push(this.state.validationMessages[key]);
-            return result;
-          }, [])
+        .filter((key) => interactedFields.has(key))
+        .reduce((result, key) => {
+          result.push(this.state.validationMessages[key]);
+          return result;
+        }, [])
       : Object.values(this.state.validationMessages);
     this.setState({ validationError: filteredValidationBanner });
   };
@@ -956,15 +956,15 @@ class DataSourceManagerComponent extends React.Component {
     const sampleDBmodalFooterStyle = isSampleDb ? { paddingTop: '8px' } : {};
     const isSaveDisabled = selectedDataSource
       ? (deepEqual(options, selectedDataSource?.options, ['encrypted']) &&
-          selectedDataSource?.name === datasourceName) ||
-        !isEmpty(validationMessages)
+        selectedDataSource?.name === datasourceName) ||
+      !isEmpty(validationMessages)
       : true;
     this.props.setGlobalDataSourceStatus({ isEditing: !isSaveDisabled });
     const docLink = isSampleDb
       ? 'https://docs.tooljet.ai/docs/data-sources/sample-data-sources'
       : selectedDataSource?.pluginId && selectedDataSource.pluginId.trim() !== ''
-      ? `https://docs.tooljet.ai/docs/marketplace/plugins/marketplace-plugin-${selectedDataSource?.kind}/`
-      : `https://docs.tooljet.ai/docs/data-sources/${selectedDataSource?.kind}`;
+        ? `https://docs.tooljet.ai/docs/marketplace/plugins/marketplace-plugin-${selectedDataSource?.kind}/`
+        : `https://docs.tooljet.ai/docs/data-sources/${selectedDataSource?.kind}`;
     const OAuthDs = ['slack', 'zendesk', 'googlesheets', 'salesforce', 'googlecalendar', 'snowflake'];
     return (
       pluginsLoaded && (
@@ -1016,7 +1016,7 @@ class DataSourceManagerComponent extends React.Component {
                           />
                           {!this.props.isEditing && (
                             <span className="input-icon-addon">
-                              <img src="assets/images/icons/edit-source.svg" width="12" height="12" />
+                              <img src="assets/images/icons/edit-source.svg" width="12" height="12" alt="Edit data source" />
                             </span>
                           )}
                         </div>

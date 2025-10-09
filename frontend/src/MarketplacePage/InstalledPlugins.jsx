@@ -196,7 +196,7 @@ const InstalledPluginCard = ({ plugin, marketplacePlugin, fetchPlugins, isDevMod
             <div className="row align-items-center">
               <div className="col-auto">
                 <span className="text-white avatar">
-                  <img height="32" width="32" src={`data:image/svg+xml;base64,${plugin.iconFile.data}`} />
+                  <img height="32" width="32" src={`data:image/svg+xml;base64,${plugin.iconFile.data}`} alt={`${plugin.name} plugin icon`} />
                 </span>
               </div>
               <div className="col">

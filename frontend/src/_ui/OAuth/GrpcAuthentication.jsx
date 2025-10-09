@@ -49,7 +49,7 @@ const GrpcAuthentication = ({
           <label className="form-label text-muted mt-3">
             Password
             <small className="text-green mx-2">
-              <img className="mx-2 encrypted-icon" src="assets/images/icons/padlock.svg" width="12" height="12" />
+              <img className="mx-2 encrypted-icon" src="assets/images/icons/padlock.svg" width="12" height="12" alt="Encrypted field" />
               Encrypted
             </small>
           </label>
@@ -69,7 +69,7 @@ const GrpcAuthentication = ({
           <label className="form-label text-muted mt-3">
             Token
             <small className="text-green mx-2">
-              <img className="mx-2 encrypted-icon" src="assets/images/icons/padlock.svg" width="12" height="12" />
+              <img className="mx-2 encrypted-icon" src="assets/images/icons/padlock.svg" width="12" height="12" alt="Encrypted field" />
               Encrypted
             </small>
           </label>

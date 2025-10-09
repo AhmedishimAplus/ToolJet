@@ -37,8 +37,9 @@ const Pagination = ({
           gotoPreviousPage();
         }}
         classNames={darkMode ? 'dark' : 'nothing'}
-        styles={{ height: '20px', width: '20px' }}
+        styles={{ height: '44px', width: '44px', minHeight: '44px', minWidth: '44px' }}
         disabled={isDisabled || currentPage === 1}
+        aria-label="Go to previous page"
       >
         <Button.Content iconSrc={'assets/images/icons/chevron-left.svg'} />
       </Button.UnstyledButton>
@@ -50,6 +51,7 @@ const Pagination = ({
           className="form-control-pagination"
           data-cy={`current-page-number-${currentPageNumber}`}
           value={currentPageNumber}
+          aria-label="Current page number"
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               handleOnChange(event.target.value);
@@ -73,8 +75,9 @@ const Pagination = ({
           gotoNextPage();
         }}
         classNames={darkMode && 'dark'}
-        styles={{ height: '20px', width: '20px' }}
+        styles={{ height: '44px', width: '44px', minHeight: '44px', minWidth: '44px' }}
         disabled={isDisabled || currentPage === totalPage}
+        aria-label="Go to next page"
       >
         <Button.Content iconSrc={'assets/images/icons/chevron-right.svg'} />
       </Button.UnstyledButton>

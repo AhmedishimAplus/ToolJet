@@ -110,10 +110,10 @@ function OnboardingTrialPage(props) {
               <div key={index} className="body-row">
                 <div className="feature-title">{feature.title}</div>
                 <div className="feature-radio free-radio">
-                  <input type="radio" checked={feature.free} />
+                  <input type="radio" checked={feature.free} aria-label={`${feature.title} - Free`} readOnly />
                 </div>
                 <div className="feature-radio paid-radio">
-                  <input type="radio" checked={feature.paid} />
+                  <input type="radio" checked={feature.paid} aria-label={`${feature.title} - Paid`} readOnly />
                 </div>
               </div>
             ))}

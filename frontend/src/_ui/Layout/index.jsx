@@ -22,7 +22,7 @@ function Layout({
   darkMode,
   enableCollapsibleSidebar = false,
   collapseSidebar = false,
-  toggleCollapsibleSidebar = () => {},
+  toggleCollapsibleSidebar = () => { },
 }) {
   const [licenseValid, setLicenseValid] = useState(false);
   const logo = useWhiteLabellingStore((state) => state.whiteLabelLogo);
@@ -127,7 +127,7 @@ function Layout({
                 to={getPrivateRoute('dashboard')}
                 onClick={(event) => checkForUnsavedChanges(getPrivateRoute('dashboard'), event)}
               >
-                {isWhiteLabellingDataLoading ? '' : logo ? <img width="26px" height="26px" src={logo} /> : <Logo />}
+                {isWhiteLabellingDataLoading ? '' : logo ? <img width="26px" height="26px" src={logo} alt="Organization logo" /> : <Logo />}
               </Link>
             </div>
             <LeftNavSideBar
