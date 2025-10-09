@@ -386,6 +386,8 @@ class BaseSSOConfigurationList extends React.Component {
               }}
               bsPrefix="no-caret-dropdown-toggle"
               data-cy="dropdown-custom-toggle"
+              aria-haspopup="listbox"
+              aria-expanded={showDropdown}
             >
               <div
                 className="sso-option-label"

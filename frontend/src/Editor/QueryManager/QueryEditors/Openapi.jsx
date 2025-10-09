@@ -305,7 +305,15 @@ class OpenapiComponent extends React.Component {
                         <span
                           className="col-auto field-width-28 d-flex"
                           role="button"
-                          onClick={() => this.removeParam('path', param.name)}
+                          tabIndex="0"
+                          aria-label="Remove header parameter"
+                          onClick={() => this.removeParam('header', param.name)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              this.removeParam('header', param.name);
+                            }
+                          }}
                         >
                           <svg
                             width="100%"
@@ -358,7 +366,15 @@ class OpenapiComponent extends React.Component {
                         <span
                           className="col-auto field-width-28 d-flex"
                           role="button"
+                          tabIndex="0"
+                          aria-label="Remove path parameter"
                           onClick={() => this.removeParam('path', param.name)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              this.removeParam('path', param.name);
+                            }
+                          }}
                         >
                           <svg
                             width="100%"

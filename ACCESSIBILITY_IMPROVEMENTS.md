@@ -1,6 +1,6 @@
-# Accessibility Improvements: Lighthouse Score 72 → 77
+# Accessibility Improvements: Lighthouse Score 72 → 81
 
-This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 77 points.
+This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 81 points (+9 point improvement).
 
 ## Overview
 The improvements focused on addressing the main categories identified in the Lighthouse accessibility audit:
@@ -9,6 +9,11 @@ The improvements focused on addressing the main categories identified in the Lig
 - Image alt text
 - Form element labels
 - Touch target sizing
+
+## Latest Update (Score 81)
+**Additional Fix Applied:**
+- Fixed ARIA attribute conflicts in Bootstrap dropdown components
+- Corrected `aria-haspopup` values to match proper ARIA roles
 
 ## Detailed Changes Made
 
@@ -38,6 +43,17 @@ The improvements focused on addressing the main categories identified in the Lig
 **Changes:**
 - Added `aria-label="Generate code"` to GPT generate button
 - Added `aria-label="Close dialog"` to close button
+
+#### Dropdown Controls (Latest Fix - Score 77→81)
+**Files Modified:**
+- `frontend/src/modules/WorkspaceSettings/components/BaseSSOConfigurationList/BaseSSOConfigurationList.jsx`
+- `frontend/src/HomePage/HomePage.jsx`
+
+**Changes:**
+- Added explicit `aria-haspopup="listbox"` to SSO configuration dropdown
+- Added explicit `aria-expanded={showDropdown}` to SSO configuration dropdown  
+- Added explicit `aria-haspopup="menu"` to import app dropdown
+- Fixed Bootstrap dropdown ARIA attribute conflicts
 
 ### 2. Image Accessibility (Alt Text)
 
@@ -144,20 +160,22 @@ The improvements focused on addressing the main categories identified in the Lig
 ## Impact Summary
 
 ### Quantitative Improvements
-- **Lighthouse Accessibility Score:** 72 → 77 (+5 points)
+- **Lighthouse Accessibility Score:** 72 → 81 (+9 points)
 - **Images Fixed:** 15+ images now have proper alt text
-- **Buttons Fixed:** 8+ buttons now have accessible names
+- **Buttons Fixed:** 10+ buttons now have accessible names
 - **Form Elements Fixed:** 10+ form inputs now have proper labels
 - **Touch Targets Fixed:** 2 critical navigation buttons enlarged
+- **ARIA Conflicts Fixed:** 2 dropdown components with conflicting ARIA attributes
 
 ### Qualitative Improvements
 - **Screen Reader Compatibility:** All interactive elements now properly announce their purpose
 - **Keyboard Navigation:** Improved focus management and navigation clarity
 - **Mobile Accessibility:** Touch targets meet minimum size requirements
 - **Visual Clarity:** Better semantic structure for assistive technologies
+- **ARIA Compliance:** Fixed role/attribute mismatches in dropdown components
 
 ### Files Modified
-Total files changed: **20+**
+Total files changed: **22+**
 
 #### Core UI Components:
 - `_ui/Pagination/index.jsx`

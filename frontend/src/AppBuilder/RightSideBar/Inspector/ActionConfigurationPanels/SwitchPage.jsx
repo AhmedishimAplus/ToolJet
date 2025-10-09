@@ -87,7 +87,19 @@ export function SwitchPage({ getPages, event, handlerChanged, eventIndex, darkMo
                 cyLabel={`event-query-param-value`}
               />
             </div>
-            <span className="btn-sm col-auto my-1" role="button" onClick={() => deleteQueryParam(index)}>
+            <span
+              className="btn-sm col-auto my-1"
+              role="button"
+              tabIndex="0"
+              aria-label="Delete query parameter"
+              onClick={() => deleteQueryParam(index)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  deleteQueryParam(index);
+                }
+              }}
+            >
               x
             </span>
           </div>

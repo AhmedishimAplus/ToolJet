@@ -24,7 +24,19 @@ export const QuerySelector = ({ param, definition, eventOptionUpdated, dataQueri
 
   return (
     <div className="field mb-3 mt-1 px-2">
-      <label className="form-label" role="button" onClick={() => setOpen(!open)}>
+      <label
+        className="form-label"
+        role="button"
+        tabIndex="0"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setOpen(!open);
+          }
+        }}
+      >
         <div className="row">
           <div className="col">{eventMeta.displayName}</div>
           <div className={`col-auto events-toggle ${open ? 'events-toggle-active' : ''}`}>
