@@ -30,16 +30,16 @@ const ForgotPasswordForm = ({ onSubmit }) => {
   const edition = fetchEdition();
   const adminUser = edition === 'cloud' ? 'admin' : 'super admin';
 
-  // Focus management - auto focus email field on mount
+  // Focus management - auto focus first element on mount
   useEffect(() => {
     setIsNavigationMode(true);
     setCurrentFocusIndex(0);
 
     setTimeout(() => {
       const focusableElements = getFocusableElements();
-      if (focusableElements.length > 0 && focusableElements[0]?.ref?.current) {
-        focusableElements[0].ref.current.focus();
-        announceToScreenReader('Arrow key navigation active. Use arrow keys to navigate, Enter to activate.');
+      if (focusableElements.length > 0 && focusableElements[0]) {
+        focusableElements[0].focus();
+        // Don't announce here since the screen reader effect will handle it
       }
     }, 100);
   }, []);
@@ -48,74 +48,48 @@ const ForgotPasswordForm = ({ onSubmit }) => {
   const getFocusableElements = () => {
     const elements = [];
 
-    if (emailInputRef.current) elements.push({ ref: emailInputRef, type: 'input', name: 'email' });
-    if (submitButtonRef.current) elements.push({ ref: submitButtonRef, type: 'button', name: 'send reset link' });
-    if (signupLinkRef.current) elements.push({ ref: signupLinkRef, type: 'link', name: 'create account' });
+    // Follow the visual order: signup link first, then form elements
+    if (signupLinkRef.current) elements.push(signupLinkRef.current);
+    if (emailInputRef.current) elements.push(emailInputRef.current);
+    if (submitButtonRef.current) elements.push(submitButtonRef.current);
 
-    return elements;
+    return elements.filter(el => el && !el.disabled);
   };
 
-  // Arrow key navigation handler
-  const handleArrowKeyNavigation = (e) => {
+  const handleArrowKeyNavigation = (direction) => {
     const focusableElements = getFocusableElements();
-
     if (focusableElements.length === 0) return;
 
     let newIndex = currentFocusIndex;
 
-    switch (e.key) {
-      case 'ArrowDown':
-      case 'ArrowRight':
-        e.preventDefault();
-        newIndex = (currentFocusIndex + 1) % focusableElements.length;
-        break;
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        e.preventDefault();
-        newIndex = currentFocusIndex === 0 ? focusableElements.length - 1 : currentFocusIndex - 1;
-        break;
-      case 'Enter':
-        e.preventDefault();
-        const currentElement = focusableElements[currentFocusIndex];
-        handleEnterActivation(currentElement);
-        return;
-      case 'Escape':
-        e.preventDefault();
-        setIsNavigationMode(true);
-        announceToScreenReader('Navigation mode activated. Use arrow keys to move between elements, Enter to activate.');
-        return;
-      default:
-        return;
+    if (direction === 'down') {
+      newIndex = currentFocusIndex < focusableElements.length - 1 ? currentFocusIndex + 1 : 0;
+    } else if (direction === 'up') {
+      newIndex = currentFocusIndex > 0 ? currentFocusIndex - 1 : focusableElements.length - 1;
     }
 
     setCurrentFocusIndex(newIndex);
-    const targetElement = focusableElements[newIndex];
 
-    if (targetElement?.ref?.current) {
-      targetElement.ref.current.focus();
-      announceToScreenReader(`Focused on ${targetElement.name} ${targetElement.type}`);
+    const targetElement = focusableElements[newIndex];
+    if (targetElement) {
+      targetElement.focus();
+      setIsNavigationMode(true);
     }
   };
 
-  // Handle Enter key activation
-  const handleEnterActivation = (element) => {
-    if (!element?.ref?.current) return;
+  const handleEnterActivation = () => {
+    const focusableElements = getFocusableElements();
+    const currentElement = focusableElements[currentFocusIndex];
 
-    const { type, name } = element;
-
-    switch (type) {
-      case 'input':
-        setIsNavigationMode(false);
-        announceToScreenReader(`Editing ${name} field. Press Escape to return to navigation mode.`);
-        break;
-      case 'button':
-        handleSubmit({ preventDefault: () => { } });
-        announceToScreenReader(`${name} activated`);
-        break;
-      case 'link':
-        element.ref.current.click();
-        announceToScreenReader(`${name} link activated`);
-        break;
+    if (currentElement) {
+      if (currentElement.tagName === 'BUTTON') {
+        currentElement.click();
+      } else if (currentElement.tagName === 'A') {
+        currentElement.click();
+      } else if (currentElement.tagName === 'INPUT') {
+        // For input fields, just ensure they're focused for typing
+        currentElement.focus();
+      }
     }
   };
 
@@ -133,47 +107,93 @@ const ForgotPasswordForm = ({ onSubmit }) => {
     }, 1000);
   };
 
-  // Global keyboard event listener
+  // Keyboard event handlers
   useEffect(() => {
-    const handleGlobalKeyDown = (e) => {
-      const isInForm = e.target.closest('.forgot-password-form') ||
-        document.activeElement === document.body ||
-        document.activeElement.tagName === 'BODY';
-
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(e.key)) {
-        handleArrowKeyNavigation(e);
-      }
-    };
-
-    document.addEventListener('keydown', handleGlobalKeyDown, true);
-    return () => document.removeEventListener('keydown', handleGlobalKeyDown, true);
-  }, [currentFocusIndex, isNavigationMode]);
-
-  // F1 activation shortcut
-  useEffect(() => {
-    const handleGlobalActivation = (e) => {
+    const handleKeyDown = (e) => {
+      // F1 key to activate navigation mode
       if (e.key === 'F1') {
         e.preventDefault();
         setIsNavigationMode(true);
+        setCurrentFocusIndex(0);
         const focusableElements = getFocusableElements();
         if (focusableElements.length > 0) {
-          setCurrentFocusIndex(0);
-          focusableElements[0].ref.current?.focus();
-          announceToScreenReader('Arrow key navigation activated. Use arrow keys to navigate, Enter to activate.');
+          focusableElements[0].focus();
         }
+        return;
+      }
+
+      // Arrow key navigation
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const direction = e.key === 'ArrowDown' ? 'down' : 'up';
+        handleArrowKeyNavigation(direction);
+        return;
+      }
+
+      // Enter key activation
+      if (e.key === 'Enter' && isNavigationMode) {
+        e.preventDefault();
+        handleEnterActivation();
+        return;
+      }
+
+      // Escape to exit navigation mode
+      if (e.key === 'Escape') {
+        setIsNavigationMode(false);
+        return;
       }
     };
 
-    document.addEventListener('keydown', handleGlobalActivation);
-    return () => document.removeEventListener('keydown', handleGlobalActivation);
-  }, []);
+    const handleClick = () => {
+      // Re-activate navigation on click
+      setIsNavigationMode(true);
+    };
 
-  // Handle input focus
-  const handleInputFocus = (fieldName) => {
+    // Add event listeners with capture to ensure they work globally
+    document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [currentFocusIndex, isNavigationMode]);
+
+  // Screen reader support
+  useEffect(() => {
+    if (isNavigationMode) {
+      const focusableElements = getFocusableElements();
+      const announcement = `Keyboard navigation active. ${focusableElements.length} elements available. Use arrow keys to navigate, Enter to activate, F1 to restart navigation, or Escape to exit.`;
+
+      // Create a temporary screen reader announcement
+      const srAnnouncement = document.createElement('div');
+      srAnnouncement.setAttribute('aria-live', 'assertive');
+      srAnnouncement.setAttribute('aria-atomic', 'true');
+      srAnnouncement.className = 'sr-only';
+      srAnnouncement.textContent = announcement;
+      document.body.appendChild(srAnnouncement);
+
+      setTimeout(() => {
+        document.body.removeChild(srAnnouncement);
+      }, 1000);
+    }
+  }, [isNavigationMode]);
+
+  const handleElementFocus = (elementType) => {
     const focusableElements = getFocusableElements();
-    const index = focusableElements.findIndex(el => el.name === fieldName);
-    if (index !== -1) {
-      setCurrentFocusIndex(index);
+    const elementMap = {
+      'signup-link': signupLinkRef.current,
+      'email-input': emailInputRef.current,
+      'submit-button': submitButtonRef.current,
+    };
+
+    const targetElement = elementMap[elementType];
+    if (targetElement) {
+      const newIndex = focusableElements.indexOf(targetElement);
+      if (newIndex !== -1) {
+        setCurrentFocusIndex(newIndex);
+        setIsNavigationMode(true);
+      }
     }
   };
 

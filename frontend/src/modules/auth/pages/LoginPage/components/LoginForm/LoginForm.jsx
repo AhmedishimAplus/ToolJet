@@ -125,8 +125,8 @@ const LoginForm = ({
       if (btn) elements.push({ ref: { current: btn }, type: 'button', name: `SSO login ${index + 1}` });
     });
 
-    // Make sure to include sign up link
-    if (signUpLinkRef.current) elements.push({ ref: signUpLinkRef, type: 'link', name: 'sign up' });
+    // Only include sign up link if it's actually rendered
+    if (isSignUpCTAEnabled && signUpLinkRef.current) elements.push({ ref: signUpLinkRef, type: 'link', name: 'sign up' });
 
     return elements;
   };  // Arrow key navigation handler

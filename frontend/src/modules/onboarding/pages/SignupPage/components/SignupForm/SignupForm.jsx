@@ -183,7 +183,8 @@ const SignupForm = ({
     if (submitButtonRef.current) {
       elements.push(submitButtonRef.current);
     }
-    if (signinLinkRef.current) {
+    // Only include signin link if it's actually rendered
+    if (shouldShowSignInCTA && signinLinkRef.current) {
       elements.push(signinLinkRef.current);
     }
 

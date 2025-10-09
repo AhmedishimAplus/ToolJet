@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import './AppButton.scss';
 import SolidIcon from '../Icon/solidIcons/index';
 import { Spinner } from 'react-bootstrap';
 
-export const ButtonBase = function ButtonBase(props) {
+export const ButtonBase = forwardRef(function ButtonBase(props, ref) {
   const mapBaseSize = {
     lg: 'tj-large-btn',
     md: 'tj-medium-btn',
@@ -36,13 +36,14 @@ export const ButtonBase = function ButtonBase(props) {
   return (
     <Element
       {...restProps}
+      ref={ref}
       className={`tj-base-btn ${mapBaseSize[size]}  ${className}`}
       disabled={disabled}
       style={
         ({
           backgroundColor: backgroundColor && backgroundColor,
         },
-        { ...restProps.style, ...customStyles })
+          { ...restProps.style, ...customStyles })
       }
       type={isAnchor ? undefined : type || 'button'}
     >
@@ -73,9 +74,9 @@ export const ButtonBase = function ButtonBase(props) {
       )}
     </Element>
   );
-};
+});
 
-export const ButtonSolid = function ButtonSolid(props) {
+export const ButtonSolid = forwardRef(function ButtonSolid(props, ref) {
   const mapVariant = {
     primary: 'tj-primary-btn',
     ghostBlue: 'tj-ghost-blue-btn',
@@ -90,5 +91,5 @@ export const ButtonSolid = function ButtonSolid(props) {
   };
 
   const { variant = 'primary', className, ...restProps } = props;
-  return <ButtonBase {...restProps} className={`${mapVariant[variant]} ${className && className}`} />;
-};
+  return <ButtonBase {...restProps} ref={ref} className={`${mapVariant[variant]} ${className && className}`} />;
+});
