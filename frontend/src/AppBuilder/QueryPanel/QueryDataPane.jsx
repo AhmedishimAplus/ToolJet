@@ -302,6 +302,7 @@ const AddDataSourceButton = ({ darkMode, disabled: _disabled }) => {
           }}
           style={{ height: '28px', width: '28px', padding: '0px' }}
           data-cy={`show-ds-popover-button`}
+          aria-label="Add data source"
         >
           <Plus style={{ height: '14px' }} fill="var(--icons-strong)" />
         </ButtonSolid>
