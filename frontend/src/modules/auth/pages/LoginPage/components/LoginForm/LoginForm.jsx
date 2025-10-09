@@ -57,7 +57,17 @@ const LoginForm = ({
   const noLoginMethodsEnabled = !configs?.form?.enabled && !isAnySSOEnabled;
   const workspaceSignUpEnabled = organizationId && configs?.enable_sign_up;
   const instanceSignUpEnabled = !organizationId && (configs?.form?.enable_sign_up || configs?.enable_sign_up);
-  const isSignUpCTAEnabled = workspaceSignUpEnabled || instanceSignUpEnabled;
+  const isSignUpCTAEnabled = workspaceSignUpEnabled || instanceSignUpEnabled || true; // Temporarily force to show for testing
+
+  console.log('LoginForm signup debug:', {
+    organizationId,
+    'configs?.enable_sign_up': configs?.enable_sign_up,
+    'configs?.form?.enable_sign_up': configs?.form?.enable_sign_up,
+    workspaceSignUpEnabled,
+    instanceSignUpEnabled,
+    isSignUpCTAEnabled
+  });
+
   const signUpCTA = workspaceSignUpEnabled ? 'Sign up' : 'Create an account';
   const signupText = workspaceSignUpEnabled
     ? t('loginSignupPage.newToWorkspace', 'New to this workspace?')
