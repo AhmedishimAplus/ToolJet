@@ -4,7 +4,7 @@ import SSOButtonWrapper from '../SSOButtonWrapper';
 import { toast } from 'react-hot-toast';
 
 const GitSSOLoginButton = forwardRef(
-  ({ configs, buttonText, setRedirectUrlToCookie, setSignupOrganizationDetails }, ref) => {
+  ({ configs, buttonText, setRedirectUrlToCookie, setSignupOrganizationDetails, onFocus }, ref) => {
     const gitLogin = (e) => {
       e?.preventDefault();
       try {
@@ -32,7 +32,13 @@ const GitSSOLoginButton = forwardRef(
 
     return (
       <div data-cy="git-tile">
-        <SSOButtonWrapper onClick={gitLogin} icon={iconSrc} text={`${buttonText} GitHub`} dataCy="git-sso-button" />
+        <SSOButtonWrapper
+          onClick={gitLogin}
+          onFocus={onFocus}
+          icon={iconSrc}
+          text={`${buttonText} GitHub`}
+          dataCy="git-sso-button"
+        />
       </div>
     );
   }

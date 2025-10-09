@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { validateEmail, validatePassword } from '@/_helpers/utils';
@@ -29,6 +29,18 @@ const SignupForm = ({
 }) => {
   const defaultState = checkWhiteLabelsDefaultState();
   const { t } = useTranslation();
+
+  // Navigation state for arrow key navigation
+  const [currentFocusIndex, setCurrentFocusIndex] = useState(0);
+  const [isNavigationMode, setIsNavigationMode] = useState(false);
+
+  // Refs for navigation
+  const nameInputRef = useRef(null);
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
+  const submitButtonRef = useRef(null);
+  const signinLinkRef = useRef(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -154,10 +166,168 @@ const SignupForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Navigation helper functions
+  const getFocusableElements = () => {
+    const elements = [];
+
+    // Add form elements in order
+    if (!comingFromInviteFlow && nameInputRef.current) {
+      elements.push(nameInputRef.current);
+    }
+    if (emailInputRef.current) {
+      elements.push(emailInputRef.current);
+    }
+    if (passwordInputRef.current) {
+      elements.push(passwordInputRef.current);
+    }
+    if (submitButtonRef.current) {
+      elements.push(submitButtonRef.current);
+    }
+    if (signinLinkRef.current) {
+      elements.push(signinLinkRef.current);
+    }
+
+    return elements.filter(el => el && !el.disabled);
+  };
+
+  const handleArrowKeyNavigation = (direction) => {
+    const focusableElements = getFocusableElements();
+    if (focusableElements.length === 0) return;
+
+    let newIndex = currentFocusIndex;
+
+    if (direction === 'down') {
+      newIndex = currentFocusIndex < focusableElements.length - 1 ? currentFocusIndex + 1 : 0;
+    } else if (direction === 'up') {
+      newIndex = currentFocusIndex > 0 ? currentFocusIndex - 1 : focusableElements.length - 1;
+    }
+
+    setCurrentFocusIndex(newIndex);
+
+    const targetElement = focusableElements[newIndex];
+    if (targetElement) {
+      targetElement.focus();
+      setIsNavigationMode(true);
+    }
+  };
+
+  const handleEnterActivation = () => {
+    const focusableElements = getFocusableElements();
+    const currentElement = focusableElements[currentFocusIndex];
+
+    if (currentElement) {
+      if (currentElement.tagName === 'BUTTON') {
+        currentElement.click();
+      } else if (currentElement.tagName === 'A') {
+        currentElement.click();
+      } else if (currentElement.tagName === 'INPUT') {
+        // For input fields, just ensure they're focused for typing
+        currentElement.focus();
+      }
+    }
+  };
+
+  const handleElementFocus = (elementType) => {
+    const focusableElements = getFocusableElements();
+    const elementMap = {
+      'name-input': nameInputRef.current,
+      'email-input': emailInputRef.current,
+      'password-input': passwordInputRef.current,
+      'submit-button': submitButtonRef.current,
+      'signin-link': signinLinkRef.current,
+    };
+
+    const targetElement = elementMap[elementType];
+    if (targetElement) {
+      const newIndex = focusableElements.indexOf(targetElement);
+      if (newIndex !== -1) {
+        setCurrentFocusIndex(newIndex);
+        setIsNavigationMode(true);
+      }
+    }
+  };
+
+  // Keyboard event handlers
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // F1 key to activate navigation mode
+      if (e.key === 'F1') {
+        e.preventDefault();
+        setIsNavigationMode(true);
+        setCurrentFocusIndex(0);
+        const focusableElements = getFocusableElements();
+        if (focusableElements.length > 0) {
+          focusableElements[0].focus();
+        }
+        return;
+      }
+
+      // Arrow key navigation
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const direction = e.key === 'ArrowDown' ? 'down' : 'up';
+        handleArrowKeyNavigation(direction);
+        return;
+      }
+
+      // Enter key activation
+      if (e.key === 'Enter' && isNavigationMode) {
+        e.preventDefault();
+        handleEnterActivation();
+        return;
+      }
+
+      // Escape to exit navigation mode
+      if (e.key === 'Escape') {
+        setIsNavigationMode(false);
+        return;
+      }
+    };
+
+    const handleClick = () => {
+      // Re-activate navigation on click
+      setIsNavigationMode(true);
+    };
+
+    // Add event listeners with capture to ensure they work globally
+    document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [currentFocusIndex, isNavigationMode, comingFromInviteFlow]);
+
+  // Screen reader support
+  useEffect(() => {
+    if (isNavigationMode) {
+      const focusableElements = getFocusableElements();
+      const announcement = `Keyboard navigation active. ${focusableElements.length} elements available. Use arrow keys to navigate, Enter to activate, F1 to restart navigation, or Escape to exit.`;
+
+      // Create a temporary screen reader announcement
+      const srAnnouncement = document.createElement('div');
+      srAnnouncement.setAttribute('aria-live', 'assertive');
+      srAnnouncement.setAttribute('aria-atomic', 'true');
+      srAnnouncement.className = 'sr-only';
+      srAnnouncement.textContent = announcement;
+      document.body.appendChild(srAnnouncement);
+
+      setTimeout(() => {
+        document.body.removeChild(srAnnouncement);
+      }, 1000);
+    }
+  }, [isNavigationMode]);
+
   return (
     <div className="signup-form">
       <OnboardingUIWrapper>
         <OnboardingFormInsideWrapper>
+          {/* Navigation Status Indicator */}
+          <div className="sr-only" aria-live="polite" aria-atomic="true">
+            {isNavigationMode && `Navigation active. Use arrow keys to move between form elements. Current position: ${currentFocusIndex + 1} of ${getFocusableElements().length}. Press Enter to activate selected element or F1 to start navigation.`}
+          </div>
+
           <FormHeader>{t('loginSignupPage.signUp', 'Sign up')}</FormHeader>
           {(organizationId || shouldShowSignInCTA) && (
             <p className="signup-info" data-cy="signup-info">
@@ -174,12 +344,13 @@ const SignupForm = ({
                 <>
                   {t('loginSignupPage.alreadyHaveAnAccount', 'Already have an account?')}{' '}
                   <Link
-                    to={`/login${paramOrganizationSlug ? `/${paramOrganizationSlug}` : ''}${
-                      redirectTo ? `?redirectTo=${redirectTo}` : ''
-                    }`}
+                    ref={signinLinkRef}
+                    to={`/login${paramOrganizationSlug ? `/${paramOrganizationSlug}` : ''}${redirectTo ? `?redirectTo=${redirectTo}` : ''
+                      }`}
                     className="signin-link"
                     tabIndex="-1"
                     data-cy="signin-link"
+                    onFocus={() => handleElementFocus('signin-link')}
                   >
                     {t('loginSignupPage.signIn', 'Sign in')}
                   </Link>
@@ -195,15 +366,18 @@ const SignupForm = ({
                 <form onSubmit={handleSubmit} className="form-input-area">
                   {!comingFromInviteFlow && (
                     <FormTextInput
+                      ref={nameInputRef}
                       label={t('loginSignupPage.name', 'Name')}
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder={t('loginSignupPage.enterFullName', 'Enter your full name')}
                       error={errors.name}
+                      onFocus={() => handleElementFocus('name-input')}
                     />
                   )}
                   <FormTextInput
+                    ref={emailInputRef}
                     label={t('loginSignupPage.workEmail', 'Email')}
                     name="email"
                     value={formData.email}
@@ -211,18 +385,23 @@ const SignupForm = ({
                     placeholder={t('loginSignupPage.enterWorkEmail', 'Enter your email')}
                     error={errors.email}
                     disabled={!!inviteeEmail}
+                    onFocus={() => handleElementFocus('email-input')}
                   />
                   <PasswordInput
+                    ref={passwordInputRef}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
                     error={errors.password}
                     label={organizationToken ? 'Create a password' : 'Password'}
+                    onFocus={() => handleElementFocus('password-input')}
                   />
                   <SubmitButton
+                    ref={submitButtonRef}
                     buttonText={t('loginSignupPage.signUp', 'Sign up')}
                     disabled={!isFormValid || isLoading}
                     isLoading={isLoading}
+                    onFocus={() => handleElementFocus('submit-button')}
                   />
                 </form>
               )}

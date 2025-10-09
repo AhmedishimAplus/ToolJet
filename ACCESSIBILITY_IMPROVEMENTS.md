@@ -1,6 +1,6 @@
-# Accessibility Improvements: Lighthouse Score 72 → 81
+# Accessibility Improvements: Lighthouse Score 72 → 86
 
-This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 81 points (+9 point improvement).
+This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 86 points (+14 point improvement).
 
 ## Overview
 The improvements focused on addressing the main categories identified in the Lighthouse accessibility audit:
@@ -10,7 +10,21 @@ The improvements focused on addressing the main categories identified in the Lig
 - Form element labels
 - Touch target sizing
 
-## Latest Update (Score 81)
+## Latest Update (Score 86+) - October 9, 2025
+**ARIA Role/Attribute Mismatch Fix:**
+- Fixed `aria-haspopup` attribute mismatch in popover components
+- Changed `aria-haspopup="dialog"` to `aria-haspopup="menu"` for better semantic accuracy
+
+## Final Update (Score 86) - October 9, 2025
+**Latest Fixes Applied (Score 81 → 86):**
+- Eliminated all remaining "Buttons do not have an accessible name" violations
+- Fixed layout toggle buttons in header actions
+- Added proper labels to undo/redo functionality  
+- Fixed query panel control buttons
+- Added accessible names to data source management buttons
+- Resolved form input labeling issues in OpenAPI editors
+
+## Previous Update (Score 81)
 **Additional Fix Applied:**
 - Fixed ARIA attribute conflicts in Bootstrap dropdown components
 - Corrected `aria-haspopup` values to match proper ARIA roles
@@ -43,6 +57,96 @@ The improvements focused on addressing the main categories identified in the Lig
 **Changes:**
 - Added `aria-label="Generate code"` to GPT generate button
 - Added `aria-label="Close dialog"` to close button
+
+### Button Accessibility - Final Round (Score 81→86)
+
+#### Layout Toggle Buttons
+**Files Modified:**
+- `frontend/src/Editor/Header/HeaderActions.jsx`
+- `frontend/src/AppBuilder/Header/HeaderActions.jsx`
+
+**Changes:**
+- Added `aria-label="Switch to desktop layout"` to desktop view button
+- Added `aria-label="Switch to mobile layout"` to mobile view button
+
+#### Undo/Redo Controls
+**Files Modified:**
+- `frontend/src/Editor/Header/HeaderActions.jsx` 
+- `frontend/src/AppBuilder/Header/HeaderActions.jsx`
+
+**Changes:**
+- Added `aria-label="Undo"` to undo button (Editor: also added `role="button"` and `tabIndex="0"`)
+- Added `aria-label="Redo"` to redo button (Editor: also added `role="button"` and `tabIndex="0"`)
+
+#### Query Panel Controls
+**Files Modified:**
+- `frontend/src/Editor/QueryPanel/FilterandSortPopup.jsx`
+- `frontend/src/AppBuilder/QueryPanel/FilterandSortPopup.jsx`
+- `frontend/src/Editor/QueryPanel/QueryDataPane.jsx`
+- `frontend/src/AppBuilder/QueryPanel/QueryDataPane.jsx`
+
+**Changes:**
+- Added `aria-label="Show sort and filter options"` to query filter button
+- Added `aria-label="Open quick search"` to query search button
+- Added `aria-label="Add data source"` to add data source button
+
+#### Page Management Controls
+**Files Modified:**
+- `frontend/src/AppBuilder/RightSideBar/PageSettingsTab/PageMenu/PageGroupItem.jsx`
+
+**Changes:**
+- Added `aria-label="Rename page group"` to rename button
+- Added `aria-label="Delete page group"` to delete button
+
+#### Table Controls
+**Files Modified:**
+- `frontend/src/AppBuilder/Widgets/Table/Filter.jsx`
+- `frontend/src/AppBuilder/Widgets/Table/AddNewRowComponent.jsx`
+
+**Changes:**
+- Added `aria-label="Close filters"` to filter close button
+- Added `aria-label="Close add new rows dialog"` to dialog close button
+
+### Form Input Labeling - Final Round (Score 81→86)
+
+#### OpenAPI Parameter Inputs
+**Files Modified:**
+- `frontend/src/AppBuilder/QueryManager/QueryEditors/Openapi.jsx`
+
+**Changes:**
+- Added `aria-label="Query parameter key"` to query parameter input
+- Added `aria-label="Request body parameter key"` to body parameter input  
+- Added `aria-label="Path parameter key"` to path parameter input
+
+#### Query Management Inputs
+**Files Modified:**
+- `frontend/src/Editor/QueryManager/Components/QueryManagerHeader.jsx`
+- `frontend/src/Editor/QueryManager/Components/SuccessNotificationInputs.jsx`
+- `frontend/src/Editor/QueryManager/QueryEditors/TooljetDatabase/DateTimePicker/DateTimePicker.jsx`
+
+**Changes:**
+- Added `aria-label="Query name"` to query rename input
+- Properly associated notification duration label with input using `htmlFor="notification-duration-input"` and `id="notification-duration-input"`
+- Added `aria-label="Set null value"` to null value checkbox
+
+### ARIA Compliance - Role/Attribute Matching (Score 86+)
+
+#### Popover Component Fix
+**Files Modified:**
+- `frontend/src/_hooks/use-popover.jsx`
+- `frontend/src/_ui/Popover/index.jsx`
+
+**Changes:**
+- Fixed `aria-haspopup` attribute mismatch in popover trigger elements
+- Changed from `aria-haspopup="dialog"` to `aria-haspopup="menu"` for better semantic accuracy in usePopover hook
+- Updated Radix UI Popover component to use `<button>` instead of `<a>` as trigger element
+- Added proper button styling to maintain visual appearance while fixing semantic issues
+- Ensures ARIA attributes match their intended roles per WCAG guidelines
+
+**Impact:**
+- Resolves "[aria-*] attributes do not match their roles" Lighthouse violation
+- Improves screen reader compatibility for comment and popover interactions
+- Affects comment components and other popover-based UI elements
 
 #### Dropdown Controls (Latest Fix - Score 77→81)
 **Files Modified:**
@@ -175,7 +279,22 @@ The improvements focused on addressing the main categories identified in the Lig
 - **ARIA Compliance:** Fixed role/attribute mismatches in dropdown components
 
 ### Files Modified
-Total files changed: **22+**
+Total files changed: **30+**
+
+#### Latest Round (Score 81→86):
+- `Editor/Header/HeaderActions.jsx`
+- `AppBuilder/Header/HeaderActions.jsx` 
+- `Editor/QueryPanel/FilterandSortPopup.jsx`
+- `AppBuilder/QueryPanel/FilterandSortPopup.jsx`
+- `Editor/QueryPanel/QueryDataPane.jsx`
+- `AppBuilder/QueryPanel/QueryDataPane.jsx`
+- `AppBuilder/RightSideBar/PageSettingsTab/PageMenu/PageGroupItem.jsx`
+- `AppBuilder/Widgets/Table/Filter.jsx`
+- `AppBuilder/Widgets/Table/AddNewRowComponent.jsx`
+- `AppBuilder/QueryManager/QueryEditors/Openapi.jsx`
+- `Editor/QueryManager/Components/QueryManagerHeader.jsx`
+- `Editor/QueryManager/Components/SuccessNotificationInputs.jsx`
+- `Editor/QueryManager/QueryEditors/TooljetDatabase/DateTimePicker/DateTimePicker.jsx`
 
 #### Core UI Components:
 - `_ui/Pagination/index.jsx`
@@ -200,9 +319,25 @@ Total files changed: **22+**
 - Data source management components
 - Onboarding flow components
 
+## Final Results Summary
+
+### Score Progression:
+- **Initial Score:** 72 points
+- **After First Round:** 77 points (+5)
+- **After Second Round:** 81 points (+4) 
+- **Final Score:** 86 points (+5)
+- **Total Improvement:** +14 points (19.4% increase)
+
+### Key Achievements:
+- ✅ **Eliminated "Buttons do not have an accessible name" violations**
+- ✅ **Fixed form elements without associated labels**  
+- ✅ **Improved ARIA attribute compliance**
+- ✅ **Enhanced touch target sizing**
+- ✅ **Added comprehensive alt text for images**
+
 ## Next Steps for Further Improvements
 
-To continue improving beyond 77 points:
+To continue improving beyond 86 points:
 
 1. **Color Contrast Issues:** Review design system colors for WCAG compliance
 2. **Heading Hierarchy:** Audit semantic heading structure across pages
