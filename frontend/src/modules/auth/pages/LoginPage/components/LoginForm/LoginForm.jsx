@@ -124,9 +124,10 @@ const LoginForm = ({
 
     if (configs?.form?.enabled) {
       if (emailInputRef.current) elements.push({ ref: emailInputRef, type: 'input', name: 'email' });
+       if (forgotPasswordLinkRef.current) elements.push({ ref: forgotPasswordLinkRef, type: 'link', name: 'forgot password' });
       if (passwordInputRef.current) elements.push({ ref: passwordInputRef, type: 'input', name: 'password' });
       if (passwordToggleRef.current) elements.push({ ref: passwordToggleRef, type: 'button', name: 'toggle password visibility' });
-      if (forgotPasswordLinkRef.current) elements.push({ ref: forgotPasswordLinkRef, type: 'link', name: 'forgot password' });
+     
       if (submitButtonRef.current) elements.push({ ref: submitButtonRef, type: 'button', name: 'sign in' });
     }
 
@@ -361,7 +362,7 @@ const LoginForm = ({
                 </p>
                 {isNavigationMode && (
                   <div className="navigation-status" aria-live="polite">
-                    <small>🎯 Arrow key navigation active - Use ↑↓←→ to navigate, Enter to activate</small>
+                    <small> Arrow key navigation active - Use ↑↓←→ to navigate, Enter to activate</small>
                   </div>
                 )}
               </div>

@@ -38,6 +38,7 @@ const SignupForm = ({
   const nameInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
+  const passwordToggleRef = useRef(null);
   const submitButtonRef = useRef(null);
   const signinLinkRef = useRef(null);
 
@@ -180,6 +181,9 @@ const SignupForm = ({
     if (passwordInputRef.current) {
       elements.push(passwordInputRef.current);
     }
+    if (passwordToggleRef.current) {
+      elements.push(passwordToggleRef.current);
+    }
     if (submitButtonRef.current) {
       elements.push(submitButtonRef.current);
     }
@@ -197,9 +201,9 @@ const SignupForm = ({
 
     let newIndex = currentFocusIndex;
 
-    if (direction === 'down') {
+    if (direction === 'down' || direction === 'right') {
       newIndex = currentFocusIndex < focusableElements.length - 1 ? currentFocusIndex + 1 : 0;
-    } else if (direction === 'up') {
+    } else if (direction === 'up' || direction === 'left') {
       newIndex = currentFocusIndex > 0 ? currentFocusIndex - 1 : focusableElements.length - 1;
     }
 
@@ -234,6 +238,7 @@ const SignupForm = ({
       'name-input': nameInputRef.current,
       'email-input': emailInputRef.current,
       'password-input': passwordInputRef.current,
+      'password-toggle': passwordToggleRef.current,
       'submit-button': submitButtonRef.current,
       'signin-link': signinLinkRef.current,
     };
@@ -264,9 +269,14 @@ const SignupForm = ({
       }
 
       // Arrow key navigation
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
-        const direction = e.key === 'ArrowDown' ? 'down' : 'up';
+        let direction;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+          direction = 'down';
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+          direction = 'up';
+        }
         handleArrowKeyNavigation(direction);
         return;
       }
@@ -396,6 +406,8 @@ const SignupForm = ({
                     error={errors.password}
                     label={organizationToken ? 'Create a password' : 'Password'}
                     onFocus={() => handleElementFocus('password-input')}
+                    passwordToggleRef={passwordToggleRef}
+                    onPasswordToggleFocus={() => handleElementFocus('password-toggle')}
                   />
                   <SubmitButton
                     ref={submitButtonRef}

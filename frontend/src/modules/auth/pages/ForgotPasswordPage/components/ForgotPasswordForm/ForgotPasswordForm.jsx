@@ -6,6 +6,7 @@ import { OnboardingUIWrapper, OnboardingFormInsideWrapper } from '@/modules/onbo
 import { FormTextInput, SubmitButton, FormHeader } from '@/modules/common/components';
 import { retrieveWhiteLabelText } from '@white-label/whiteLabelling';
 import './resources/styles/forgot-password-form.styles.scss';
+import '../../../LoginPage/components/LoginForm/resources/styles/accessibility.scss';
 import { Alert } from '@/_ui/Alert';
 import SepratorComponent from '@/modules/common/components/SepratorComponent';
 import { fetchEdition } from '@/modules/common/helpers/utils';
@@ -37,11 +38,36 @@ const ForgotPasswordForm = ({ onSubmit }) => {
 
     setTimeout(() => {
       const focusableElements = getFocusableElements();
-      if (focusableElements.length > 0 && focusableElements[0]) {
-        focusableElements[0].focus();
-        // Don't announce here since the screen reader effect will handle it
+      if (focusableElements.length > 0 && focusableElements[0]?.ref?.current) {
+        focusableElements[0].ref.current.focus();
+        announceToScreenReader('Arrow key navigation active. Use arrow keys to navigate, Enter to activate.');
       }
     }, 100);
+  }, []);
+
+  // Re-activate navigation when clicking outside and then back into form
+  useEffect(() => {
+    const handleFormClick = (e) => {
+      if (e.target.closest('.forgot-password-form')) {
+        setIsNavigationMode(true);
+        const focusableElements = getFocusableElements();
+
+        // Find the clicked element in our navigation list
+        let clickedIndex = -1;
+        focusableElements.forEach((element, index) => {
+          if (element.ref.current === e.target || element.ref.current?.contains(e.target)) {
+            clickedIndex = index;
+          }
+        });
+
+        if (clickedIndex !== -1) {
+          setCurrentFocusIndex(clickedIndex);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleFormClick);
+    return () => document.removeEventListener('click', handleFormClick);
   }, []);
 
   // Get all focusable elements in order
@@ -49,47 +75,82 @@ const ForgotPasswordForm = ({ onSubmit }) => {
     const elements = [];
 
     // Follow the visual order: signup link first, then form elements
-    if (signupLinkRef.current) elements.push(signupLinkRef.current);
-    if (emailInputRef.current) elements.push(emailInputRef.current);
-    if (submitButtonRef.current) elements.push(submitButtonRef.current);
+    if (signupLinkRef.current) elements.push({ ref: signupLinkRef, type: 'link', name: 'sign up' });
+    if (emailInputRef.current) elements.push({ ref: emailInputRef, type: 'input', name: 'email' });
+    if (submitButtonRef.current) elements.push({ ref: submitButtonRef, type: 'button', name: 'send reset link' });
 
-    return elements.filter(el => el && !el.disabled);
+    return elements;
   };
 
-  const handleArrowKeyNavigation = (direction) => {
+  // Arrow key navigation handler
+  const handleArrowKeyNavigation = (e) => {
     const focusableElements = getFocusableElements();
+
     if (focusableElements.length === 0) return;
 
     let newIndex = currentFocusIndex;
 
-    if (direction === 'down') {
-      newIndex = currentFocusIndex < focusableElements.length - 1 ? currentFocusIndex + 1 : 0;
-    } else if (direction === 'up') {
-      newIndex = currentFocusIndex > 0 ? currentFocusIndex - 1 : focusableElements.length - 1;
+    switch (e.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        e.preventDefault();
+        newIndex = (currentFocusIndex + 1) % focusableElements.length;
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        e.preventDefault();
+        newIndex = currentFocusIndex === 0 ? focusableElements.length - 1 : currentFocusIndex - 1;
+        break;
+      case 'Enter':
+        e.preventDefault();
+        const currentElement = focusableElements[currentFocusIndex];
+        handleEnterActivation(currentElement);
+        return;
+      case 'Escape':
+        e.preventDefault();
+        setIsNavigationMode(true);
+        announceToScreenReader('Navigation mode activated. Use arrow keys to move between elements, Enter to activate.');
+        return;
+      default:
+        return;
     }
 
     setCurrentFocusIndex(newIndex);
-
     const targetElement = focusableElements[newIndex];
-    if (targetElement) {
-      targetElement.focus();
-      setIsNavigationMode(true);
+
+    if (targetElement?.ref?.current) {
+      targetElement.ref.current.focus();
+      announceToScreenReader(`Focused on ${targetElement.name} ${targetElement.type}`);
     }
-  };
+  };  // Handle Enter key activation
+  const handleEnterActivation = (element) => {
+    if (!element?.ref?.current) return;
 
-  const handleEnterActivation = () => {
-    const focusableElements = getFocusableElements();
-    const currentElement = focusableElements[currentFocusIndex];
+    const { type, name } = element;
 
-    if (currentElement) {
-      if (currentElement.tagName === 'BUTTON') {
-        currentElement.click();
-      } else if (currentElement.tagName === 'A') {
-        currentElement.click();
-      } else if (currentElement.tagName === 'INPUT') {
-        // For input fields, just ensure they're focused for typing
-        currentElement.focus();
-      }
+    switch (type) {
+      case 'input':
+        setIsNavigationMode(false);
+        announceToScreenReader(`Editing ${name} field. Press Escape to return to navigation mode.`);
+        break;
+      case 'button':
+        if (name === 'send reset link') {
+          // Check if button is disabled before clicking
+          if (!element.ref.current.disabled) {
+            element.ref.current.click();
+            announceToScreenReader(`${name} activated`);
+          } else {
+            announceToScreenReader('Button is disabled and cannot be activated');
+          }
+        } else {
+          element.ref.current.click();
+          announceToScreenReader(`${name} activated`);
+        }
+        break;
+      case 'link':
+        element.ref.current.click();
+        announceToScreenReader(`${name} link activated`);
+        break;
     }
   };
 
@@ -107,57 +168,45 @@ const ForgotPasswordForm = ({ onSubmit }) => {
     }, 1000);
   };
 
-  // Keyboard event handlers
+  // Global keyboard event listener
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      // F1 key to activate navigation mode
+    const handleGlobalKeyDown = (e) => {
+      // Always allow arrow key navigation when on the forgot password page
+      // Check if we're in the form area or if no other input is focused
+      const isInForm = e.target.closest('.forgot-password-form') ||
+        document.activeElement === document.body ||
+        document.activeElement.tagName === 'BODY';
+
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(e.key)) {
+        // Always handle navigation keys for accessibility
+        handleArrowKeyNavigation(e);
+      }
+    };
+
+    // Use capture phase to ensure we catch all events
+    document.addEventListener('keydown', handleGlobalKeyDown, true);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown, true);
+  }, [currentFocusIndex, isNavigationMode]);
+
+  // Add global activation shortcut
+  useEffect(() => {
+    const handleGlobalActivation = (e) => {
+      // Press F1 to activate arrow key navigation from anywhere on the page
       if (e.key === 'F1') {
         e.preventDefault();
         setIsNavigationMode(true);
-        setCurrentFocusIndex(0);
         const focusableElements = getFocusableElements();
         if (focusableElements.length > 0) {
-          focusableElements[0].focus();
+          setCurrentFocusIndex(0);
+          focusableElements[0].ref.current?.focus();
+          announceToScreenReader('Arrow key navigation activated. Use arrow keys to navigate, Enter to activate.');
         }
-        return;
-      }
-
-      // Arrow key navigation
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const direction = e.key === 'ArrowDown' ? 'down' : 'up';
-        handleArrowKeyNavigation(direction);
-        return;
-      }
-
-      // Enter key activation
-      if (e.key === 'Enter' && isNavigationMode) {
-        e.preventDefault();
-        handleEnterActivation();
-        return;
-      }
-
-      // Escape to exit navigation mode
-      if (e.key === 'Escape') {
-        setIsNavigationMode(false);
-        return;
       }
     };
 
-    const handleClick = () => {
-      // Re-activate navigation on click
-      setIsNavigationMode(true);
-    };
-
-    // Add event listeners with capture to ensure they work globally
-    document.addEventListener('keydown', handleKeyDown, true);
-    document.addEventListener('click', handleClick, true);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown, true);
-      document.removeEventListener('click', handleClick, true);
-    };
-  }, [currentFocusIndex, isNavigationMode]);
+    document.addEventListener('keydown', handleGlobalActivation);
+    return () => document.removeEventListener('keydown', handleGlobalActivation);
+  }, []);
 
   // Screen reader support
   useEffect(() => {
@@ -179,25 +228,23 @@ const ForgotPasswordForm = ({ onSubmit }) => {
     }
   }, [isNavigationMode]);
 
-  const handleElementFocus = (elementType) => {
+  // Handle input field focus
+  const handleInputFocus = (fieldName) => {
     const focusableElements = getFocusableElements();
-    const elementMap = {
-      'signup-link': signupLinkRef.current,
-      'email-input': emailInputRef.current,
-      'submit-button': submitButtonRef.current,
-    };
-
-    const targetElement = elementMap[elementType];
-    if (targetElement) {
-      const newIndex = focusableElements.indexOf(targetElement);
-      if (newIndex !== -1) {
-        setCurrentFocusIndex(newIndex);
-        setIsNavigationMode(true);
-      }
+    const index = focusableElements.findIndex(el => el.name === fieldName);
+    if (index !== -1) {
+      setCurrentFocusIndex(index);
     }
   };
 
-  useEffect(() => {
+  const handleElementFocus = (elementType) => {
+    const focusableElements = getFocusableElements();
+    const index = focusableElements.findIndex(el => el.name === elementType);
+    if (index !== -1) {
+      setCurrentFocusIndex(index);
+      setIsNavigationMode(true);
+    }
+  }; useEffect(() => {
     setIsFormValid(validateEmail(email));
     const emailError =
       !isDefaultFormEmail && (email.trim() ? (validateEmail(email) ? '' : 'Email is invalid') : 'Email is required');
@@ -221,16 +268,24 @@ const ForgotPasswordForm = ({ onSubmit }) => {
   };
 
   return (
-    <OnboardingUIWrapper>
-      <OnboardingFormInsideWrapper>
-        <div className="forgot-password-form">
-          {/* Navigation Status Indicator */}
-          <div className="sr-only" aria-live="polite" aria-atomic="true">
-            {isNavigationMode && `Navigation active. Use arrow keys to move between form elements. Current position: ${currentFocusIndex + 1} of ${getFocusableElements().length}. Press Enter to activate selected element or F1 to start navigation.`}
+    <div className="forgot-password-form" data-navigation-mode={isNavigationMode ? 'true' : 'false'}>
+      <OnboardingUIWrapper>
+        <OnboardingFormInsideWrapper>
+          <div className="keyboard-navigation-instructions" role="banner" aria-live="polite">
+            <p className="sr-only">
+              Keyboard navigation: Use arrow keys to move between elements, Enter to activate or edit, Escape to exit edit mode. Press F1 to activate navigation from anywhere.
+            </p>
+            {isNavigationMode && (
+              <div className="navigation-status" aria-live="polite">
+                <small>🎯 Arrow key navigation active - Use ↑↓←→ to navigate, Enter to activate</small>
+              </div>
+            )}
           </div>
 
-          <FormHeader>{t('forgotPasswordPage.forgotPassword', 'Forgot Password')}</FormHeader>
-          <p className="forgot-password-form-signup-redirect" data-cy="signup-redirect-text">
+          <FormHeader role="heading" aria-level="1">
+            {t('forgotPasswordPage.forgotPassword', 'Forgot Password')}
+          </FormHeader>
+          <p className="forgot-password-form-signup-redirect" data-cy="signup-redirect-text" role="banner">
             {t('forgotPasswordPage.newTo', 'New to')} {whiteLabelText}?{' '}
             <Link
               ref={signupLinkRef}
@@ -238,12 +293,19 @@ const ForgotPasswordForm = ({ onSubmit }) => {
               className="signup-link"
               data-cy="create-an-account-link"
               state={{ from: '/forgot-password' }}
-              onFocus={() => handleElementFocus('signup-link')}
+              onFocus={() => handleInputFocus('sign up')}
+              aria-label={`New to ${whiteLabelText}? Create an account`}
             >
               {t('forgotPasswordPage.createAnAccount', 'Create an account')}
             </Link>
           </p>
-          <form onSubmit={handleSubmit} className="form-input-area">
+          <form
+            onSubmit={handleSubmit}
+            className="form-input-area"
+            role="form"
+            aria-label="Forgot password form"
+            noValidate
+          >
             <FormTextInput
               ref={emailInputRef}
               type="email"
@@ -254,15 +316,27 @@ const ForgotPasswordForm = ({ onSubmit }) => {
               name="email"
               error={emailError}
               dataCy="email-input-field"
-              onFocus={() => handleElementFocus('email-input')}
+              onFocus={() => handleInputFocus('email')}
+              aria-describedby={emailError ? 'email-error' : undefined}
+              aria-invalid={!!emailError}
+              aria-required="true"
+              autoComplete="email"
+              data-navigation-hint="Use arrow keys to navigate, Enter to edit, Escape to exit edit mode"
             />
             <SubmitButton
               ref={submitButtonRef}
               buttonText={t('forgotPasswordPage.sendResetLink', 'Send a reset link')}
               disabled={!isFormValid || isLoading}
               isLoading={isLoading}
-              onFocus={() => handleElementFocus('submit-button')}
+              onFocus={() => handleInputFocus('send reset link')}
+              aria-label={isLoading ? 'Sending reset link, please wait' : 'Send password reset link'}
+              aria-describedby={!isFormValid ? 'form-validation-info' : undefined}
             />
+            {!isFormValid && (
+              <div id="form-validation-info" className="sr-only" aria-live="polite">
+                Please enter a valid email address to send password reset link
+              </div>
+            )}
           </form>
           <SepratorComponent />
           <Alert
@@ -276,9 +350,9 @@ const ForgotPasswordForm = ({ onSubmit }) => {
               {`Contact ${adminUser} to reset your password`}
             </div>
           </Alert>
-        </div>
-      </OnboardingFormInsideWrapper>
-    </OnboardingUIWrapper>
+        </OnboardingFormInsideWrapper>
+      </OnboardingUIWrapper>
+    </div>
   );
 };
 
