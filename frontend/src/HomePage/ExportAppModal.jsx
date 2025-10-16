@@ -18,6 +18,100 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
   const [versionSelectLoading, setVersionSelectLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Navigation order configuration - can be customized based on modal context
+  const getNavigationOrder = () => {
+    const baseOrder = [
+      { element: 'close-button', tabIndex: 1 },
+      { element: 'selected-version', tabIndex: 2 },
+      { element: 'selected-version-input', tabIndex: 3 },
+    ];
+
+    // Add other versions dynamically
+    const otherVersionsCount = versions ? versions.filter(v => v.id !== currentVersion?.id).length : 0;
+    let nextTabIndex = 4;
+
+    for (let i = 0; i < otherVersionsCount; i++) {
+      baseOrder.push(
+        { element: `other-version-${i}`, tabIndex: nextTabIndex++ },
+        { element: `other-version-input-${i}`, tabIndex: nextTabIndex++ }
+      );
+    }
+
+    // Add remaining elements
+    baseOrder.push(
+      { element: 'checkbox', tabIndex: nextTabIndex++ },
+      { element: 'checkbox-input', tabIndex: nextTabIndex++ },
+      { element: 'export-all-button', tabIndex: nextTabIndex++ },
+      { element: 'export-selected-button', tabIndex: nextTabIndex++ }
+    );
+
+    return baseOrder;
+  };
+
+  // Get tab index for specific element
+  const getTabIndex = (elementKey, index = 0) => {
+    const order = getNavigationOrder();
+    const found = order.find(item =>
+      item.element === elementKey ||
+      item.element === `${elementKey}-${index}`
+    );
+    return found ? found.tabIndex.toString() : "0";
+  };  // Debug modal state and keyboard events
+  useEffect(() => {
+    if (show) {
+      console.log('🚀 MODAL OPENED: ExportAppModal');
+      console.log('📋 NAVIGATION ORDER:', getNavigationOrder());
+
+      // Debug all focusable elements in the modal
+      setTimeout(() => {
+        const modal = document.querySelector('.modal.show');
+        if (modal) {
+          const allElements = modal.querySelectorAll('*');
+          const focusableElements = modal.querySelectorAll('[tabindex]:not([tabindex="-1"]), button:not([disabled]), input:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]), select:not([disabled]), a[href]:not([disabled])');
+          console.log('📋 FOCUSABLE ELEMENTS IN MODAL:', focusableElements.length);
+          console.log('🔍 ALL ELEMENTS WITH TABINDEX:');
+
+          Array.from(allElements).forEach((el) => {
+            if (el.hasAttribute('tabindex')) {
+              console.log(`   ${el.tagName} (tabIndex=${el.tabIndex}) - ${el.className.substring(0, 50)} - ${el.getAttribute('data-cy') || 'no data-cy'}`);
+            }
+          });
+
+          console.log('🎯 SORTED BY TABINDEX:');
+          const sortedElements = Array.from(focusableElements).sort((a, b) => {
+            const aIndex = a.tabIndex === 0 ? 999 : a.tabIndex;
+            const bIndex = b.tabIndex === 0 ? 999 : b.tabIndex;
+            return aIndex - bIndex;
+          });
+
+          sortedElements.forEach((el, index) => {
+            console.log(`   ${index + 1}. ${el.tagName} (tabIndex=${el.tabIndex}) - ${el.className.substring(0, 50)} - ${el.getAttribute('data-cy') || 'no data-cy'}`);
+          });
+        }
+      }, 100);
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Tab') {
+          console.log(`⌨️  TAB pressed (${e.shiftKey ? 'Shift+' : ''}Tab), active element:`, document.activeElement);
+          console.log('   - Tag:', document.activeElement.tagName);
+          console.log('   - Classes:', document.activeElement.className);
+          console.log('   - TabIndex:', document.activeElement.tabIndex);
+          console.log('   - Data-cy:', document.activeElement.getAttribute('data-cy'));
+
+          // Show next focusable element
+          setTimeout(() => {
+            console.log(`🎯 NEXT FOCUSED: ${document.activeElement.tagName} (tabIndex=${document.activeElement.tabIndex})`);
+          }, 10);
+        }
+      }; document.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        console.log('❌ MODAL CLOSED: ExportAppModal');
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [show]);
+
   useEffect(() => {
     async function fetchAppVersions() {
       setLoading(true);
@@ -172,6 +266,9 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
           aria-label="Close"
           onClick={() => closeModal()}
           data-cy="modal-close-button"
+          tabIndex={getTabIndex('close-button')}
+          onFocus={() => console.log(`🎯 FOCUS: Close button (tabIndex=${getTabIndex('close-button')})`)}
+          onBlur={() => console.log('👋 BLUR: Close button')}
         ></button>
       </BootstrapModal.Header>
       {Array.isArray(versions) && !loading ? (
@@ -190,29 +287,38 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
                   checked={versionId === currentVersion?.id}
                   setVersionId={setVersionId}
                   className="current-version-wrap"
+                  tabIndex={getTabIndex('selected-version')}
+                  inputTabIndex={getTabIndex('selected-version-input')}
                 />
               </div>
               {versions.length >= 2 ? (
-                <div className="other-versions" data-cy="other-version-section">
+                <div
+                  className="other-versions"
+                  data-cy="other-version-section"
+                  role="group"
+                  aria-label="Other Versions section"
+                >
                   <span data-cy="other-version-label" className="other-version-label">
                     Other Versions
                   </span>
-                  {versions.map((version) => {
-                    if (version.id !== currentVersion?.id) {
+                  {versions
+                    .filter(version => version.id !== currentVersion?.id)
+                    .map((version, filteredIndex) => {
                       return (
                         <InputRadioField
+                          key={version.id}
                           versionId={version.id}
                           data-cy={`${version.id.toLowerCase().replace(/\s+/g, '-')}-value`}
                           versionName={version.name}
                           versionCreatedAt={version.createdAt || version.created_at}
-                          key={version.name}
                           checked={versionId === version.id}
                           setVersionId={setVersionId}
                           className="other-version-wrap"
+                          tabIndex={getTabIndex('other-version', filteredIndex)}
+                          inputTabIndex={getTabIndex('other-version-input', filteredIndex)}
                         />
                       );
-                    }
-                  })}
+                    })}
                 </div>
               ) : (
                 <div className="other-versions" data-cy="other-version-section">
@@ -221,12 +327,40 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
               )}
             </div>
           </BootstrapModal.Body>
-          <div className="tj-version-wrap-sub-footer">
+          <div
+            className="tj-version-wrap-sub-footer"
+            tabIndex={getTabIndex('checkbox')}
+            role="button"
+            aria-label="Toggle export ToolJet table schema"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setExportTjDb(!exportTjDb);
+              }
+            }}
+            style={{
+              cursor: 'pointer',
+              outline: 'none',
+              borderRadius: '4px',
+              transition: 'all 0.2s ease'
+            }}
+            onFocus={(e) => {
+              console.log(`🎯 FOCUS: Checkbox container (tabIndex=${getTabIndex('checkbox')})`);
+              e.target.style.boxShadow = '0 0 0 2px rgba(48, 132, 245, 0.5)';
+            }}
+            onBlur={(e) => {
+              console.log('👋 BLUR: Checkbox container');
+              e.target.style.boxShadow = 'none';
+            }}
+          >
             <input
               type="checkbox"
               checked={exportTjDb}
               onChange={() => setExportTjDb(!exportTjDb)}
               aria-label="Export ToolJet table schema"
+              tabIndex={getTabIndex('checkbox-input')}
+              onFocus={() => console.log(`🎯 FOCUS: Checkbox input (tabIndex=${getTabIndex('checkbox-input')})`)}
+              onBlur={() => console.log('👋 BLUR: Checkbox input')}
             />
             <p>Export ToolJet table schema</p>
           </div>
@@ -236,6 +370,9 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
               variant="tertiary"
               data-cy="export-all-button"
               onClick={() => exportApp(app, null, exportTjDb, allTables)}
+              tabIndex={getTabIndex('export-all-button')}
+              onFocus={() => console.log(`🎯 FOCUS: Export All button (tabIndex=${getTabIndex('export-all-button')})`)}
+              onBlur={() => console.log('👋 BLUR: Export All button')}
             >
               Export All
             </ButtonSolid>
@@ -243,6 +380,9 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
               className={`import-export-footer-btns ${versionSelectLoading ? 'btn-loading' : ''}`}
               data-cy="export-selected-version-button"
               onClick={() => exportApp(app, versionId, exportTjDb, tables)}
+              tabIndex={getTabIndex('export-selected-button')}
+              onFocus={() => console.log(`🎯 FOCUS: Export Selected button (tabIndex=${getTabIndex('export-selected-button')})`)}
+              onBlur={() => console.log('👋 BLUR: Export Selected button')}
             >
               Export selected version
             </ButtonSolid>
@@ -260,15 +400,38 @@ function InputRadioField({
   versionName,
   versionCreatedAt,
   checked = undefined,
-  key = undefined,
   setVersionId,
   className,
+  tabIndex = "0",
+  inputTabIndex = "0",
 }) {
   return (
     <span
-      key={key}
       className={`version-wrapper cursor-pointer ${className}`}
       data-cy={`${String(versionName).toLowerCase().replace(/\s+/g, '-')}-version-wrapper`}
+      tabIndex={tabIndex}
+      role="button"
+      aria-label={`Select version ${versionName} created on ${moment(versionCreatedAt).format('Do MMM YYYY')}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setVersionId(versionId);
+        }
+      }}
+      style={{
+        outline: 'none',
+        border: checked ? '2px solid #3084f5' : '1px solid transparent',
+        borderRadius: '4px',
+        transition: 'all 0.2s ease'
+      }}
+      onFocus={(e) => {
+        console.log(`🎯 FOCUS: Version "${versionName}" (tabIndex=${tabIndex})`);
+        e.target.style.boxShadow = '0 0 0 2px rgba(48, 132, 245, 0.5)';
+      }}
+      onBlur={(e) => {
+        console.log(`👋 BLUR: Version "${versionName}"`);
+        e.target.style.boxShadow = 'none';
+      }}
     >
       <input
         type="radio"
@@ -280,6 +443,9 @@ function InputRadioField({
         onClick={({ target }) => setVersionId(target.value)}
         style={{ marginLeft: '1rem' }}
         className="cursor-pointer"
+        tabIndex={inputTabIndex}
+        onFocus={() => console.log(`🎯 FOCUS: Radio input "${versionName}" (tabIndex=${inputTabIndex})`)}
+        onBlur={() => console.log(`👋 BLUR: Radio input "${versionName}"`)}
       />
       <label
         htmlFor={`${versionName}`}

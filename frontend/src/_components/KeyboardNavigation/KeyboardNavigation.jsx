@@ -9,6 +9,57 @@ const KeyboardNavigation = () => {
     const [expandedCard, setExpandedCard] = useState(null); // Track which card is expanded for button navigation
     const [isMenuOpen, setIsMenuOpen] = useState(false); // Track if 3-dots menu is open for navigation
 
+    // Helper function for modal navigation
+    const navigateInModal = useCallback((direction) => {
+        const modal = document.querySelector('.modal.show');
+        if (!modal) return;
+
+        const focusableElements = Array.from(modal.querySelectorAll('[tabindex]:not([tabindex="-1"]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]:not([disabled])'))
+            .filter(el => {
+                const style = window.getComputedStyle(el);
+                const rect = el.getBoundingClientRect();
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && rect.width > 0 && rect.height > 0;
+            })
+            .sort((a, b) => {
+                const aIndex = a.tabIndex === 0 ? 999 : a.tabIndex;
+                const bIndex = b.tabIndex === 0 ? 999 : b.tabIndex;
+                return aIndex - bIndex;
+            });
+
+        const currentIndex = focusableElements.indexOf(document.activeElement);
+        let targetIndex;
+
+        if (direction === 'next') {
+            targetIndex = (currentIndex + 1) % focusableElements.length;
+        } else {
+            targetIndex = currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
+        }
+
+        focusableElements[targetIndex]?.focus();
+    }, []);
+
+    // Helper function to check if we're currently in a modal
+    const isInModal = useCallback(() => {
+        const modalSelectors = [
+            '.modal.show',
+            '.modal.fade.show',
+            '.modal-dialog',
+            '.dialog-overlay',
+            '.popover.show',
+            '.dropdown-menu.show',
+            '[role="dialog"]',
+            '[role="alertdialog"]'
+        ];
+
+        for (const selector of modalSelectors) {
+            const modal = document.querySelector(selector);
+            if (modal && isElementVisible(modal)) {
+                return true;
+            }
+        }
+        return false;
+    }, [isElementVisible]);
+
     // Get all focusable elements on the page in logical order
     const getFocusableElements = useCallback(() => {
         const elements = [];
@@ -36,27 +87,46 @@ const KeyboardNavigation = () => {
 
         // If we're in a modal, only focus elements within the modal
         if (activeModal && !isMenuOpen) { // Don't override menu navigation
-            console.log('Modal detected, focusing only modal elements:', activeModal.className);
+            // Get all focusable elements in DOM order using TreeWalker
+            const modalElements = [];
+            const walker = document.createTreeWalker(
+                activeModal,
+                NodeFilter.SHOW_ELEMENT,
+                {
+                    acceptNode: function (node) {
+                        // Check if element is focusable and visible
+                        const isFocusable = (
+                            (node.tagName === 'BUTTON' && !node.disabled) ||
+                            (node.tagName === 'INPUT' && !node.disabled) ||
+                            (node.tagName === 'TEXTAREA' && !node.disabled) ||
+                            (node.tagName === 'SELECT' && !node.disabled) ||
+                            (node.tagName === 'A' && node.href && !node.disabled) ||
+                            (node.hasAttribute('tabindex') && node.getAttribute('tabindex') !== '-1') ||
+                            (node.hasAttribute('role') && node.getAttribute('role') === 'button' && !node.disabled)
+                        );
 
-            const modalElements = Array.from(activeModal.querySelectorAll(
-                'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]:not([disabled]), [tabindex]:not([tabindex="-1"]), [role="button"]:not([disabled])'
-            )).filter(el => isElementVisible(el));
+                        return isFocusable && isElementVisible(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+                    }
+                }
+            );
 
-            console.log(`Modal elements found: ${modalElements.length}`);
+            let node;
+            while (node = walker.nextNode()) {
+                modalElements.push(node);
+            }
+
             return modalElements;
         }
 
         // If menu is open, only return menu items for navigation (second priority)
         if (isMenuOpen) {
             const menuItems = getMenuItems();
-            console.log('Menu is open, returning only menu items:', menuItems.length);
             return menuItems;
         }
 
         // If a card is expanded, only return its buttons for navigation
         if (expandedCard) {
             const cardButtons = getCardButtons(expandedCard);
-            console.log('Card is expanded, returning only card buttons:', cardButtons.length);
             return cardButtons;
         }
 
@@ -95,11 +165,6 @@ const KeyboardNavigation = () => {
         const otherElements = Array.from(document.querySelectorAll('button:not([disabled]), a[href]:not([disabled])'))
             .filter(el => isElementVisible(el) && !elements.includes(el));
         elements.push(...otherElements);
-
-        // Debug logging
-        console.log(`All focusable elements found: ${elements.length}`);
-        console.log('App cards found:', appCards.length);
-        console.log('Expanded card mode:', expandedCard ? 'LOCKED to card buttons' : 'NORMAL navigation');
 
         return elements;
     }, [isElementVisible, expandedCard, getCardButtons, isMenuOpen, getMenuItems]);
@@ -204,16 +269,6 @@ const KeyboardNavigation = () => {
             );
         buttons.push(...allFocusable);
 
-        console.log('=== Card buttons detection ===');
-        console.log('Card element:', cardElement.className);
-        console.log('Edit button found:', !!editButton);
-        console.log('Launch button found:', !!launchButton);
-        console.log('Total buttons found:', buttons.length);
-        buttons.forEach((btn, index) => {
-            console.log(`${index + 1}. ${btn.tagName}.${btn.className} - "${btn.textContent?.trim().substring(0, 20)}"`);
-        });
-        console.log('=== End detection ===');
-
         return buttons;
     }, [isElementVisible]);
 
@@ -238,7 +293,6 @@ const KeyboardNavigation = () => {
         }
 
         if (!menuPopover) {
-            console.log('Menu popover not found with any selector');
             return [];
         }
 
@@ -315,22 +369,7 @@ const KeyboardNavigation = () => {
             }
 
             return true;
-        }); console.log('=== Menu items detection ===');
-        console.log('Menu popover found:', menuPopover.className);
-        console.log('Menu popover dimensions:', menuPopover.getBoundingClientRect());
-        console.log('All possible items found:', allPossibleItems.length);
-        console.log('Filtered menu items found:', menuItems.length);
-
-        allPossibleItems.forEach((item, index) => {
-            const rect = item.getBoundingClientRect();
-            console.log(`All ${index + 1}. ${item.tagName}.${item.className} - "${item.textContent?.trim().substring(0, 30)}" - ${rect.width}x${rect.height}`);
         });
-
-        menuItems.forEach((item, index) => {
-            const rect = item.getBoundingClientRect();
-            console.log(`Final ${index + 1}. ${item.tagName}.${item.className} - "${item.textContent?.trim().substring(0, 30)}" - ${rect.width}x${rect.height}`);
-        });
-        console.log('=== End menu detection ===');
 
         return menuItems;
     }, [isElementVisible]);
@@ -343,7 +382,6 @@ const KeyboardNavigation = () => {
         const launchButton = cardElement.querySelector('.launch-button');
         if (launchButton && !launchButton.hasAttribute('tabindex')) {
             launchButton.setAttribute('tabindex', '0');
-            console.log('Made launch button focusable');
         }
 
         // 2. Make menu div focusable
@@ -351,14 +389,12 @@ const KeyboardNavigation = () => {
         if (menuIcon && !menuIcon.hasAttribute('tabindex')) {
             menuIcon.setAttribute('tabindex', '0');
             menuIcon.setAttribute('role', 'button');
-            console.log('Made menu icon focusable');
         }
 
         // 3. Ensure edit button/link is focusable
         const editButton = cardElement.querySelector('.edit-button');
         if (editButton && !editButton.hasAttribute('tabindex')) {
             editButton.setAttribute('tabindex', '0');
-            console.log('Made edit button focusable');
         }
     }, []);
 
@@ -377,7 +413,6 @@ const KeyboardNavigation = () => {
                 }
             }
         });
-        console.log('Reset card button focusability');
     }, []);
 
     // Make menu items keyboard focusable
@@ -392,8 +427,6 @@ const KeyboardNavigation = () => {
                 if (['DIV', 'SPAN'].includes(item.tagName) && !item.hasAttribute('role')) {
                     item.setAttribute('role', 'menuitem');
                 }
-
-                console.log(`Made menu item ${index + 1} focusable:`, item.textContent?.trim());
             }
         });
 
@@ -408,7 +441,6 @@ const KeyboardNavigation = () => {
             item.removeAttribute('tabindex');
             item.removeAttribute('role');
         });
-        console.log('Reset menu items focusability');
     }, []);
 
     // Navigate to next focusable element
@@ -417,7 +449,6 @@ const KeyboardNavigation = () => {
 
         const elements = getFocusableElements();
         if (elements.length === 0) {
-            console.log('No focusable elements found!');
             return;
         }
 
@@ -431,13 +462,6 @@ const KeyboardNavigation = () => {
                 block: 'nearest',
                 inline: 'nearest'
             });
-
-            // Debug logging
-            console.log(`Navigated to element ${nextIndex + 1}/${elements.length}:`, elements[nextIndex]);
-            console.log('Classes:', elements[nextIndex].className);
-            console.log('Tag:', elements[nextIndex].tagName);
-            console.log('Navigation mode:', expandedCard ? 'LOCKED (card buttons only)' : 'NORMAL');
-            console.log('Is app card:', elements[nextIndex].classList.contains('app-card') || elements[nextIndex].classList.contains('homepage-app-card'));
         }
     }, [getFocusableElements, isInputMode]);
 
@@ -447,7 +471,6 @@ const KeyboardNavigation = () => {
 
         const elements = getFocusableElements();
         if (elements.length === 0) {
-            console.log('No focusable elements found!');
             return;
         }
 
@@ -461,13 +484,6 @@ const KeyboardNavigation = () => {
                 block: 'nearest',
                 inline: 'nearest'
             });
-
-            // Debug logging
-            console.log(`Navigated to element ${prevIndex + 1}/${elements.length}:`, elements[prevIndex]);
-            console.log('Classes:', elements[prevIndex].className);
-            console.log('Tag:', elements[prevIndex].tagName);
-            console.log('Navigation mode:', expandedCard ? 'LOCKED (card buttons only)' : 'NORMAL');
-            console.log('Is app card:', elements[prevIndex].classList.contains('app-card') || elements[prevIndex].classList.contains('homepage-app-card'));
         }
     }, [getFocusableElements, isInputMode]);
 
@@ -500,8 +516,7 @@ const KeyboardNavigation = () => {
                 resetCardButtonsFocusability(activeElement);
                 setExpandedCard(null);
                 activeElement.classList.remove('keyboard-expanded');
-                // Don't click the card - just keep it focused for further navigation
-                console.log('Card collapsed, staying focused on card');
+
             } else {
                 // Collapse any previously expanded card
                 if (expandedCard) {
@@ -516,14 +531,11 @@ const KeyboardNavigation = () => {
                 // Make buttons focusable
                 makeCardButtonsFocusable(activeElement);
 
-                console.log('Card expanded, will focus first button');
-
                 // Focus on the first button in the expanded card
                 const cardButtons = getCardButtons(activeElement);
                 if (cardButtons.length > 0) {
                     setTimeout(() => {
                         cardButtons[0].focus();
-                        console.log('Focused on first button:', cardButtons[0]);
                     }, 200); // Slightly longer delay to ensure CSS transition and tabindex setup
                 }
             }
@@ -534,8 +546,6 @@ const KeyboardNavigation = () => {
             // Click the menu button to open the menu
             activeElement.click();
 
-            console.log('Menu button clicked, waiting for menu to open...');
-
             // Set menu open state and focus first menu item
             setIsMenuOpen(true);
 
@@ -544,38 +554,38 @@ const KeyboardNavigation = () => {
                 const menuItems = makeMenuItemsFocusable();
                 if (menuItems.length > 0) {
                     menuItems[0].focus();
-                    console.log('Focused on first menu item:', menuItems[0]);
+
                 } else {
-                    console.log('No menu items found after opening menu');
+
                 }
             }, 300); // Longer delay to ensure menu renders
         } else if (isMenuItem(activeElement)) {
             e.preventDefault();
             e.stopPropagation();
 
-            console.log('Menu item activated:', activeElement);
+
 
             // For span[role="button"] elements, click them directly
             if (activeElement.tagName === 'SPAN' && activeElement.getAttribute('role') === 'button') {
                 activeElement.click();
-                console.log('Clicked span menu item directly');
+
             }
             // For field div elements, find and click the span[role="button"] child
             else if (activeElement.classList.contains('field')) {
                 const clickableSpan = activeElement.querySelector('span[role="button"]');
                 if (clickableSpan) {
                     clickableSpan.click();
-                    console.log('Found and clicked span inside field:', clickableSpan);
+
                 } else {
                     // Fallback - click the field itself
                     activeElement.click();
-                    console.log('No span found, clicked field directly');
+
                 }
             }
             // Fallback for other menu item types
             else {
                 activeElement.click();
-                console.log('Clicked menu item fallback');
+
             }
         } else if (activeElement) {
             e.preventDefault();
@@ -606,7 +616,7 @@ const KeyboardNavigation = () => {
                     e.stopPropagation();
                     e.stopImmediatePropagation();
 
-                    console.log('Intercepted keydown on:', activeElement.tagName, activeElement.className);
+
 
                     // Call our handleEnter function
                     handleEnter(e);
@@ -654,7 +664,7 @@ const KeyboardNavigation = () => {
         const checkMenuVisibility = () => {
             const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
             if (!menuPopover || !isElementVisible(menuPopover)) {
-                console.log('Menu no longer visible, closing menu state');
+
                 setIsMenuOpen(false);
             }
         };
@@ -666,7 +676,7 @@ const KeyboardNavigation = () => {
         const handleClickOutside = (e) => {
             const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
             if (menuPopover && !menuPopover.contains(e.target)) {
-                console.log('Clicked outside menu, closing menu state');
+
                 setIsMenuOpen(false);
             }
         };
@@ -681,6 +691,15 @@ const KeyboardNavigation = () => {
 
     // Arrow key and tab navigation - only work when NOT in input mode
     useHotkeys('down', (e) => {
+        // In modals, use tab-order navigation for arrow keys too
+        if (isInModal()) {
+            if (!isInputMode) {
+                e.preventDefault();
+                navigateInModal('next');
+            }
+            return;
+        }
+
         if (!isInputMode) {
             e.preventDefault();
             navigateToNext();
@@ -688,13 +707,60 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('up', (e) => {
+        // In modals, use tab-order navigation for arrow keys too
+        if (isInModal()) {
+            if (!isInputMode) {
+                e.preventDefault();
+                navigateInModal('previous');
+            }
+            return;
+        }
+
         if (!isInputMode) {
             e.preventDefault();
             navigateToPrevious();
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
+    // Left and Right arrow keys for modal navigation
+    useHotkeys('left', (e) => {
+        // In modals, left arrow works like up arrow (previous element)
+        if (isInModal()) {
+            if (!isInputMode) {
+                e.preventDefault();
+                navigateInModal('previous');
+            }
+            return;
+        }
+
+        if (!isInputMode) {
+            e.preventDefault();
+            navigateToPrevious();
+        }
+    }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
+
+    useHotkeys('right', (e) => {
+        // In modals, right arrow works like down arrow (next element)
+        if (isInModal()) {
+            if (!isInputMode) {
+                e.preventDefault();
+                navigateInModal('next');
+            }
+            return;
+        }
+
+        if (!isInputMode) {
+            e.preventDefault();
+            navigateToNext();
+        }
+    }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
+
     useHotkeys('tab', (e) => {
+        // Allow normal tab navigation in modals
+        if (isInModal()) {
+            return; // Don't prevent default, let normal tab navigation work
+        }
+
         if (!isInputMode) {
             e.preventDefault();
             navigateToNext();
@@ -702,6 +768,11 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('shift+tab', (e) => {
+        // Allow normal tab navigation in modals
+        if (isInModal()) {
+            return; // Don't prevent default, let normal tab navigation work
+        }
+
         if (!isInputMode) {
             e.preventDefault();
             navigateToPrevious();
@@ -727,7 +798,7 @@ const KeyboardNavigation = () => {
             // Priority 1: If there's an open modal, try to close it
             const modalCloseButtons = Array.from(document.querySelectorAll('.modal.show .btn-close, .modal.show .close, .modal.show button[data-dismiss="modal"], .modal.show [aria-label="Close"]'));
             if (modalCloseButtons.length > 0) {
-                console.log('Closing modal with close button');
+
                 modalCloseButtons[0].click();
                 return;
             }
@@ -736,7 +807,7 @@ const KeyboardNavigation = () => {
             if (isMenuOpen) {
                 resetMenuItemsFocusability();
                 setIsMenuOpen(false);
-                console.log('Menu closed, returning to card button navigation');
+
 
                 // Focus back on the menu button (3-dots) in the expanded card
                 if (expandedCard) {
@@ -744,7 +815,7 @@ const KeyboardNavigation = () => {
                     if (menuButton) {
                         setTimeout(() => {
                             menuButton.focus();
-                            console.log('Focused back on menu button');
+
                         }, 100);
                     }
                 }
@@ -757,21 +828,12 @@ const KeyboardNavigation = () => {
                 setExpandedCard(null);
                 // Focus back on the card
                 cardToFocus.focus();
-                console.log('Card collapsed, focus returned to card');
+
             }
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     // Debug hotkey to list all elements
-    useHotkeys('ctrl+shift+d', (e) => {
-        e.preventDefault();
-        const elements = getFocusableElements();
-        console.log('=== DEBUG: All focusable elements ===');
-        elements.forEach((el, index) => {
-            console.log(`${index + 1}. ${el.tagName} - ${el.className} - ${el.textContent?.substring(0, 50) || 'No text'}`);
-        });
-        console.log('=== End debug list ===');
-    });
 
     // Clean up input mode classes when switching elements or unmounting
     useEffect(() => {
