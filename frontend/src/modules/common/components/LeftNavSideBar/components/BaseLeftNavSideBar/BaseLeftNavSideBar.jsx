@@ -26,11 +26,13 @@ const BaseLeftNavSideBar = ({
             <Link
               to={getPrivateRoute('dashboard')}
               onClick={(event) => checkForUnsavedChanges(getPrivateRoute('dashboard'), event)}
-              className={`tj-leftsidebar-icon-items  ${
-                (router.pathname === '/:workspaceId' || router.pathname === getPrivateRoute('dashboard')) &&
+              className={`tj-leftsidebar-icon-items  ${(router.pathname === '/:workspaceId' || router.pathname === getPrivateRoute('dashboard')) &&
                 `current-seleted-route`
-              }`}
+                }`}
               data-cy="icon-dashboard"
+              tabIndex="0"
+              role="button"
+              aria-label="Navigate to Apps"
             >
               <SolidIcon
                 name="apps"
@@ -49,10 +51,12 @@ const BaseLeftNavSideBar = ({
               <Link
                 to={getPrivateRoute('workflows')}
                 onClick={(event) => checkForUnsavedChanges(getPrivateRoute('workflows'), event)}
-                className={`tj-leftsidebar-icon-items  ${
-                  router.pathname === getPrivateRoute('workflows') && `current-seleted-route`
-                }`}
+                className={`tj-leftsidebar-icon-items  ${router.pathname === getPrivateRoute('workflows') && `current-seleted-route`
+                  }`}
                 data-cy="icon-workflows"
+                tabIndex="0"
+                role="button"
+                aria-label="Navigate to Workflows"
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -67,8 +71,8 @@ const BaseLeftNavSideBar = ({
                     router.pathname === getPrivateRoute('workflows') && `current-seleted-route`
                       ? '#3E63DD'
                       : darkMode
-                      ? '#4C5155'
-                      : '#C1C8CD'
+                        ? '#4C5155'
+                        : '#C1C8CD'
                   }
                 />
               </Link>
@@ -81,10 +85,12 @@ const BaseLeftNavSideBar = ({
               <Link
                 to={getPrivateRoute('database')}
                 onClick={(event) => checkForUnsavedChanges(getPrivateRoute('database'), event)}
-                className={`tj-leftsidebar-icon-items  ${
-                  router.pathname === getPrivateRoute('database') && `current-seleted-route`
-                }`}
+                className={`tj-leftsidebar-icon-items  ${router.pathname === getPrivateRoute('database') && `current-seleted-route`
+                  }`}
                 data-cy="icon-database"
+                tabIndex="0"
+                role="button"
+                aria-label="Navigate to ToolJet Database"
               >
                 <SolidIcon
                   name="table"
@@ -106,10 +112,12 @@ const BaseLeftNavSideBar = ({
               <Link
                 to={getPrivateRoute('data_sources')}
                 onClick={(event) => checkForUnsavedChanges(getPrivateRoute('data_sources'), event)}
-                className={`tj-leftsidebar-icon-items  ${
-                  router.pathname === getPrivateRoute('data_sources') && `current-seleted-route`
-                }`}
+                className={`tj-leftsidebar-icon-items  ${router.pathname === getPrivateRoute('data_sources') && `current-seleted-route`
+                  }`}
                 data-cy="icon-global-datasources"
+                tabIndex="0"
+                role="button"
+                aria-label="Navigate to Data sources"
               >
                 <SolidIcon
                   name="datasource"
@@ -125,10 +133,12 @@ const BaseLeftNavSideBar = ({
               <Link
                 to={getPrivateRoute('workspace_constants')}
                 onClick={(event) => checkForUnsavedChanges(getPrivateRoute('workspace_constants'), event)}
-                className={`tj-leftsidebar-icon-items  ${
-                  router.pathname === getPrivateRoute('workspace_constants') && `current-seleted-route`
-                }`}
+                className={`tj-leftsidebar-icon-items  ${router.pathname === getPrivateRoute('workspace_constants') && `current-seleted-route`
+                  }`}
                 data-cy="icon-workspace-constants"
+                tabIndex="0"
+                role="button"
+                aria-label="Navigate to Workspace constants"
               >
                 <SolidIcon
                   name="workspaceconstants"
@@ -148,6 +158,9 @@ const BaseLeftNavSideBar = ({
               className="cursor-pointer tj-leftsidebar-icon-items"
               onClick={() => switchDarkMode(!darkMode)}
               data-cy="mode-switch-button"
+              tabIndex="0"
+              role="button"
+              aria-label="Toggle dark mode"
             >
               <SolidIcon name={darkMode ? 'lightmode' : 'darkmode'} fill="var(--slate8)" />
             </Link>

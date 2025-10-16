@@ -1,0 +1,194 @@
+/* Keyboard Navigation Styles */
+
+/* Universal hover outlines for all interactive elements */
+button:hover:not([disabled]),
+input:hover:not([disabled]),
+select:hover:not([disabled]),
+textarea:hover:not([disabled]),
+a:hover:not([disabled]),
+[role="button"]:hover:not([disabled]),
+[tabindex]:hover:not([tabindex="-1"]):not([disabled]),
+.cursor-pointer:hover:not([disabled]),
+.btn:hover:not([disabled]),
+.tj-leftsidebar-icon-items:hover,
+.app-card:hover,
+.notification-center-nav-item:hover,
+.settings-nav-item:hover,
+.homepage-app-card:hover,
+.card--clickable:hover,
+.dropdown-item:hover,
+.list-group-item:hover,
+.nav-link:hover,
+.btn-outline:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-tertiary:hover,
+.tj-primary-btn:hover,
+.tj-tertiary-btn:hover,
+.launch-button:hover,
+.edit-button:hover {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Special hover styles for app cards */
+.app-card:hover,
+.homepage-app-card:hover {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.1) !important;
+}
+
+/* Hover styles for form inputs */
+input:hover:not([disabled]),
+textarea:hover:not([disabled]),
+select:hover:not([disabled]) {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 1px !important;
+    border-radius: 4px !important;
+}
+
+/* Hover styles for links */
+a:hover:not([disabled]) {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 1px !important;
+    border-radius: 2px !important;
+}
+
+/* Add focus styles to sidebar navigation items */
+.tj-leftsidebar-icon-items:focus {
+    outline: 2px solid #3E63DD;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Add focus styles to app cards */
+.app-card:focus {
+    outline: 2px solid #3E63DD;
+    outline-offset: 2px;
+    border-radius: 8px;
+    box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.1);
+}
+
+/* Add focus styles to notification center */
+.notification-center-nav-item:focus {
+    outline: 2px solid #3E63DD;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Add focus styles to settings menu */
+.settings-nav-item:focus {
+    outline: 2px solid #3E63DD;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Ensure focusable elements are visible */
+[tabindex="0"] {
+    position: relative;
+}
+
+/* Smooth focus transitions */
+.tj-leftsidebar-icon-items,
+.app-card,
+.notification-center-nav-item,
+.settings-nav-item {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Add keyboard navigation hint */
+.keyboard-navigation-hint {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.keyboard-navigation-hint.visible {
+    opacity: 1;
+}
+
+/* Override any conflicting hover styles */
+*:hover {
+    position: relative;
+}
+
+/* Ensure outlines are visible above other elements */
+*:hover:not([disabled]) {
+    z-index: 1;
+}
+
+/* Handle specific ToolJet components that might override styles */
+.homepage-app-card-list-item:hover .homepage-app-card,
+.homepage-app-card-list-item:hover .app-card {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.1) !important;
+}
+
+/* Dark mode specific overrides */
+.dark-theme .homepage-app-card-list-item:hover .homepage-app-card,
+.dark-theme .homepage-app-card-list-item:hover .app-card {
+    outline-color: #5B9BFF !important;
+    box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.1) !important;
+}
+
+/* Dark mode hover and focus styles */
+.dark-theme button:hover:not([disabled]),
+.dark-theme input:hover:not([disabled]),
+.dark-theme select:hover:not([disabled]),
+.dark-theme textarea:hover:not([disabled]),
+.dark-theme a:hover:not([disabled]),
+.dark-theme [role="button"]:hover:not([disabled]),
+.dark-theme [tabindex]:hover:not([tabindex="-1"]):not([disabled]),
+.dark-theme .cursor-pointer:hover:not([disabled]),
+.dark-theme .btn:hover:not([disabled]),
+.dark-theme .tj-leftsidebar-icon-items:hover,
+.dark-theme .app-card:hover,
+.dark-theme .notification-center-nav-item:hover,
+.dark-theme .settings-nav-item:hover,
+.dark-theme .homepage-app-card:hover,
+.dark-theme .card--clickable:hover,
+.dark-theme .dropdown-item:hover,
+.dark-theme .list-group-item:hover,
+.dark-theme .nav-link:hover,
+.dark-theme .btn-outline:hover,
+.dark-theme .btn-primary:hover,
+.dark-theme .btn-secondary:hover,
+.dark-theme .btn-tertiary:hover,
+.dark-theme .tj-primary-btn:hover,
+.dark-theme .tj-tertiary-btn:hover,
+.dark-theme .launch-button:hover,
+.dark-theme .edit-button:hover {
+    outline-color: #5B9BFF !important;
+}
+
+.dark-theme .app-card:hover,
+.dark-theme .homepage-app-card:hover {
+    outline-color: #5B9BFF !important;
+    box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.1) !important;
+}
+
+/* Dark mode focus styles */
+.dark-theme .tj-leftsidebar-icon-items:focus,
+.dark-theme .app-card:focus,
+.dark-theme .notification-center-nav-item:focus,
+.dark-theme .settings-nav-item:focus {
+    outline-color: #5B9BFF;
+}
+
+.dark-theme .app-card:focus {
+    box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.1);
+}

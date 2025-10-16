@@ -15,6 +15,7 @@ import '../../_styles/left-sidebar.scss';
 import { hasBuilderRole } from '@/_helpers/utils';
 import { LeftNavSideBar } from '@/modules/common/components';
 import { useWhiteLabellingStore } from '@/_stores/whiteLabellingStore';
+import KeyboardNavigation from '@/_components/KeyboardNavigation';
 
 function Layout({
   children,
@@ -119,6 +120,7 @@ function Layout({
 
   return (
     <div className="row m-auto">
+      <KeyboardNavigation />
       <div className="col-auto p-0">
         <aside className="left-sidebar h-100 position-fixed">
           <div className="tj-leftsidebar-icon-wrap">

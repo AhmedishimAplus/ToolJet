@@ -38,9 +38,8 @@ export const NotificationCenter = ({ darkMode }) => {
 
   const overlay = (
     <div
-      className={`notification-center dropdown-menu dropdown-menu-arrow dropdown-menu-end !tw-rounded-lg dropdown-menu-card ${
-        darkMode && 'dark-theme'
-      }`}
+      className={`notification-center dropdown-menu dropdown-menu-arrow dropdown-menu-end !tw-rounded-lg dropdown-menu-card ${darkMode && 'dark-theme'
+        }`}
       data-bs-popper="static"
     >
       <div className="card notifications-card" data-cy="notifications-card">
@@ -73,12 +72,11 @@ export const NotificationCenter = ({ darkMode }) => {
                 {t('header.notificationCenter.youAreCaughtUp', `You're all caught up!`)}
               </p>
               <p className="empty-subtitle" data-cy="empty-notification-subtitle">
-                {`${t('header.notificationCenter.youDontHaveany', `You don't have any`)} ${
-                  !isRead ? t('header.notificationCenter.un', 'un') : ''
-                }${t('header.notificationCenter.read', 'read')} ${t(
-                  `header.notificationCenter.notifications`,
-                  'notifications'
-                ).toLowerCase()}!
+                {`${t('header.notificationCenter.youDontHaveany', `You don't have any`)} ${!isRead ? t('header.notificationCenter.un', 'un') : ''
+                  }${t('header.notificationCenter.read', 'read')} ${t(
+                    `header.notificationCenter.notifications`,
+                    'notifications'
+                  ).toLowerCase()}!
               `}
               </p>
             </div>
@@ -95,12 +93,11 @@ export const NotificationCenter = ({ darkMode }) => {
             onClick={() => setIsRead(!isRead)}
             data-cy="notifications-card-footer"
           >
-            {`${t('header.notificationCenter.view', 'View')} ${
-              isRead ? t('header.notificationCenter.un', 'un') : ''
-            }${t('header.notificationCenter.read', 'read')} ${t(
-              `header.notificationCenter.notifications`,
-              'notifications'
-            ).toLowerCase()}`}
+            {`${t('header.notificationCenter.view', 'View')} ${isRead ? t('header.notificationCenter.un', 'un') : ''
+              }${t('header.notificationCenter.read', 'read')} ${t(
+                `header.notificationCenter.notifications`,
+                'notifications'
+              ).toLowerCase()}`}
           </span>
         </div>
       </div>
@@ -111,7 +108,18 @@ export const NotificationCenter = ({ darkMode }) => {
     <OverlayTrigger onEntering={fetchData} rootClose trigger="click" placement="right" overlay={overlay}>
       <div>
         <ToolTip message="Comment notifications" placement="right">
-          <div className="notification-center-nav-item cursor-pointer tj-leftsidebar-icon-items">
+          <div
+            className="notification-center-nav-item cursor-pointer tj-leftsidebar-icon-items"
+            tabIndex="0"
+            role="button"
+            aria-label="Open notifications"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.currentTarget.click();
+              }
+            }}
+          >
             <SolidIcon data-cy="notifications-icon" name="notification" fill="var(--slate8)" />
             {commentNotifications?.length !== 0 && <span className="notification-center-badge badge bg-red" />}
           </div>

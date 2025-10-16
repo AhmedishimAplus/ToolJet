@@ -146,7 +146,19 @@ function BaseSettingsMenu({
 
   return (
     <OverlayTrigger onToggle={setShowOverlay} rootClose={true} trigger="click" placement="top" overlay={getOverlay()}>
-      <div className={cx('settings-nav-item cursor-pointer', { active: showOverlay })} data-cy="settings-icon">
+      <div
+        className={cx('settings-nav-item cursor-pointer', { active: showOverlay })}
+        data-cy="settings-icon"
+        tabIndex="0"
+        role="button"
+        aria-label="Open settings menu"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.currentTarget.click();
+          }
+        }}
+      >
         <div className="d-xl-block">
           <SolidIcon name="settings" fill={showOverlay ? '#3E63DD' : 'var(--slate8)'} width={28} />
         </div>

@@ -151,8 +151,7 @@ export default function AppCard({
           <button
             type="button"
             className={cx(
-              ` launch-button tj-text-xsm ${
-                app?.current_version_id === null || app?.is_maintenance_on ? 'tj-disabled-btn ' : 'tj-tertiary-btn'
+              ` launch-button tj-text-xsm ${app?.current_version_id === null || app?.is_maintenance_on ? 'tj-disabled-btn ' : 'tj-tertiary-btn'
               }`
             )}
             disabled={app?.current_version_id === null || app?.is_maintenance_on}
@@ -174,8 +173,8 @@ export default function AppCard({
                 app?.current_version_id === null || app?.is_maintenance_on
                   ? '#4C5155'
                   : darkMode
-                  ? '#FDFDFE'
-                  : '#11181C'
+                    ? '#FDFDFE'
+                    : '#11181C'
               }
             />
 
@@ -213,7 +212,23 @@ export default function AppCard({
       placement="bottom"
       show={appType === 'module' && props.basicPlan}
     >
-      <div className="card homepage-app-card card--clickable" ref={cardRef}>
+      <div
+        className="card homepage-app-card card--clickable app-card"
+        ref={cardRef}
+        tabIndex="0"
+        role="button"
+        aria-label={`App: ${app?.name}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (canUpdate || appType === 'module') {
+              navigate(getPrivateRoute('editor', {
+                slug: isValidSlug(app.slug) ? app.slug : app.id,
+              }));
+            }
+          }
+        }}
+      >
         <div
           className={appType === 'module' && props.basicPlan ? 'disabled-module' : ''}
           key={app?.id}
