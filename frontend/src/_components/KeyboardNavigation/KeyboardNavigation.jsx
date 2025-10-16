@@ -7,10 +7,18 @@ const KeyboardNavigation = () => {
     const [isInputMode, setIsInputMode] = useState(false); // Track if we're in input typing mode
     const [currentInputElement, setCurrentInputElement] = useState(null); // Track current input
     const [expandedCard, setExpandedCard] = useState(null); // Track which card is expanded for button navigation
+    const [isMenuOpen, setIsMenuOpen] = useState(false); // Track if 3-dots menu is open for navigation
 
     // Get all focusable elements on the page in logical order
     const getFocusableElements = useCallback(() => {
         const elements = [];
+
+        // If menu is open, only return menu items for navigation (highest priority)
+        if (isMenuOpen) {
+            const menuItems = getMenuItems();
+            console.log('Menu is open, returning only menu items:', menuItems.length);
+            return menuItems;
+        }
 
         // If a card is expanded, only return its buttons for navigation
         if (expandedCard) {
@@ -61,7 +69,7 @@ const KeyboardNavigation = () => {
         console.log('Expanded card mode:', expandedCard ? 'LOCKED to card buttons' : 'NORMAL navigation');
 
         return elements;
-    }, [isElementVisible, expandedCard, getCardButtons]);
+    }, [isElementVisible, expandedCard, getCardButtons, isMenuOpen, getMenuItems]);
 
     // Helper function to check if element is visible
     const isElementVisible = useCallback((el) => {
@@ -87,6 +95,15 @@ const KeyboardNavigation = () => {
         return element && (
             element.classList.contains('homepage-app-card') ||
             element.classList.contains('app-card')
+        );
+    }, []);
+
+    // Check if element is a menu button (3-dots)
+    const isMenuButton = useCallback((element) => {
+        return element && (
+            element.classList.contains('menu-ico') ||
+            element.classList.contains('menu-icon--trigger') ||
+            element.getAttribute('data-cy') === 'app-card-menu-icon'
         );
     }, []);
 
@@ -146,6 +163,30 @@ const KeyboardNavigation = () => {
         console.log('=== End detection ===');
 
         return buttons;
+    }, [isElementVisible]);
+
+    // Get menu items for menu navigation
+    const getMenuItems = useCallback(() => {
+        // Look for the menu popover
+        const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
+        if (!menuPopover || !isElementVisible(menuPopover)) {
+            console.log('Menu popover not found or not visible');
+            return [];
+        }
+
+        // Get all focusable items within the menu
+        const menuItems = Array.from(menuPopover.querySelectorAll('button, a, [role="menuitem"], .dropdown-item'))
+            .filter(item => isElementVisible(item));
+
+        console.log('=== Menu items detection ===');
+        console.log('Menu popover found:', menuPopover.className);
+        console.log('Menu items found:', menuItems.length);
+        menuItems.forEach((item, index) => {
+            console.log(`${index + 1}. ${item.tagName}.${item.className} - "${item.textContent?.trim().substring(0, 30)}"`);
+        });
+        console.log('=== End menu detection ===');
+
+        return menuItems;
     }, [isElementVisible]);
 
     // Make card buttons keyboard focusable
@@ -309,24 +350,60 @@ const KeyboardNavigation = () => {
                     }, 200); // Slightly longer delay to ensure CSS transition and tabindex setup
                 }
             }
+        } else if (isMenuButton(activeElement)) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Click the menu button to open the menu
+            activeElement.click();
+
+            console.log('Menu button clicked, waiting for menu to open...');
+
+            // Set menu open state and focus first menu item
+            setIsMenuOpen(true);
+
+            // Wait for menu to render, then focus first item
+            setTimeout(() => {
+                const menuItems = getMenuItems();
+                if (menuItems.length > 0) {
+                    menuItems[0].focus();
+                    console.log('Focused on first menu item:', menuItems[0]);
+                } else {
+                    console.log('No menu items found after opening menu');
+                }
+            }, 300); // Longer delay to ensure menu renders
         } else if (activeElement) {
             e.preventDefault();
             // Activate non-input elements (including card buttons)
             activeElement.click();
         }
-    }, [isInputElement, isInputMode, isAppCard, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability]);
+    }, [isInputElement, isInputMode, isAppCard, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, getMenuItems]);
 
     // Global keydown handler to intercept card keyboard events before they reach the card's handler
     useEffect(() => {
         const handleGlobalKeyDown = (e) => {
-            // Only handle Enter and Space keys on app cards
-            if ((e.key === 'Enter' || e.key === ' ') && isAppCard(document.activeElement) && !isInputMode) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
+            const activeElement = document.activeElement;
 
-                // Call our handleEnter function
-                handleEnter(e);
+            // Handle Enter and Space keys on:
+            // 1. App cards themselves
+            // 2. Menu buttons (3-dots)
+            // 3. Other card buttons when card is expanded
+            if ((e.key === 'Enter' || e.key === ' ') && !isInputMode) {
+                const shouldIntercept =
+                    isAppCard(activeElement) ||
+                    isMenuButton(activeElement) ||
+                    (expandedCard && expandedCard.contains(activeElement));
+
+                if (shouldIntercept) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+
+                    console.log('Intercepted keydown on:', activeElement.tagName, activeElement.className);
+
+                    // Call our handleEnter function
+                    handleEnter(e);
+                }
             }
         };
 
@@ -336,7 +413,7 @@ const KeyboardNavigation = () => {
         return () => {
             document.removeEventListener('keydown', handleGlobalKeyDown, true);
         };
-    }, [handleEnter, isAppCard, isInputMode]);
+    }, [handleEnter, isAppCard, isInputMode, isMenuButton, expandedCard]);
 
     // Prevent input focus on hover - override default behavior
     useEffect(() => {
@@ -362,6 +439,38 @@ const KeyboardNavigation = () => {
             document.removeEventListener('focus', preventInputHoverFocus, true);
         };
     }, [isInputElement, isInputMode]);
+
+    // Watch for menu visibility changes
+    useEffect(() => {
+        if (!isMenuOpen) return;
+
+        const checkMenuVisibility = () => {
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
+            if (!menuPopover || !isElementVisible(menuPopover)) {
+                console.log('Menu no longer visible, closing menu state');
+                setIsMenuOpen(false);
+            }
+        };
+
+        // Check periodically if menu is still visible
+        const interval = setInterval(checkMenuVisibility, 200);
+
+        // Also listen for clicks outside to close menu
+        const handleClickOutside = (e) => {
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
+            if (menuPopover && !menuPopover.contains(e.target)) {
+                console.log('Clicked outside menu, closing menu state');
+                setIsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside, true);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('click', handleClickOutside, true);
+        };
+    }, [isMenuOpen, isElementVisible]);
 
     // Arrow key and tab navigation - only work when NOT in input mode
     useHotkeys('down', (e) => {
@@ -403,17 +512,37 @@ const KeyboardNavigation = () => {
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
-    // ESC key to collapse expanded cards
+    // ESC key to collapse expanded cards and close menus (hierarchical)
     useHotkeys('escape', (e) => {
-        if (!isInputMode && expandedCard) {
+        if (!isInputMode) {
             e.preventDefault();
-            const cardToFocus = expandedCard; // Store reference before clearing
-            resetCardButtonsFocusability(cardToFocus);
-            cardToFocus.classList.remove('keyboard-expanded');
-            setExpandedCard(null);
-            // Focus back on the card
-            cardToFocus.focus();
-            console.log('Card collapsed, focus returned to card');
+
+            // Priority 1: If menu is open, close menu and return to card navigation
+            if (isMenuOpen) {
+                setIsMenuOpen(false);
+                console.log('Menu closed, returning to card button navigation');
+
+                // Focus back on the menu button (3-dots) in the expanded card
+                if (expandedCard) {
+                    const menuButton = expandedCard.querySelector('.menu-ico, .menu-icon--trigger');
+                    if (menuButton) {
+                        setTimeout(() => {
+                            menuButton.focus();
+                            console.log('Focused back on menu button');
+                        }, 100);
+                    }
+                }
+            }
+            // Priority 2: If card is expanded (and no menu), collapse card
+            else if (expandedCard) {
+                const cardToFocus = expandedCard; // Store reference before clearing
+                resetCardButtonsFocusability(cardToFocus);
+                cardToFocus.classList.remove('keyboard-expanded');
+                setExpandedCard(null);
+                // Focus back on the card
+                cardToFocus.focus();
+                console.log('Card collapsed, focus returned to card');
+            }
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
@@ -464,8 +593,10 @@ const KeyboardNavigation = () => {
             <div className="keyboard-navigation-hint visible">
                 {isInputMode ? (
                     '📝 Input Mode • Enter to Exit'
+                ) : isMenuOpen ? (
+                    '📋 Menu Open • ↑↓ Navigate Items • Enter Activate • ESC Back to Card'
                 ) : expandedCard ? (
-                    '🎯 Card Expanded • ↑↓ Navigate Buttons • Enter Activate • ESC Collapse'
+                    '🎯 Card Expanded • ↑↓ Navigate Buttons • Enter Activate/Open Menu • ESC Collapse'
                 ) : (
                     '⌨️ Nav Mode • ↑↓ Navigate • Enter Expand Card'
                 )}
