@@ -13,7 +13,40 @@ const KeyboardNavigation = () => {
     const getFocusableElements = useCallback(() => {
         const elements = [];
 
-        // If menu is open, only return menu items for navigation (highest priority)
+        // Check if we're in a modal/dialog context first (highest priority)
+        const modalSelectors = [
+            '.modal.show', // Bootstrap modals
+            '.modal.fade.show',
+            '.modal-dialog',
+            '.dialog-overlay',
+            '.popover.show',
+            '.dropdown-menu.show',
+            '[role="dialog"]',
+            '[role="alertdialog"]'
+        ];
+
+        let activeModal = null;
+        for (const selector of modalSelectors) {
+            const modal = document.querySelector(selector);
+            if (modal && isElementVisible(modal)) {
+                activeModal = modal;
+                break;
+            }
+        }
+
+        // If we're in a modal, only focus elements within the modal
+        if (activeModal && !isMenuOpen) { // Don't override menu navigation
+            console.log('Modal detected, focusing only modal elements:', activeModal.className);
+
+            const modalElements = Array.from(activeModal.querySelectorAll(
+                'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]:not([disabled]), [tabindex]:not([tabindex="-1"]), [role="button"]:not([disabled])'
+            )).filter(el => isElementVisible(el));
+
+            console.log(`Modal elements found: ${modalElements.length}`);
+            return modalElements;
+        }
+
+        // If menu is open, only return menu items for navigation (second priority)
         if (isMenuOpen) {
             const menuItems = getMenuItems();
             console.log('Menu is open, returning only menu items:', menuItems.length);
@@ -691,7 +724,15 @@ const KeyboardNavigation = () => {
         if (!isInputMode) {
             e.preventDefault();
 
-            // Priority 1: If menu is open, close menu and return to card navigation
+            // Priority 1: If there's an open modal, try to close it
+            const modalCloseButtons = Array.from(document.querySelectorAll('.modal.show .btn-close, .modal.show .close, .modal.show button[data-dismiss="modal"], .modal.show [aria-label="Close"]'));
+            if (modalCloseButtons.length > 0) {
+                console.log('Closing modal with close button');
+                modalCloseButtons[0].click();
+                return;
+            }
+
+            // Priority 2: If menu is open, close menu and return to card navigation
             if (isMenuOpen) {
                 resetMenuItemsFocusability();
                 setIsMenuOpen(false);
@@ -708,7 +749,7 @@ const KeyboardNavigation = () => {
                     }
                 }
             }
-            // Priority 2: If card is expanded (and no menu), collapse card
+            // Priority 3: If card is expanded (and no menu), collapse card
             else if (expandedCard) {
                 const cardToFocus = expandedCard; // Store reference before clearing
                 resetCardButtonsFocusability(cardToFocus);

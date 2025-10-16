@@ -115,7 +115,7 @@ input[placeholder*="search"]:focus:not([disabled]):not(.input-mode-active) {
 }
 
 /* Fallback: ANY focused element that's not in input mode should have an outline */
-*:focus:not(.input-mode-active) {
+*:focus:not(.input-mode-active):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content) {
     outline: 2px solid #3E63DD !important;
     outline-offset: 2px !important;
     border-radius: 4px !important;
@@ -200,13 +200,24 @@ a:hover:not([disabled]) {
 }
 
 /* Override any conflicting hover styles */
-*:hover {
+*:hover:not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer) {
     position: relative;
 }
 
 /* Ensure outlines are visible above other elements */
-*:hover:not([disabled]) {
+*:hover:not([disabled]):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer) {
     z-index: 1;
+}
+
+/* Ensure modal backdrops are not affected by our styles */
+.modal-backdrop {
+    position: fixed !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    z-index: 1040 !important;
+}
+
+.modal {
+    z-index: 1050 !important;
 }
 
 /* Handle specific ToolJet components that might override styles */
@@ -301,7 +312,7 @@ a:hover:not([disabled]) {
 }
 
 /* Dark mode fallback: ANY focused element that's not in input mode should have an outline */
-.dark-theme *:focus:not(.input-mode-active) {
+.dark-theme *:focus:not(.input-mode-active):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content) {
     outline-color: #5B9BFF !important;
 }
 
