@@ -107,6 +107,25 @@ const KeyboardNavigation = () => {
         );
     }, []);
 
+    // Check if element is a menu item (within a popover menu)
+    const isMenuItem = useCallback((element) => {
+        if (!element) return false;
+
+        // Check if it's a span with role="button" inside a field div
+        if (element.tagName === 'SPAN' && element.getAttribute('role') === 'button') {
+            const fieldParent = element.closest('.field');
+            return fieldParent && fieldParent.classList.contains('field');
+        }
+
+        // Check if it's a field div itself within a popover
+        if (element.classList.contains('field')) {
+            const popover = element.closest('.popover, .popover-body, .popover-content');
+            return !!popover;
+        }
+
+        return false;
+    }, []);
+
     // Get card buttons for expanded card navigation
     const getCardButtons = useCallback((cardElement) => {
         if (!cardElement) return [];
@@ -167,22 +186,116 @@ const KeyboardNavigation = () => {
 
     // Get menu items for menu navigation
     const getMenuItems = useCallback(() => {
-        // Look for the menu popover
-        const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
-        if (!menuPopover || !isElementVisible(menuPopover)) {
-            console.log('Menu popover not found or not visible');
+        // Look for the menu popover with multiple possible selectors
+        const menuSelectors = [
+            '#popover-app-menu',
+            '.popover-app-menu',
+            '.app-menu-popover',
+            '.popover.bs-popover-bottom',
+            '.popover',
+            '[data-popper-placement]'
+        ];
+
+        let menuPopover = null;
+        for (const selector of menuSelectors) {
+            menuPopover = document.querySelector(selector);
+            if (menuPopover && isElementVisible(menuPopover)) {
+                break;
+            }
+        }
+
+        if (!menuPopover) {
+            console.log('Menu popover not found with any selector');
             return [];
         }
 
-        // Get all focusable items within the menu
-        const menuItems = Array.from(menuPopover.querySelectorAll('button, a, [role="menuitem"], .dropdown-item'))
-            .filter(item => isElementVisible(item));
+        // Get all possible menu items with expanded selectors, prioritizing specific selectors
+        const prioritizedSelectors = [
+            // Most specific - the actual clickable spans inside field divs
+            '.field.mb-3 span[role="button"]',
+            '.field span[role="button"]',
+            'div.field.mb-3 span[role="button"]',
+            'div.field span[role="button"]',
 
-        console.log('=== Menu items detection ===');
+            // Fallback to field containers if spans not found
+            '.field.mb-3',
+            '.field',
+            'div.field.mb-3',
+            'div.field',
+
+            // Fallback selectors
+            '.popover-body > div.field',
+            '.popover-body > .field',
+            '.popover-content > div.field',
+            '.popover-content > .field',
+            '.popover-body > div',
+            '.popover-content > div',
+
+            // Even broader selectors
+            'span[role="button"]',
+            'div[class*="cursor-pointer"]',
+            'span[class*="cursor-pointer"]',
+            '[role="menuitem"]',
+            '.dropdown-item',
+            '.menu-item',
+            '.app-menu-item',
+            'div[role="button"]',
+
+            // Last resort selectors
+            'button',
+            'a'
+        ]; const allPossibleItems = [];
+        prioritizedSelectors.forEach(selector => {
+            const items = Array.from(menuPopover.querySelectorAll(selector));
+            items.forEach(item => {
+                if (!allPossibleItems.includes(item) && isElementVisible(item)) {
+                    allPossibleItems.push(item);
+                }
+            });
+        });
+
+        // Filter to get actual clickable menu items
+        const menuItems = allPossibleItems.filter(item => {
+            const text = item.textContent?.trim();
+
+            // Must have meaningful text content
+            if (!text || text.length === 0 || text === '×') {
+                return false;
+            }
+
+            // If it has .field class, it's likely a menu item - include it
+            if (item.classList.contains('field')) {
+                return true;
+            }
+
+            // For other elements, apply stricter filtering
+            // Exclude very large containers (likely parent elements)
+            const rect = item.getBoundingClientRect();
+            if (rect.height > 100) { // Increased threshold
+                return false;
+            }
+
+            // Must be a direct clickable element (not a container with many children)
+            const clickableChildren = item.querySelectorAll('button, a, [role="button"], [role="menuitem"]');
+            if (clickableChildren.length > 2) { // Relaxed threshold
+                return false; // Likely a container, not the item itself
+            }
+
+            return true;
+        }); console.log('=== Menu items detection ===');
         console.log('Menu popover found:', menuPopover.className);
-        console.log('Menu items found:', menuItems.length);
+        console.log('Menu popover dimensions:', menuPopover.getBoundingClientRect());
+        console.log('All possible items found:', allPossibleItems.length);
+        console.log('Filtered menu items found:', menuItems.length);
+
+        allPossibleItems.forEach((item, index) => {
+            const rect = item.getBoundingClientRect();
+            console.log(`All ${index + 1}. ${item.tagName}.${item.className} - "${item.textContent?.trim().substring(0, 30)}" - ${rect.width}x${rect.height}`);
+        });
+
         menuItems.forEach((item, index) => {
-            console.log(`${index + 1}. ${item.tagName}.${item.className} - "${item.textContent?.trim().substring(0, 30)}"`);
+            const rect = item.getBoundingClientRect();
+            console.log(`Final ${index + 1}. ${item.tagName}.${item.className} - "${item.textContent?.trim().substring(0, 30)}" - ${rect.width}x${rect.height}`);
         });
         console.log('=== End menu detection ===');
 
@@ -232,6 +345,37 @@ const KeyboardNavigation = () => {
             }
         });
         console.log('Reset card button focusability');
+    }, []);
+
+    // Make menu items keyboard focusable
+    const makeMenuItemsFocusable = useCallback(() => {
+        const menuItems = getMenuItems();
+
+        menuItems.forEach((item, index) => {
+            if (!item.hasAttribute('tabindex')) {
+                item.setAttribute('tabindex', '0');
+
+                // Add role if it's a div or span
+                if (['DIV', 'SPAN'].includes(item.tagName) && !item.hasAttribute('role')) {
+                    item.setAttribute('role', 'menuitem');
+                }
+
+                console.log(`Made menu item ${index + 1} focusable:`, item.textContent?.trim());
+            }
+        });
+
+        return menuItems;
+    }, [getMenuItems]);
+
+    // Remove custom tabindex when menu closes
+    const resetMenuItemsFocusability = useCallback(() => {
+        // Find any elements with our custom menu attributes
+        const menuItems = document.querySelectorAll('[tabindex="0"][role="menuitem"]');
+        menuItems.forEach(item => {
+            item.removeAttribute('tabindex');
+            item.removeAttribute('role');
+        });
+        console.log('Reset menu items focusability');
     }, []);
 
     // Navigate to next focusable element
@@ -362,9 +506,9 @@ const KeyboardNavigation = () => {
             // Set menu open state and focus first menu item
             setIsMenuOpen(true);
 
-            // Wait for menu to render, then focus first item
+            // Wait for menu to render, then make items focusable and focus first item
             setTimeout(() => {
-                const menuItems = getMenuItems();
+                const menuItems = makeMenuItemsFocusable();
                 if (menuItems.length > 0) {
                     menuItems[0].focus();
                     console.log('Focused on first menu item:', menuItems[0]);
@@ -372,12 +516,40 @@ const KeyboardNavigation = () => {
                     console.log('No menu items found after opening menu');
                 }
             }, 300); // Longer delay to ensure menu renders
+        } else if (isMenuItem(activeElement)) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            console.log('Menu item activated:', activeElement);
+
+            // For span[role="button"] elements, click them directly
+            if (activeElement.tagName === 'SPAN' && activeElement.getAttribute('role') === 'button') {
+                activeElement.click();
+                console.log('Clicked span menu item directly');
+            }
+            // For field div elements, find and click the span[role="button"] child
+            else if (activeElement.classList.contains('field')) {
+                const clickableSpan = activeElement.querySelector('span[role="button"]');
+                if (clickableSpan) {
+                    clickableSpan.click();
+                    console.log('Found and clicked span inside field:', clickableSpan);
+                } else {
+                    // Fallback - click the field itself
+                    activeElement.click();
+                    console.log('No span found, clicked field directly');
+                }
+            }
+            // Fallback for other menu item types
+            else {
+                activeElement.click();
+                console.log('Clicked menu item fallback');
+            }
         } else if (activeElement) {
             e.preventDefault();
             // Activate non-input elements (including card buttons)
             activeElement.click();
         }
-    }, [isInputElement, isInputMode, isAppCard, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, getMenuItems]);
+    }, [isInputElement, isInputMode, isAppCard, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, isMenuItem, makeMenuItemsFocusable]);
 
     // Global keydown handler to intercept card keyboard events before they reach the card's handler
     useEffect(() => {
@@ -387,11 +559,13 @@ const KeyboardNavigation = () => {
             // Handle Enter and Space keys on:
             // 1. App cards themselves
             // 2. Menu buttons (3-dots)
-            // 3. Other card buttons when card is expanded
+            // 3. Menu items (within popovers)
+            // 4. Other card buttons when card is expanded
             if ((e.key === 'Enter' || e.key === ' ') && !isInputMode) {
                 const shouldIntercept =
                     isAppCard(activeElement) ||
                     isMenuButton(activeElement) ||
+                    isMenuItem(activeElement) ||
                     (expandedCard && expandedCard.contains(activeElement));
 
                 if (shouldIntercept) {
@@ -413,7 +587,7 @@ const KeyboardNavigation = () => {
         return () => {
             document.removeEventListener('keydown', handleGlobalKeyDown, true);
         };
-    }, [handleEnter, isAppCard, isInputMode, isMenuButton, expandedCard]);
+    }, [handleEnter, isAppCard, isInputMode, isMenuButton, isMenuItem, expandedCard]);
 
     // Prevent input focus on hover - override default behavior
     useEffect(() => {
@@ -519,6 +693,7 @@ const KeyboardNavigation = () => {
 
             // Priority 1: If menu is open, close menu and return to card navigation
             if (isMenuOpen) {
+                resetMenuItemsFocusability();
                 setIsMenuOpen(false);
                 console.log('Menu closed, returning to card button navigation');
 
