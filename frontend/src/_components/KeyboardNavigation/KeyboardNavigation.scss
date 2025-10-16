@@ -1,5 +1,14 @@
 /* Keyboard Navigation Styles */
 
+/* Keyboard Navigation Styles */
+
+/* Prevent input focus on hover when not in input mode */
+input:not(.input-mode-active):hover,
+textarea:not(.input-mode-active):hover,
+select:not(.input-mode-active):hover {
+    cursor: default !important;
+}
+
 /* Universal hover outlines for all interactive elements */
 button:hover:not([disabled]),
 input:hover:not([disabled]),
@@ -33,9 +42,51 @@ a:hover:not([disabled]),
     transition: all 0.2s ease-in-out !important;
 }
 
+/* Universal FOCUS outlines for all interactive elements (keyboard navigation) */
+button:focus:not([disabled]),
+input:focus:not([disabled]):not(.input-mode-active),
+select:focus:not([disabled]):not(.input-mode-active),
+textarea:focus:not([disabled]):not(.input-mode-active),
+a:focus:not([disabled]),
+[role="button"]:focus:not([disabled]),
+[tabindex]:focus:not([tabindex="-1"]):not([disabled]),
+.cursor-pointer:focus:not([disabled]),
+.btn:focus:not([disabled]),
+.tj-leftsidebar-icon-items:focus,
+.app-card:focus,
+.notification-center-nav-item:focus,
+.settings-nav-item:focus,
+.homepage-app-card:focus,
+.card--clickable:focus,
+.dropdown-item:focus,
+.list-group-item:focus,
+.nav-link:focus,
+.btn-outline:focus,
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-tertiary:focus,
+.tj-primary-btn:focus,
+.tj-tertiary-btn:focus,
+.launch-button:focus,
+.edit-button:focus {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
 /* Special hover styles for app cards */
 .app-card:hover,
 .homepage-app-card:hover {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.1) !important;
+}
+
+/* Special FOCUS styles for app cards */
+.app-card:focus,
+.homepage-app-card:focus {
     outline: 2px solid #3E63DD !important;
     outline-offset: 2px !important;
     border-radius: 8px !important;
@@ -49,6 +100,35 @@ select:hover:not([disabled]) {
     outline: 2px solid #3E63DD !important;
     outline-offset: 1px !important;
     border-radius: 4px !important;
+}
+
+/* FOCUS styles for form inputs (keyboard navigation) */
+input:focus:not([disabled]):not(.input-mode-active),
+textarea:focus:not([disabled]):not(.input-mode-active),
+select:focus:not([disabled]):not(.input-mode-active),
+.form-control:focus:not([disabled]):not(.input-mode-active),
+input[placeholder*="Search"]:focus:not([disabled]):not(.input-mode-active),
+input[placeholder*="search"]:focus:not([disabled]):not(.input-mode-active) {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 1px !important;
+    border-radius: 4px !important;
+}
+
+/* Fallback: ANY focused element that's not in input mode should have an outline */
+*:focus:not(.input-mode-active) {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+}
+
+/* Input mode active styling */
+input.input-mode-active,
+textarea.input-mode-active,
+select.input-mode-active {
+    outline: 3px solid #22c55e !important;
+    outline-offset: 1px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1) !important;
 }
 
 /* Hover styles for links */
@@ -171,14 +251,58 @@ a:hover:not([disabled]) {
 .dark-theme .tj-primary-btn:hover,
 .dark-theme .tj-tertiary-btn:hover,
 .dark-theme .launch-button:hover,
-.dark-theme .edit-button:hover {
+.dark-theme .edit-button:hover,
+/* Dark mode FOCUS styles for keyboard navigation */
+.dark-theme button:focus:not([disabled]),
+.dark-theme input:focus:not([disabled]):not(.input-mode-active),
+.dark-theme select:focus:not([disabled]):not(.input-mode-active),
+.dark-theme textarea:focus:not([disabled]):not(.input-mode-active),
+.dark-theme a:focus:not([disabled]),
+.dark-theme [role="button"]:focus:not([disabled]),
+.dark-theme [tabindex]:focus:not([tabindex="-1"]):not([disabled]),
+.dark-theme .cursor-pointer:focus:not([disabled]),
+.dark-theme .btn:focus:not([disabled]),
+.dark-theme .tj-leftsidebar-icon-items:focus,
+.dark-theme .app-card:focus,
+.dark-theme .notification-center-nav-item:focus,
+.dark-theme .settings-nav-item:focus,
+.dark-theme .homepage-app-card:focus,
+.dark-theme .card--clickable:focus,
+.dark-theme .dropdown-item:focus,
+.dark-theme .list-group-item:focus,
+.dark-theme .nav-link:focus,
+.dark-theme .btn-outline:focus,
+.dark-theme .btn-primary:focus,
+.dark-theme .btn-secondary:focus,
+.dark-theme .btn-tertiary:focus,
+.dark-theme .tj-primary-btn:focus,
+.dark-theme .tj-tertiary-btn:focus,
+.dark-theme .launch-button:focus,
+.dark-theme .edit-button:focus {
     outline-color: #5B9BFF !important;
 }
 
 .dark-theme .app-card:hover,
-.dark-theme .homepage-app-card:hover {
+.dark-theme .homepage-app-card:hover,
+.dark-theme .app-card:focus,
+.dark-theme .homepage-app-card:focus {
     outline-color: #5B9BFF !important;
     box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.1) !important;
+}
+
+/* Dark mode input mode active styling */
+.dark-theme input.input-mode-active,
+.dark-theme textarea.input-mode-active,
+.dark-theme select.input-mode-active {
+    outline: 3px solid #4ade80 !important;
+    outline-offset: 1px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.1) !important;
+}
+
+/* Dark mode fallback: ANY focused element that's not in input mode should have an outline */
+.dark-theme *:focus:not(.input-mode-active) {
+    outline-color: #5B9BFF !important;
 }
 
 /* Dark mode focus styles */
@@ -191,4 +315,48 @@ a:hover:not([disabled]) {
 
 .dark-theme .app-card:focus {
     box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.1);
+}
+
+/* Card button expansion on keyboard focus (mirrors hover behavior) */
+.homepage-app-card:focus,
+.homepage-app-card.keyboard-expanded {
+    .home-app-card-header {
+        margin-bottom: 12px;
+
+        .menu-ico {
+            visibility: visible !important;
+        }
+    }
+
+    .app-creation-time-container {
+        margin-bottom: 0px;
+    }
+
+    .app-card-name {
+        margin-bottom: 0px;
+    }
+
+    .appcard-buttons-wrap {
+        display: flex;
+        visibility: visible;
+        opacity: 1;
+        padding: 0px;
+        gap: 12px;
+        width: 240px;
+        height: 28px;
+        flex-direction: row;
+        transition: all 0.15s ease-in-out;
+        will-change: opacity, visibility;
+
+        div {
+            a {
+                text-decoration: none;
+            }
+        }
+    }
+
+    .app-icon-main {
+        width: 36px;
+        height: 36px;
+    }
 }
