@@ -127,9 +127,8 @@ export const Folders = function Folders({
     const search = `${name ? `?folder=${name}` : ''}`;
     navigate(
       {
-        pathname: `/${getWorkspaceId()}${
-          appType === 'workflow' ? '/workflows' : appType === 'module' ? '/modules' : ''
-        }`,
+        pathname: `/${getWorkspaceId()}${appType === 'workflow' ? '/workflows' : appType === 'module' ? '/modules' : ''
+          }`,
         search,
       },
       { replace: true }
@@ -320,13 +319,14 @@ export const Folders = function Folders({
             style={{ height: '32px' }}
             onClick={() => handleFolderChange({})}
             data-cy="all-applications-link"
+            tabIndex="0"
           >
             {appType === 'module'
               ? 'All modules'
               : t(
-                  `${appType === 'workflow' ? 'workflowsDashboard' : 'homePage'}.foldersSection.allApplications`,
-                  'All apps'
-                )}
+                `${appType === 'workflow' ? 'workflowsDashboard' : 'homePage'}.foldersSection.allApplications`,
+                'All apps'
+              )}
           </a>
         </div>
       )}
@@ -347,6 +347,7 @@ export const Folders = function Folders({
               handleFolderChange(folder);
             }}
             data-cy={`${folder.name.toLowerCase().replace(/\s+/g, '-')}-list-card`}
+            tabIndex="0"
           >
             <ToolTip message={folder.name}>
               <div

@@ -38,7 +38,18 @@ const KeyboardNavigation = () => {
             ul li,
             .icon-grid li,
             .icon-picker li,
-            .keyboard-navigable
+            .keyboard-navigable,
+            .folder-list-group-item,
+            .list-group-item,
+            .all-apps-link,
+            [data-cy*="list-card"],
+            [data-cy*="folder"],
+            [data-cy*="app"],
+            [data-testid*="folder"],
+            [data-testid*="application"],
+            .application-card,
+            .folder-card,
+            .app-list-item
         `))
             .filter(el => {
                 const style = window.getComputedStyle(el);
@@ -137,17 +148,31 @@ const KeyboardNavigation = () => {
         const modal = document.querySelector('.modal.show');
         if (!modal) return false;
 
-        // Look for grid containers
-        const gridContainer = modal.querySelector('ul, .icon-grid, .grid, [class*="grid"]');
+        // Look for grid containers (including file/folder lists)
+        const gridContainer = modal.querySelector(`
+            ul, .icon-grid, .grid, [class*="grid"],
+            .folder-list, .app-list, .list-group,
+            [data-testid*="applicationfoldersList"],
+            [data-testid*="applicationsList"]
+        `);
         if (!gridContainer) return false;
 
-        // Get all grid items
+        // Get all grid items (including file/folder list items)
         const gridItems = Array.from(gridContainer.querySelectorAll(`
             li, .icon-item, .grid-item, 
             div[role="button"], span[role="button"],
             [data-testid], [data-cy*="icon"],
             div[onclick], span[onclick], li[onclick],
-            .keyboard-navigable, [tabindex="0"]
+            .keyboard-navigable, [tabindex="0"],
+            .folder-list-group-item,
+            .list-group-item,
+            .all-apps-link,
+            [data-cy*="list-card"],
+            [data-cy*="folder"],
+            [data-cy*="app"],
+            .application-card,
+            .folder-card,
+            .app-list-item
         `)).filter(el => {
             const style = window.getComputedStyle(el);
             const rect = el.getBoundingClientRect();
@@ -169,40 +194,64 @@ const KeyboardNavigation = () => {
             return true;
         }
 
-        // Calculate grid dimensions
-        const firstItemRect = gridItems[0].getBoundingClientRect();
-        const columnsCount = gridItems.filter(item => {
-            const rect = item.getBoundingClientRect();
-            return Math.abs(rect.top - firstItemRect.top) < 10; // Same row
-        }).length;
+        // For file/folder lists, treat as vertical list (1 column)
+        const isFileList = gridContainer.querySelector('.folder-list-group-item, .list-group-item, .all-apps-link');
+        let columnsCount = 1; // Default for vertical lists
+
+        if (!isFileList) {
+            // Calculate grid dimensions for actual grids (like icon grids)
+            const firstItemRect = gridItems[0].getBoundingClientRect();
+            columnsCount = gridItems.filter(item => {
+                const rect = item.getBoundingClientRect();
+                return Math.abs(rect.top - firstItemRect.top) < 10; // Same row
+            }).length;
+        }
 
         let targetIndex = currentIndex;
 
         switch (direction) {
             case 'right':
+                if (isFileList) {
+                    // For file lists, right arrow doesn't navigate
+                    return false;
+                }
                 targetIndex = currentIndex + 1;
                 if (targetIndex >= gridItems.length) targetIndex = 0; // Wrap to start
                 break;
             case 'left':
+                if (isFileList) {
+                    // For file lists, left arrow doesn't navigate
+                    return false;
+                }
                 targetIndex = currentIndex - 1;
                 if (targetIndex < 0) targetIndex = gridItems.length - 1; // Wrap to end
                 break;
             case 'down':
                 targetIndex = currentIndex + columnsCount;
                 if (targetIndex >= gridItems.length) {
-                    // Go to first item in same column
-                    targetIndex = currentIndex % columnsCount;
+                    if (isFileList) {
+                        // For file lists, wrap to first item
+                        targetIndex = 0;
+                    } else {
+                        // For grids, go to first item in same column
+                        targetIndex = currentIndex % columnsCount;
+                    }
                 }
                 break;
             case 'up':
                 targetIndex = currentIndex - columnsCount;
                 if (targetIndex < 0) {
-                    // Go to last row, same column
-                    const column = currentIndex % columnsCount;
-                    const rows = Math.ceil(gridItems.length / columnsCount);
-                    targetIndex = ((rows - 1) * columnsCount) + column;
-                    if (targetIndex >= gridItems.length) {
-                        targetIndex = ((rows - 2) * columnsCount) + column;
+                    if (isFileList) {
+                        // For file lists, wrap to last item
+                        targetIndex = gridItems.length - 1;
+                    } else {
+                        // For grids, go to last row, same column
+                        const column = currentIndex % columnsCount;
+                        const rows = Math.ceil(gridItems.length / columnsCount);
+                        targetIndex = ((rows - 1) * columnsCount) + column;
+                        if (targetIndex >= gridItems.length) {
+                            targetIndex = ((rows - 2) * columnsCount) + column;
+                        }
                     }
                 }
                 break;
@@ -225,6 +274,148 @@ const KeyboardNavigation = () => {
 
         return false;
     }, []);
+
+    // Helper function for main page grid/list navigation
+    const navigateInMainPage = useCallback((direction) => {
+        // Don't interfere if we're in a modal
+        if (isInModal()) return false;
+
+        // Check if we're currently focused on a file/folder list item
+        const activeElement = document.activeElement;
+        const isInFileList = activeElement && (
+            activeElement.classList.contains('folder-list-group-item') ||
+            activeElement.classList.contains('list-group-item') ||
+            activeElement.classList.contains('all-apps-link') ||
+            activeElement.closest('.tj-folders, .folders-sidebar')
+        );
+
+        if (isInFileList) {
+            // Find the file list container
+            const listContainer = activeElement.closest('.tj-folders, .folders-sidebar') ||
+                document.querySelector('.tj-folders, .folders-sidebar, .folder-list');
+
+            if (listContainer) {
+                const listItems = Array.from(listContainer.querySelectorAll(`
+                    .folder-list-group-item,
+                    .list-group-item,
+                    .all-apps-link,
+                    [data-cy*="folder"],
+                    [data-cy*="app"],
+                    .keyboard-navigable
+                `)).filter(el => {
+                    const style = window.getComputedStyle(el);
+                    const rect = el.getBoundingClientRect();
+                    return style.display !== 'none' && style.visibility !== 'hidden' &&
+                        style.opacity !== '0' && rect.width > 0 && rect.height > 0;
+                });
+
+                if (listItems.length === 0) return false;
+
+                const currentIndex = listItems.indexOf(activeElement);
+                if (currentIndex === -1) return false;
+
+                let targetIndex = currentIndex;
+
+                switch (direction) {
+                    case 'down':
+                        targetIndex = currentIndex + 1;
+                        if (targetIndex >= listItems.length) targetIndex = 0; // Wrap to start
+                        break;
+                    case 'up':
+                        targetIndex = currentIndex - 1;
+                        if (targetIndex < 0) targetIndex = listItems.length - 1; // Wrap to end
+                        break;
+                    case 'left':
+                    case 'right':
+                        // Don't handle left/right in file lists
+                        return false;
+                }
+
+                if (listItems[targetIndex]) {
+                    listItems[targetIndex].focus();
+
+                    // Make sure it's focusable
+                    if (!listItems[targetIndex].hasAttribute('tabindex')) {
+                        listItems[targetIndex].setAttribute('tabindex', '0');
+                    }
+
+                    // Add visual focus styling
+                    listItems.forEach(item => item.classList.remove('keyboard-focused'));
+                    listItems[targetIndex].classList.add('keyboard-focused');
+
+                    return true;
+                }
+            }
+        }
+
+        // Check if we're in the app cards grid
+        const isInAppGrid = activeElement && activeElement.classList.contains('homepage-app-card');
+
+        if (isInAppGrid) {
+            const appCards = Array.from(document.querySelectorAll('.homepage-app-card')).filter(el => {
+                const style = window.getComputedStyle(el);
+                const rect = el.getBoundingClientRect();
+                return style.display !== 'none' && style.visibility !== 'hidden' &&
+                    style.opacity !== '0' && rect.width > 0 && rect.height > 0;
+            });
+
+            if (appCards.length === 0) return false;
+
+            const currentIndex = appCards.indexOf(activeElement);
+            if (currentIndex === -1) return false;
+
+            // Calculate grid columns for app cards
+            const firstCardRect = appCards[0].getBoundingClientRect();
+            const columnsCount = appCards.filter(card => {
+                const rect = card.getBoundingClientRect();
+                return Math.abs(rect.top - firstCardRect.top) < 10; // Same row
+            }).length;
+
+            let targetIndex = currentIndex;
+
+            switch (direction) {
+                case 'right':
+                    targetIndex = currentIndex + 1;
+                    if (targetIndex >= appCards.length) targetIndex = 0; // Wrap to start
+                    break;
+                case 'left':
+                    targetIndex = currentIndex - 1;
+                    if (targetIndex < 0) targetIndex = appCards.length - 1; // Wrap to end
+                    break;
+                case 'down':
+                    targetIndex = currentIndex + columnsCount;
+                    if (targetIndex >= appCards.length) {
+                        // Go to first item in same column
+                        targetIndex = currentIndex % columnsCount;
+                    }
+                    break;
+                case 'up':
+                    targetIndex = currentIndex - columnsCount;
+                    if (targetIndex < 0) {
+                        // Go to last row, same column
+                        const column = currentIndex % columnsCount;
+                        const rows = Math.ceil(appCards.length / columnsCount);
+                        targetIndex = ((rows - 1) * columnsCount) + column;
+                        if (targetIndex >= appCards.length) {
+                            targetIndex = ((rows - 2) * columnsCount) + column;
+                        }
+                    }
+                    break;
+            }
+
+            if (appCards[targetIndex]) {
+                appCards[targetIndex].focus();
+
+                // Add visual focus styling
+                appCards.forEach(card => card.classList.remove('keyboard-focused'));
+                appCards[targetIndex].classList.add('keyboard-focused');
+
+                return true;
+            }
+        }
+
+        return false;
+    }, [isInModal]);
 
     // Helper function to check if we're currently in a modal
     const isInModal = useCallback(() => {
@@ -338,18 +529,34 @@ const KeyboardNavigation = () => {
             }
         });
 
-        // 2. Search input
+        // 2. File/Folder list items in sidebar (if any)
+        const fileListItems = Array.from(document.querySelectorAll(`
+            .folder-list-group-item,
+            .list-group-item,
+            .all-apps-link,
+            [data-cy*="list-card"],
+            [data-cy*="folder"],
+            [data-cy*="app"],
+            .application-card,
+            .folder-card,
+            .app-list-item,
+            .tj-folders li,
+            .folders-sidebar li
+        `)).filter(el => isElementVisible(el) && el.hasAttribute('tabindex'));
+        elements.push(...fileListItems);
+
+        // 3. Search input
         const searchInput = document.querySelector('input[placeholder*="Search"], input[placeholder*="search"], .form-control[type="text"]');
         if (searchInput && isElementVisible(searchInput)) {
             elements.push(searchInput);
         }
 
-        // 3. App cards - only the cards themselves (not their buttons)
+        // 4. App cards - only the cards themselves (not their buttons)
         const appCards = Array.from(document.querySelectorAll('.app-card'))
             .filter(el => isElementVisible(el) && el.classList.contains('homepage-app-card'));
         elements.push(...appCards);
 
-        // 4. Other buttons and interactive elements (excluding already added ones)
+        // 5. Other buttons and interactive elements (excluding already added ones)
         const otherElements = Array.from(document.querySelectorAll('button:not([disabled]), a[href]:not([disabled])'))
             .filter(el => isElementVisible(el) && !elements.includes(el));
         elements.push(...otherElements);
@@ -948,7 +1155,10 @@ const KeyboardNavigation = () => {
 
         if (!isInputMode) {
             e.preventDefault();
-            navigateToNext();
+            // Try main page grid/list navigation first, then fall back to normal navigation
+            if (!navigateInMainPage('down')) {
+                navigateToNext();
+            }
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
@@ -967,7 +1177,10 @@ const KeyboardNavigation = () => {
 
         if (!isInputMode) {
             e.preventDefault();
-            navigateToPrevious();
+            // Try main page grid/list navigation first, then fall back to normal navigation
+            if (!navigateInMainPage('up')) {
+                navigateToPrevious();
+            }
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
@@ -987,7 +1200,10 @@ const KeyboardNavigation = () => {
 
         if (!isInputMode) {
             e.preventDefault();
-            navigateToPrevious();
+            // Try main page grid navigation first, then fall back to normal navigation
+            if (!navigateInMainPage('left')) {
+                navigateToPrevious();
+            }
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
@@ -1006,7 +1222,10 @@ const KeyboardNavigation = () => {
 
         if (!isInputMode) {
             e.preventDefault();
-            navigateToNext();
+            // Try main page grid navigation first, then fall back to normal navigation
+            if (!navigateInMainPage('right')) {
+                navigateToNext();
+            }
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
@@ -1171,6 +1390,37 @@ const KeyboardNavigation = () => {
                     item.classList.add('keyboard-navigable');
                 });
             });
+
+            // Make file/folder list items focusable (for dynamic lists)
+            const fileListItems = modal.querySelectorAll(`
+                .folder-list-group-item,
+                .list-group-item,
+                .all-apps-link,
+                [data-cy*="list-card"],
+                [data-cy*="folder"],
+                [data-cy*="app"],
+                [data-testid*="folder"],
+                [data-testid*="application"],
+                .application-card,
+                .folder-card,
+                .app-list-item
+            `);
+
+            fileListItems.forEach(item => {
+                // Skip items that are already focusable or disabled
+                if (item.hasAttribute('tabindex') || item.hasAttribute('disabled')) return;
+
+                // Make sure the item is visible and interactive
+                const style = window.getComputedStyle(item);
+                const rect = item.getBoundingClientRect();
+
+                if (style.display !== 'none' && style.visibility !== 'hidden' &&
+                    style.opacity !== '0' && rect.width > 0 && rect.height > 0) {
+
+                    item.setAttribute('tabindex', '0');
+                    item.classList.add('keyboard-navigable');
+                }
+            });
         };
 
         // Set up MutationObserver to watch for modal changes
@@ -1190,7 +1440,11 @@ const KeyboardNavigation = () => {
                         if (node.nodeType === 1) { // Element node
                             if (node.classList?.contains('modal') ||
                                 node.querySelector?.('.modal') ||
-                                node.closest?.('.modal')) {
+                                node.closest?.('.modal') ||
+                                // Check for dynamic list items being added
+                                node.classList?.contains('folder-list-group-item') ||
+                                node.classList?.contains('list-group-item') ||
+                                node.querySelector?.('.folder-list-group-item, .list-group-item')) {
                                 modalChanged = true;
                             }
                         }
@@ -1220,7 +1474,107 @@ const KeyboardNavigation = () => {
         };
     }, []);
 
-    // Show keyboard navigation hint
+    // Make main page file/folder list items focusable
+    useEffect(() => {
+        const makeMainPageElementsFocusable = () => {
+            // Don't interfere if we're in a modal
+            if (isInModal()) return;
+
+            // Make file/folder list items focusable in sidebar
+            const fileListItems = document.querySelectorAll(`
+                .folder-list-group-item,
+                .list-group-item,
+                .all-apps-link,
+                [data-cy*="list-card"],
+                [data-cy*="folder"],
+                [data-cy*="app"],
+                [data-testid*="folder"],
+                [data-testid*="application"],
+                .application-card,
+                .folder-card,
+                .app-list-item,
+                .tj-folders li,
+                .folders-sidebar li
+            `);
+
+            fileListItems.forEach(item => {
+                // Skip items that are already focusable or disabled
+                if (item.hasAttribute('tabindex') || item.hasAttribute('disabled')) return;
+
+                // Make sure the item is visible and interactive
+                const style = window.getComputedStyle(item);
+                const rect = item.getBoundingClientRect();
+
+                if (style.display !== 'none' && style.visibility !== 'hidden' &&
+                    style.opacity !== '0' && rect.width > 0 && rect.height > 0) {
+
+                    item.setAttribute('tabindex', '0');
+                    item.classList.add('keyboard-navigable');
+                }
+            });
+
+            // Make app cards focusable if they aren't already
+            const appCards = document.querySelectorAll('.homepage-app-card, .app-card');
+            appCards.forEach(card => {
+                if (!card.hasAttribute('tabindex')) {
+                    card.setAttribute('tabindex', '0');
+                    card.classList.add('keyboard-navigable');
+                }
+            });
+        };
+
+        // Set up MutationObserver to watch for dynamic content changes on main page
+        const mainPageObserver = new MutationObserver((mutations) => {
+            let contentChanged = false;
+
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) { // Element node
+                            // Check for dynamic list items or app cards being added
+                            if (node.classList?.contains('folder-list-group-item') ||
+                                node.classList?.contains('list-group-item') ||
+                                node.classList?.contains('homepage-app-card') ||
+                                node.classList?.contains('app-card') ||
+                                node.querySelector?.('.folder-list-group-item, .list-group-item, .homepage-app-card, .app-card')) {
+                                contentChanged = true;
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (contentChanged) {
+                // Delay to ensure content is fully rendered
+                setTimeout(makeMainPageElementsFocusable, 100);
+            }
+        });
+
+        // Start observing the main content areas
+        const sidebarContainer = document.querySelector('.tj-leftsidebar, .sidebar, .folders-sidebar');
+        const mainContainer = document.querySelector('.main-content, .homepage-content, .applications-container');
+
+        if (sidebarContainer) {
+            mainPageObserver.observe(sidebarContainer, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        if (mainContainer) {
+            mainPageObserver.observe(mainContainer, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        // Initial check for existing elements
+        makeMainPageElementsFocusable();
+
+        return () => {
+            mainPageObserver.disconnect();
+        };
+    }, [isInModal]);    // Show keyboard navigation hint
     return (
         <>
             <div className="keyboard-navigation-hint visible">

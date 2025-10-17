@@ -151,7 +151,12 @@ a:hover:not([disabled]) {
 .modal li.keyboard-focused,
 .modal .icon-item.keyboard-focused,
 .modal .grid-item.keyboard-focused,
-ul li.keyboard-focused {
+ul li.keyboard-focused,
+.folder-list-group-item.keyboard-focused,
+.list-group-item.keyboard-focused,
+.all-apps-link.keyboard-focused,
+.application-card.keyboard-focused,
+.folder-card.keyboard-focused {
     outline: 2px solid #3E63DD !important;
     outline-offset: 2px !important;
     border-radius: 4px !important;
@@ -162,12 +167,33 @@ ul li.keyboard-focused {
 
 /* Hover states for keyboard-navigable elements */
 .keyboard-navigable:hover,
-.modal ul li:hover {
+.modal ul li:hover,
+.folder-list-group-item:hover,
+.list-group-item:hover,
+.all-apps-link:hover,
+.application-card:hover,
+.folder-card:hover {
     outline: 2px solid #3E63DD !important;
     outline-offset: 2px !important;
     border-radius: 4px !important;
     background-color: rgba(62, 99, 221, 0.03) !important;
     transition: all 0.2s ease-in-out !important;
+}
+
+/* Focus states for file/folder list items */
+.folder-list-group-item:focus,
+.list-group-item:focus,
+.all-apps-link:focus,
+.application-card:focus,
+.folder-card:focus,
+[data-cy*="list-card"]:focus,
+[data-cy*="folder"]:focus,
+[data-cy*="app"]:focus {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+    background-color: rgba(62, 99, 221, 0.05) !important;
+    box-shadow: 0 0 0 3px rgba(62, 99, 221, 0.1) !important;
 }
 
 /* Add focus styles to app cards */
