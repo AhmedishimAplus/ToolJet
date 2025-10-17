@@ -26,17 +26,38 @@ const KeyboardNavigation = () => {
                 return aIndex - bIndex;
             });
 
+        if (focusableElements.length === 0) return;
+
         const currentIndex = focusableElements.indexOf(document.activeElement);
         let targetIndex;
 
         if (direction === 'next') {
-            targetIndex = (currentIndex + 1) % focusableElements.length;
+            // Focus trapping: if we're at the last element, go to first element  
+            targetIndex = currentIndex === focusableElements.length - 1 ? 0 : currentIndex + 1;
         } else {
-            targetIndex = currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
+            // Focus trapping: if we're at the first element, go to last element
+            targetIndex = currentIndex <= 0 ? focusableElements.length - 1 : currentIndex - 1;
         }
 
-        focusableElements[targetIndex]?.focus();
-    }, []);
+        const targetElement = focusableElements[targetIndex];
+        targetElement?.focus();
+
+        // Auto-enable input mode for inputs in modals
+        if (isInputElement(targetElement)) {
+            setIsInputMode(true);
+            setCurrentInputElement(targetElement);
+            targetElement.classList.add('input-mode-active');
+        } else {
+            // Exit input mode when focusing non-input elements
+            if (isInputMode) {
+                setIsInputMode(false);
+                setCurrentInputElement(null);
+                document.querySelectorAll('.input-mode-active').forEach(el => {
+                    el.classList.remove('input-mode-active');
+                });
+            }
+        }
+    }, [isInputElement, isInputMode]);
 
     // Helper function to check if we're currently in a modal
     const isInModal = useCallback(() => {
@@ -492,6 +513,11 @@ const KeyboardNavigation = () => {
         const activeElement = document.activeElement;
 
         if (isInputElement(activeElement)) {
+            // In modals, inputs should be immediately accessible - no Enter required
+            if (isInModal()) {
+                return; // Let the input handle the Enter key naturally
+            }
+
             e.preventDefault();
             if (isInputMode) {
                 // Exit input mode
@@ -632,15 +658,30 @@ const KeyboardNavigation = () => {
         };
     }, [handleEnter, isAppCard, isInputMode, isMenuButton, isMenuItem, expandedCard]);
 
-    // Prevent input focus on hover - override default behavior
+    // Prevent input focus on hover - override default behavior (except in modals)
     useEffect(() => {
         const preventInputHoverFocus = (e) => {
+            // In modals, allow inputs to be focused immediately
+            if (isInModal()) {
+                if (isInputElement(e.target) && !isInputMode) {
+                    setIsInputMode(true);
+                    setCurrentInputElement(e.target);
+                    e.target.classList.add('input-mode-active');
+                }
+                return;
+            }
+
             if (isInputElement(e.target) && !isInputMode) {
                 e.target.blur();
             }
         };
 
         const handleMouseOver = (e) => {
+            // In modals, don't prevent input focus on hover
+            if (isInModal()) {
+                return;
+            }
+
             if (isInputElement(e.target) && !isInputMode) {
                 // Prevent automatic focus on hover for inputs
                 e.preventDefault();
