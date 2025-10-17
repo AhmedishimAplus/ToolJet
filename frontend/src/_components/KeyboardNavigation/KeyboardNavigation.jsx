@@ -15,7 +15,31 @@ const KeyboardNavigation = () => {
         const modal = document.querySelector('.modal.show');
         if (!modal) return;
 
-        const focusableElements = Array.from(modal.querySelectorAll('[tabindex]:not([tabindex="-1"]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]:not([disabled])'))
+        const focusableElements = Array.from(modal.querySelectorAll(`
+            [tabindex]:not([tabindex="-1"]), 
+            button:not([disabled]), 
+            input:not([disabled]), 
+            textarea:not([disabled]), 
+            select:not([disabled]), 
+            a[href]:not([disabled]),
+            li[role="button"],
+            li[onclick],
+            li.cursor-pointer,
+            div[role="button"],
+            div[onclick],
+            div.cursor-pointer,
+            span[role="button"],
+            span[onclick],
+            span.cursor-pointer,
+            [data-testid],
+            [data-cy*="icon"],
+            .icon-item,
+            .grid-item,
+            ul li,
+            .icon-grid li,
+            .icon-picker li,
+            .keyboard-navigable
+        `))
             .filter(el => {
                 const style = window.getComputedStyle(el);
                 const rect = el.getBoundingClientRect();
@@ -29,6 +53,46 @@ const KeyboardNavigation = () => {
 
         if (focusableElements.length === 0) return;
 
+        // Check if we're in an icon grid for special grid navigation
+        const iconGrid = modal.querySelector('ul, .icon-grid, .grid, [class*="grid"]');
+        const isIconGrid = iconGrid && focusableElements.some(el => iconGrid.contains(el));
+
+        if (isIconGrid && (direction === 'next' || direction === 'previous')) {
+            // For icon grids, try to maintain grid-like navigation
+            const currentIndex = focusableElements.indexOf(document.activeElement);
+
+            // Estimate grid columns by checking element positions
+            const gridItems = focusableElements.filter(el => iconGrid.contains(el));
+            if (gridItems.length > 0) {
+                // If no current focus in grid, focus first grid item
+                if (currentIndex === -1 || !iconGrid.contains(document.activeElement)) {
+                    gridItems[0]?.focus();
+                    return;
+                }
+
+                const firstItemRect = gridItems[0].getBoundingClientRect();
+                const columnsCount = gridItems.filter(item => {
+                    const rect = item.getBoundingClientRect();
+                    return Math.abs(rect.top - firstItemRect.top) < 10; // Same row
+                }).length;
+
+                const currentGridIndex = gridItems.indexOf(document.activeElement);
+                if (currentGridIndex !== -1) {
+                    let targetGridIndex;
+
+                    if (direction === 'next') {
+                        targetGridIndex = (currentGridIndex + 1) % gridItems.length;
+                    } else {
+                        targetGridIndex = currentGridIndex === 0 ? gridItems.length - 1 : currentGridIndex - 1;
+                    }
+
+                    gridItems[targetGridIndex]?.focus();
+                    return;
+                }
+            }
+        }
+
+        // Fallback to linear navigation
         const currentIndex = focusableElements.indexOf(document.activeElement);
         let targetIndex;
 
@@ -67,6 +131,100 @@ const KeyboardNavigation = () => {
             }
         }
     }, [isInputElement, isInputMode]);
+
+    // Helper function for grid navigation (for icon grids, etc.)
+    const navigateInGrid = useCallback((direction) => {
+        const modal = document.querySelector('.modal.show');
+        if (!modal) return false;
+
+        // Look for grid containers
+        const gridContainer = modal.querySelector('ul, .icon-grid, .grid, [class*="grid"]');
+        if (!gridContainer) return false;
+
+        // Get all grid items
+        const gridItems = Array.from(gridContainer.querySelectorAll(`
+            li, .icon-item, .grid-item, 
+            div[role="button"], span[role="button"],
+            [data-testid], [data-cy*="icon"],
+            div[onclick], span[onclick], li[onclick],
+            .keyboard-navigable, [tabindex="0"]
+        `)).filter(el => {
+            const style = window.getComputedStyle(el);
+            const rect = el.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden' &&
+                style.opacity !== '0' && rect.width > 0 && rect.height > 0;
+        });
+
+        if (gridItems.length === 0) return false;
+
+        const currentIndex = gridItems.indexOf(document.activeElement);
+        if (currentIndex === -1) {
+            // If no current focus in grid, focus first item
+            gridItems[0]?.focus();
+            // Make sure it's focusable
+            if (!gridItems[0].hasAttribute('tabindex')) {
+                gridItems[0].setAttribute('tabindex', '0');
+            }
+            gridItems[0].classList.add('keyboard-focused');
+            return true;
+        }
+
+        // Calculate grid dimensions
+        const firstItemRect = gridItems[0].getBoundingClientRect();
+        const columnsCount = gridItems.filter(item => {
+            const rect = item.getBoundingClientRect();
+            return Math.abs(rect.top - firstItemRect.top) < 10; // Same row
+        }).length;
+
+        let targetIndex = currentIndex;
+
+        switch (direction) {
+            case 'right':
+                targetIndex = currentIndex + 1;
+                if (targetIndex >= gridItems.length) targetIndex = 0; // Wrap to start
+                break;
+            case 'left':
+                targetIndex = currentIndex - 1;
+                if (targetIndex < 0) targetIndex = gridItems.length - 1; // Wrap to end
+                break;
+            case 'down':
+                targetIndex = currentIndex + columnsCount;
+                if (targetIndex >= gridItems.length) {
+                    // Go to first item in same column
+                    targetIndex = currentIndex % columnsCount;
+                }
+                break;
+            case 'up':
+                targetIndex = currentIndex - columnsCount;
+                if (targetIndex < 0) {
+                    // Go to last row, same column
+                    const column = currentIndex % columnsCount;
+                    const rows = Math.ceil(gridItems.length / columnsCount);
+                    targetIndex = ((rows - 1) * columnsCount) + column;
+                    if (targetIndex >= gridItems.length) {
+                        targetIndex = ((rows - 2) * columnsCount) + column;
+                    }
+                }
+                break;
+        }
+
+        if (gridItems[targetIndex]) {
+            gridItems[targetIndex].focus();
+
+            // Make grid items focusable if they don't have tabindex
+            if (!gridItems[targetIndex].hasAttribute('tabindex')) {
+                gridItems[targetIndex].setAttribute('tabindex', '0');
+            }
+
+            // Add visual focus styling for grid items
+            gridItems.forEach(item => item.classList.remove('keyboard-focused'));
+            gridItems[targetIndex].classList.add('keyboard-focused');
+
+            return true;
+        }
+
+        return false;
+    }, []);
 
     // Helper function to check if we're currently in a modal
     const isInModal = useCallback(() => {
@@ -776,11 +934,14 @@ const KeyboardNavigation = () => {
 
     // Arrow key and tab navigation - only work when NOT in input mode
     useHotkeys('down', (e) => {
-        // In modals, use tab-order navigation for arrow keys too
+        // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             if (!isInputMode) {
                 e.preventDefault();
-                navigateInModal('next');
+                // Try grid navigation first
+                if (!navigateInGrid('down')) {
+                    navigateInModal('next');
+                }
             }
             return;
         }
@@ -792,11 +953,14 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('up', (e) => {
-        // In modals, use tab-order navigation for arrow keys too
+        // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             if (!isInputMode) {
                 e.preventDefault();
-                navigateInModal('previous');
+                // Try grid navigation first
+                if (!navigateInGrid('up')) {
+                    navigateInModal('previous');
+                }
             }
             return;
         }
@@ -809,11 +973,14 @@ const KeyboardNavigation = () => {
 
     // Left and Right arrow keys for modal navigation
     useHotkeys('left', (e) => {
-        // In modals, left arrow works like up arrow (previous element)
+        // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             if (!isInputMode) {
                 e.preventDefault();
-                navigateInModal('previous');
+                // Try grid navigation first
+                if (!navigateInGrid('left')) {
+                    navigateInModal('previous');
+                }
             }
             return;
         }
@@ -825,11 +992,14 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('right', (e) => {
-        // In modals, right arrow works like down arrow (next element)
+        // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             if (!isInputMode) {
                 e.preventDefault();
-                navigateInModal('next');
+                // Try grid navigation first
+                if (!navigateInGrid('right')) {
+                    navigateInModal('next');
+                }
             }
             return;
         }
@@ -970,6 +1140,84 @@ const KeyboardNavigation = () => {
         }, 100);
 
         return () => clearTimeout(timer);
+    }, []);
+
+    // Make modal grid elements focusable when modals open
+    useEffect(() => {
+        const makeGridElementsFocusable = () => {
+            const modal = document.querySelector('.modal.show');
+            if (!modal) return;
+
+            // Find all grid containers in the modal
+            const gridContainers = modal.querySelectorAll('ul, .icon-grid, .grid, [class*="grid"]');
+
+            gridContainers.forEach(container => {
+                // Get all potential grid items
+                const gridItems = container.querySelectorAll(`
+                    li, .icon-item, .grid-item,
+                    div[role="button"], span[role="button"],
+                    [data-testid], [data-cy*="icon"],
+                    div[onclick], span[onclick], li[onclick],
+                    .cursor-pointer li, li.cursor-pointer
+                `);
+
+                gridItems.forEach(item => {
+                    // Make sure each grid item is focusable
+                    if (!item.hasAttribute('tabindex')) {
+                        item.setAttribute('tabindex', '0');
+                    }
+
+                    // Add keyboard-navigable class for styling
+                    item.classList.add('keyboard-navigable');
+                });
+            });
+        };
+
+        // Set up MutationObserver to watch for modal changes
+        const observer = new MutationObserver((mutations) => {
+            let modalChanged = false;
+
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes') {
+                    if (mutation.attributeName === 'class' &&
+                        (mutation.target.classList.contains('modal') ||
+                            mutation.target.closest('.modal'))) {
+                        modalChanged = true;
+                    }
+                } else if (mutation.type === 'childList') {
+                    // Check if modal content was added/removed
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.classList?.contains('modal') ||
+                                node.querySelector?.('.modal') ||
+                                node.closest?.('.modal')) {
+                                modalChanged = true;
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (modalChanged) {
+                // Delay to ensure modal content is fully rendered
+                setTimeout(makeGridElementsFocusable, 100);
+            }
+        });
+
+        // Start observing
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        // Initial check for existing modals
+        makeGridElementsFocusable();
+
+        return () => {
+            observer.disconnect();
+        };
     }, []);
 
     // Show keyboard navigation hint

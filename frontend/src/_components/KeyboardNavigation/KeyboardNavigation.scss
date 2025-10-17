@@ -145,6 +145,31 @@ a:hover:not([disabled]) {
     border-radius: 4px;
 }
 
+/* Keyboard-focused grid items (for icon grids, etc.) */
+.keyboard-focused,
+.keyboard-navigable:focus,
+.modal li.keyboard-focused,
+.modal .icon-item.keyboard-focused,
+.modal .grid-item.keyboard-focused,
+ul li.keyboard-focused {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+    background-color: rgba(62, 99, 221, 0.05) !important;
+    box-shadow: 0 0 0 3px rgba(62, 99, 221, 0.1) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Hover states for keyboard-navigable elements */
+.keyboard-navigable:hover,
+.modal ul li:hover {
+    outline: 2px solid #3E63DD !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+    background-color: rgba(62, 99, 221, 0.03) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
 /* Add focus styles to app cards */
 .app-card:focus {
     outline: 2px solid #3E63DD;
