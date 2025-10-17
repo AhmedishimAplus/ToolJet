@@ -529,36 +529,46 @@ const KeyboardNavigation = () => {
             }
         });
 
-        // 2. File/Folder list items in sidebar (if any)
+        // 2. File/Folder list items in sidebar (All applications, adsa, etc.)
         const fileListItems = Array.from(document.querySelectorAll(`
+            .all-apps-link,
             .folder-list-group-item,
             .list-group-item,
-            .all-apps-link,
             [data-cy*="list-card"],
             [data-cy*="folder"],
             [data-cy*="app"],
             .application-card,
             .folder-card,
-            .app-list-item,
-            .tj-folders li,
-            .folders-sidebar li
+            .app-list-item
         `)).filter(el => isElementVisible(el) && el.hasAttribute('tabindex'));
         elements.push(...fileListItems);
 
-        // 3. Search input
-        const searchInput = document.querySelector('input[placeholder*="Search"], input[placeholder*="search"], .form-control[type="text"]');
-        if (searchInput && isElementVisible(searchInput)) {
+        // 3. Main area search input (if visible and not in sidebar)
+        const searchInput = document.querySelector('.homepage-content input[placeholder*="Search"], .main-content input[placeholder*="search"]');
+        if (searchInput && isElementVisible(searchInput) && !document.querySelector('.tj-leftsidebar').contains(searchInput)) {
             elements.push(searchInput);
         }
 
-        // 4. App cards - only the cards themselves (not their buttons)
-        const appCards = Array.from(document.querySelectorAll('.app-card'))
-            .filter(el => isElementVisible(el) && el.classList.contains('homepage-app-card'));
+        // 4. App cards in main area - only the cards themselves (not their buttons)
+        const appCards = Array.from(document.querySelectorAll('.homepage-app-card, .app-card'))
+            .filter(el => isElementVisible(el) && !elements.includes(el));
         elements.push(...appCards);
 
-        // 5. Other buttons and interactive elements (excluding already added ones)
+        // 5. Other buttons and interactive elements (excluding already added ones and card-specific elements)
         const otherElements = Array.from(document.querySelectorAll('button:not([disabled]), a[href]:not([disabled])'))
-            .filter(el => isElementVisible(el) && !elements.includes(el));
+            .filter(el => {
+                // Exclude if already added
+                if (elements.includes(el)) return false;
+
+                // Exclude if part of card button system (these are handled by card expansion logic)
+                if (el.closest('.homepage-app-card, .app-card')) return false;
+
+                // Exclude if part of menu system (these are handled by menu logic)
+                if (el.closest('.popover, .dropdown-menu')) return false;
+
+                // Only include if visible
+                return isElementVisible(el);
+            });
         elements.push(...otherElements);
 
         return elements;
