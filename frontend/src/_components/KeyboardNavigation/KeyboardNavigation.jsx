@@ -8,6 +8,7 @@ const KeyboardNavigation = () => {
     const [currentInputElement, setCurrentInputElement] = useState(null); // Track current input
     const [expandedCard, setExpandedCard] = useState(null); // Track which card is expanded for button navigation
     const [isMenuOpen, setIsMenuOpen] = useState(false); // Track if 3-dots menu is open for navigation
+    const [lastModalState, setLastModalState] = useState(false); // Track modal open/close state
 
     // Helper function for modal navigation
     const navigateInModal = useCallback((direction) => {
@@ -44,12 +45,20 @@ const KeyboardNavigation = () => {
 
         // Auto-enable input mode for inputs in modals
         if (isInputElement(targetElement)) {
-            setIsInputMode(true);
-            setCurrentInputElement(targetElement);
-            targetElement.classList.add('input-mode-active');
+            // Only set input mode if we're not already in input mode with this element
+            if (!isInputMode || currentInputElement !== targetElement) {
+                // Clean up previous input state
+                if (currentInputElement && currentInputElement !== targetElement) {
+                    currentInputElement.classList.remove('input-mode-active');
+                }
+
+                setIsInputMode(true);
+                setCurrentInputElement(targetElement);
+                targetElement.classList.add('input-mode-active');
+            }
         } else {
             // Exit input mode when focusing non-input elements
-            if (isInputMode) {
+            if (isInputMode && currentInputElement) {
                 setIsInputMode(false);
                 setCurrentInputElement(null);
                 document.querySelectorAll('.input-mode-active').forEach(el => {
@@ -533,6 +542,19 @@ const KeyboardNavigation = () => {
                 activeElement.classList.add('input-mode-active');
                 // Don't prevent default here - let the input handle the cursor
             }
+        } else if (activeElement.tagName === 'SELECT' ||
+            activeElement.classList.contains('dropdown') ||
+            activeElement.classList.contains('form-select') ||
+            activeElement.getAttribute('role') === 'combobox' ||
+            activeElement.getAttribute('role') === 'listbox') {
+            // Handle dropdowns and select elements
+            if (isInModal()) {
+                // In modals, let the dropdown handle Enter naturally to open
+                return;
+            } else {
+                e.preventDefault();
+                activeElement.click();
+            }
         } else if (isAppCard(activeElement)) {
             e.preventDefault();
             e.stopPropagation(); // Prevent card's own onKeyDown handler from firing
@@ -614,9 +636,26 @@ const KeyboardNavigation = () => {
 
             }
         } else if (activeElement) {
-            e.preventDefault();
-            // Activate non-input elements (including card buttons)
-            activeElement.click();
+            // In modals, allow natural behavior for most elements, but still support clicking
+            if (isInModal()) {
+                // For buttons, dropdowns, and other interactive elements in modals
+                if (activeElement.tagName === 'BUTTON' ||
+                    activeElement.getAttribute('role') === 'button' ||
+                    activeElement.classList.contains('dropdown-toggle') ||
+                    activeElement.classList.contains('btn') ||
+                    activeElement.hasAttribute('data-bs-toggle')) {
+                    // Don't prevent default - let the element handle Enter naturally
+                    activeElement.click();
+                } else {
+                    // For other elements, click them
+                    e.preventDefault();
+                    activeElement.click();
+                }
+            } else {
+                e.preventDefault();
+                // Activate non-input elements (including card buttons)
+                activeElement.click();
+            }
         }
     }, [isInputElement, isInputMode, isAppCard, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, isMenuItem, makeMenuItemsFocusable]);
 
@@ -663,7 +702,12 @@ const KeyboardNavigation = () => {
         const preventInputHoverFocus = (e) => {
             // In modals, allow inputs to be focused immediately
             if (isInModal()) {
-                if (isInputElement(e.target) && !isInputMode) {
+                if (isInputElement(e.target) && (!isInputMode || currentInputElement !== e.target)) {
+                    // Clean up previous input state
+                    if (currentInputElement && currentInputElement !== e.target) {
+                        currentInputElement.classList.remove('input-mode-active');
+                    }
+
                     setIsInputMode(true);
                     setCurrentInputElement(e.target);
                     e.target.classList.add('input-mode-active');
@@ -797,9 +841,11 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('tab', (e) => {
-        // Allow normal tab navigation in modals
+        // Focus trapping in modals - Tab stays within modal
         if (isInModal()) {
-            return; // Don't prevent default, let normal tab navigation work
+            e.preventDefault();
+            navigateInModal('next');
+            return;
         }
 
         if (!isInputMode) {
@@ -809,9 +855,11 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('shift+tab', (e) => {
-        // Allow normal tab navigation in modals
+        // Focus trapping in modals - Shift+Tab stays within modal
         if (isInModal()) {
-            return; // Don't prevent default, let normal tab navigation work
+            e.preventDefault();
+            navigateInModal('previous');
+            return;
         }
 
         if (!isInputMode) {
@@ -893,6 +941,24 @@ const KeyboardNavigation = () => {
             currentInputElement.classList.remove('input-mode-active');
         }
     }, [currentInputElement, isInputMode]);
+
+    // Reset input mode when modal state changes
+    useEffect(() => {
+        const currentModalState = isInModal();
+
+        // If modal state changed (opened or closed), reset input mode
+        if (currentModalState !== lastModalState) {
+            if (!currentModalState) {
+                // Modal closed - reset input mode state
+                setIsInputMode(false);
+                setCurrentInputElement(null);
+                document.querySelectorAll('.input-mode-active').forEach(el => {
+                    el.classList.remove('input-mode-active');
+                });
+            }
+            setLastModalState(currentModalState);
+        }
+    }, [isInModal, lastModalState]);
 
     // Auto-focus on first sidebar element when page loads
     useEffect(() => {
