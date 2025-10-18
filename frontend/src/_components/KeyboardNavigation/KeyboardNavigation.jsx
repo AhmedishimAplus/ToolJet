@@ -117,31 +117,7 @@ const KeyboardNavigation = () => {
 
         const targetElement = focusableElements[targetIndex];
         targetElement?.focus();
-
-        // Auto-enable input mode for inputs in modals
-        if (isInputElement(targetElement)) {
-            // Only set input mode if we're not already in input mode with this element
-            if (!isInputMode || currentInputElement !== targetElement) {
-                // Clean up previous input state
-                if (currentInputElement && currentInputElement !== targetElement) {
-                    currentInputElement.classList.remove('input-mode-active');
-                }
-
-                setIsInputMode(true);
-                setCurrentInputElement(targetElement);
-                targetElement.classList.add('input-mode-active');
-            }
-        } else {
-            // Exit input mode when focusing non-input elements
-            if (isInputMode && currentInputElement) {
-                setIsInputMode(false);
-                setCurrentInputElement(null);
-                document.querySelectorAll('.input-mode-active').forEach(el => {
-                    el.classList.remove('input-mode-active');
-                });
-            }
-        }
-    }, [isInputElement, isInputMode]);
+    }, [isInputElement]);
 
     // Helper function for grid navigation (for icon grids, etc.)
     const navigateInGrid = useCallback((direction) => {
@@ -850,8 +826,6 @@ const KeyboardNavigation = () => {
 
     // Navigate to next focusable element
     const navigateToNext = useCallback(() => {
-        if (isInputMode) return; // Don't navigate while in input mode
-
         const elements = getFocusableElements();
         if (elements.length === 0) {
             return;
@@ -868,12 +842,10 @@ const KeyboardNavigation = () => {
                 inline: 'nearest'
             });
         }
-    }, [getFocusableElements, isInputMode]);
+    }, [getFocusableElements]);
 
     // Navigate to previous focusable element
     const navigateToPrevious = useCallback(() => {
-        if (isInputMode) return; // Don't navigate while in input mode
-
         const elements = getFocusableElements();
         if (elements.length === 0) {
             return;
@@ -890,33 +862,15 @@ const KeyboardNavigation = () => {
                 inline: 'nearest'
             });
         }
-    }, [getFocusableElements, isInputMode]);
+    }, [getFocusableElements]);
 
-    // Handle Enter key - either activate element, toggle input mode, or expand cards
+    // Handle Enter key - either activate element or expand cards
     const handleEnter = useCallback((e) => {
         const activeElement = document.activeElement;
 
         if (isInputElement(activeElement)) {
-            // In modals, inputs should be immediately accessible - no Enter required
-            if (isInModal()) {
-                return; // Let the input handle the Enter key naturally
-            }
-
-            e.preventDefault();
-            if (isInputMode) {
-                // Exit input mode
-                setIsInputMode(false);
-                setCurrentInputElement(null);
-                activeElement.classList.remove('input-mode-active');
-                activeElement.blur();
-                activeElement.focus(); // Refocus to maintain navigation position
-            } else {
-                // Enter input mode
-                setIsInputMode(true);
-                setCurrentInputElement(activeElement);
-                activeElement.classList.add('input-mode-active');
-                // Don't prevent default here - let the input handle the cursor
-            }
+            // Let inputs handle Enter naturally - no special input mode
+            return;
         } else if (activeElement.tagName === 'SELECT' ||
             activeElement.classList.contains('dropdown') ||
             activeElement.classList.contains('form-select') ||
@@ -1044,7 +998,7 @@ const KeyboardNavigation = () => {
             // 2. Menu buttons (3-dots)
             // 3. Menu items (within popovers)
             // 4. Other card buttons when card is expanded
-            if ((e.key === 'Enter' || e.key === ' ') && !isInputMode) {
+            if ((e.key === 'Enter' || e.key === ' ')) {
                 const shouldIntercept =
                     isAppCard(activeElement) ||
                     isMenuButton(activeElement) ||
@@ -1055,8 +1009,6 @@ const KeyboardNavigation = () => {
                     e.preventDefault();
                     e.stopPropagation();
                     e.stopImmediatePropagation();
-
-
 
                     // Call our handleEnter function
                     handleEnter(e);
@@ -1070,52 +1022,13 @@ const KeyboardNavigation = () => {
         return () => {
             document.removeEventListener('keydown', handleGlobalKeyDown, true);
         };
-    }, [handleEnter, isAppCard, isInputMode, isMenuButton, isMenuItem, expandedCard]);
+    }, [handleEnter, isAppCard, isMenuButton, isMenuItem, expandedCard]);
 
-    // Prevent input focus on hover - override default behavior (except in modals)
+    // Allow normal input behavior - no hover prevention
     useEffect(() => {
-        const preventInputHoverFocus = (e) => {
-            // In modals, allow inputs to be focused immediately
-            if (isInModal()) {
-                if (isInputElement(e.target) && (!isInputMode || currentInputElement !== e.target)) {
-                    // Clean up previous input state
-                    if (currentInputElement && currentInputElement !== e.target) {
-                        currentInputElement.classList.remove('input-mode-active');
-                    }
-
-                    setIsInputMode(true);
-                    setCurrentInputElement(e.target);
-                    e.target.classList.add('input-mode-active');
-                }
-                return;
-            }
-
-            if (isInputElement(e.target) && !isInputMode) {
-                e.target.blur();
-            }
-        };
-
-        const handleMouseOver = (e) => {
-            // In modals, don't prevent input focus on hover
-            if (isInModal()) {
-                return;
-            }
-
-            if (isInputElement(e.target) && !isInputMode) {
-                // Prevent automatic focus on hover for inputs
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        };
-
-        document.addEventListener('mouseover', handleMouseOver, true);
-        document.addEventListener('focus', preventInputHoverFocus, true);
-
-        return () => {
-            document.removeEventListener('mouseover', handleMouseOver, true);
-            document.removeEventListener('focus', preventInputHoverFocus, true);
-        };
-    }, [isInputElement, isInputMode]);
+        // No special input handling needed - inputs work normally
+        return () => { };
+    }, [isInputElement]);
 
     // Watch for menu visibility changes
     useEffect(() => {
@@ -1153,89 +1066,73 @@ const KeyboardNavigation = () => {
     useHotkeys('down', (e) => {
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
-            if (!isInputMode) {
-                e.preventDefault();
-                // Try grid navigation first
-                if (!navigateInGrid('down')) {
-                    navigateInModal('next');
-                }
+            e.preventDefault();
+            // Try grid navigation first
+            if (!navigateInGrid('down')) {
+                navigateInModal('next');
             }
             return;
         }
 
-        if (!isInputMode) {
-            e.preventDefault();
-            // Try main page grid/list navigation first, then fall back to normal navigation
-            if (!navigateInMainPage('down')) {
-                navigateToNext();
-            }
+        e.preventDefault();
+        // Try main page grid/list navigation first, then fall back to normal navigation
+        if (!navigateInMainPage('down')) {
+            navigateToNext();
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('up', (e) => {
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
-            if (!isInputMode) {
-                e.preventDefault();
-                // Try grid navigation first
-                if (!navigateInGrid('up')) {
-                    navigateInModal('previous');
-                }
+            e.preventDefault();
+            // Try grid navigation first
+            if (!navigateInGrid('up')) {
+                navigateInModal('previous');
             }
             return;
         }
 
-        if (!isInputMode) {
-            e.preventDefault();
-            // Try main page grid/list navigation first, then fall back to normal navigation
-            if (!navigateInMainPage('up')) {
-                navigateToPrevious();
-            }
+        e.preventDefault();
+        // Try main page grid/list navigation first, then fall back to normal navigation
+        if (!navigateInMainPage('up')) {
+            navigateToPrevious();
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
-    // Left and Right arrow keys for modal navigation
+    // Left and Right arrow keys for navigation
     useHotkeys('left', (e) => {
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
-            if (!isInputMode) {
-                e.preventDefault();
-                // Try grid navigation first
-                if (!navigateInGrid('left')) {
-                    navigateInModal('previous');
-                }
+            e.preventDefault();
+            // Try grid navigation first
+            if (!navigateInGrid('left')) {
+                navigateInModal('previous');
             }
             return;
         }
 
-        if (!isInputMode) {
-            e.preventDefault();
-            // Try main page grid navigation first, then fall back to normal navigation
-            if (!navigateInMainPage('left')) {
-                navigateToPrevious();
-            }
+        e.preventDefault();
+        // Try main page grid navigation first, then fall back to normal navigation
+        if (!navigateInMainPage('left')) {
+            navigateToPrevious();
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('right', (e) => {
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
-            if (!isInputMode) {
-                e.preventDefault();
-                // Try grid navigation first
-                if (!navigateInGrid('right')) {
-                    navigateInModal('next');
-                }
+            e.preventDefault();
+            // Try grid navigation first
+            if (!navigateInGrid('right')) {
+                navigateInModal('next');
             }
             return;
         }
 
-        if (!isInputMode) {
-            e.preventDefault();
-            // Try main page grid navigation first, then fall back to normal navigation
-            if (!navigateInMainPage('right')) {
-                navigateToNext();
-            }
+        e.preventDefault();
+        // Try main page grid navigation first, then fall back to normal navigation
+        if (!navigateInMainPage('right')) {
+            navigateToNext();
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
@@ -1247,10 +1144,8 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        if (!isInputMode) {
-            e.preventDefault();
-            navigateToNext();
-        }
+        e.preventDefault();
+        navigateToNext();
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('shift+tab', (e) => {
@@ -1261,18 +1156,16 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        if (!isInputMode) {
-            e.preventDefault();
-            navigateToPrevious();
-        }
+        e.preventDefault();
+        navigateToPrevious();
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     // Enter key handling
     useHotkeys('enter', handleEnter, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
-    // Space key for buttons (only when not in input mode)
+    // Space key for buttons
     useHotkeys('space', (e) => {
-        if (!isInputMode && document.activeElement && document.activeElement.getAttribute('role') === 'button') {
+        if (document.activeElement && document.activeElement.getAttribute('role') === 'button') {
             e.preventDefault();
             document.activeElement.click();
         }
@@ -1280,44 +1173,38 @@ const KeyboardNavigation = () => {
 
     // ESC key to collapse expanded cards and close menus (hierarchical)
     useHotkeys('escape', (e) => {
-        if (!isInputMode) {
-            e.preventDefault();
+        e.preventDefault();
 
-            // Priority 1: If there's an open modal, try to close it
-            const modalCloseButtons = Array.from(document.querySelectorAll('.modal.show .btn-close, .modal.show .close, .modal.show button[data-dismiss="modal"], .modal.show [aria-label="Close"]'));
-            if (modalCloseButtons.length > 0) {
+        // Priority 1: If there's an open modal, try to close it
+        const modalCloseButtons = Array.from(document.querySelectorAll('.modal.show .btn-close, .modal.show .close, .modal.show button[data-dismiss="modal"], .modal.show [aria-label="Close"]'));
+        if (modalCloseButtons.length > 0) {
+            modalCloseButtons[0].click();
+            return;
+        }
 
-                modalCloseButtons[0].click();
-                return;
-            }
+        // Priority 2: If menu is open, close menu and return to card navigation
+        if (isMenuOpen) {
+            resetMenuItemsFocusability();
+            setIsMenuOpen(false);
 
-            // Priority 2: If menu is open, close menu and return to card navigation
-            if (isMenuOpen) {
-                resetMenuItemsFocusability();
-                setIsMenuOpen(false);
-
-
-                // Focus back on the menu button (3-dots) in the expanded card
-                if (expandedCard) {
-                    const menuButton = expandedCard.querySelector('.menu-ico, .menu-icon--trigger');
-                    if (menuButton) {
-                        setTimeout(() => {
-                            menuButton.focus();
-
-                        }, 100);
-                    }
+            // Focus back on the menu button (3-dots) in the expanded card
+            if (expandedCard) {
+                const menuButton = expandedCard.querySelector('.menu-ico, .menu-icon--trigger');
+                if (menuButton) {
+                    setTimeout(() => {
+                        menuButton.focus();
+                    }, 100);
                 }
             }
-            // Priority 3: If card is expanded (and no menu), collapse card
-            else if (expandedCard) {
-                const cardToFocus = expandedCard; // Store reference before clearing
-                resetCardButtonsFocusability(cardToFocus);
-                cardToFocus.classList.remove('keyboard-expanded');
-                setExpandedCard(null);
-                // Focus back on the card
-                cardToFocus.focus();
-
-            }
+        }
+        // Priority 3: If card is expanded (and no menu), collapse card
+        else if (expandedCard) {
+            const cardToFocus = expandedCard; // Store reference before clearing
+            resetCardButtonsFocusability(cardToFocus);
+            cardToFocus.classList.remove('keyboard-expanded');
+            setExpandedCard(null);
+            // Focus back on the card
+            cardToFocus.focus();
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
@@ -1588,9 +1475,7 @@ const KeyboardNavigation = () => {
     return (
         <>
             <div className="keyboard-navigation-hint visible">
-                {isInputMode ? (
-                    '📝 Input Mode • Enter to Exit'
-                ) : isMenuOpen ? (
+                {isMenuOpen ? (
                     '📋 Menu Open • ↑↓ Navigate Items • Enter Activate • ESC Back to Card'
                 ) : expandedCard ? (
                     '🎯 Card Expanded • ↑↓ Navigate Buttons • Enter Activate/Open Menu • ESC Collapse'
