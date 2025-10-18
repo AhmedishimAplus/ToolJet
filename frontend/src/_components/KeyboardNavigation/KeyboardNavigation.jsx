@@ -519,24 +519,36 @@ const KeyboardNavigation = () => {
         `)).filter(el => isElementVisible(el) && el.hasAttribute('tabindex'));
         elements.push(...fileListItems);
 
-        // 3. Main area search inputs (homepage search and folder search)
-        const searchInputs = Array.from(document.querySelectorAll(`
+        // 3. All search inputs (main area and sidebar)
+        const mainSearchInputs = Array.from(document.querySelectorAll(`
             input[data-cy="home-page-search-bar"],
-            input[data-cy="query-manager-search-bar"], 
             input[placeholder*="Search apps"],
-            input[placeholder*="Search for folders"],
             .homepage-search input,
             .home-search-holder input,
             input.homepage-search,
             input.ghost-search
         `)).filter(input => {
-            // Only include if visible and not in sidebar (to avoid duplicate folder search)
+            // Only include main area search inputs (not in sidebar)
             return isElementVisible(input) &&
                 !document.querySelector('.tj-leftsidebar, .folder-list').contains(input);
         });
-        elements.push(...searchInputs);
 
-        // 4. App cards in main area - only the cards themselves (not their buttons)
+        // 4. Sidebar search inputs (folder search)
+        const sidebarSearchInputs = Array.from(document.querySelectorAll(`
+            input[data-cy="query-manager-search-bar"],
+            input[placeholder*="Search for folders"],
+            .tj-leftsidebar input[type="text"],
+            .folder-list input[type="text"],
+            .tj-common-search-input input
+        `)).filter(input => {
+            // Only include sidebar search inputs that are visible
+            return isElementVisible(input) &&
+                (document.querySelector('.tj-leftsidebar, .folder-list').contains(input));
+        });
+
+        elements.push(...mainSearchInputs, ...sidebarSearchInputs);
+
+        // 5. App cards in main area - only the cards themselves (not their buttons)
         const appCards = Array.from(document.querySelectorAll('.homepage-app-card, .app-card'))
             .filter(el => isElementVisible(el) && !elements.includes(el));
         elements.push(...appCards);
@@ -1004,6 +1016,16 @@ const KeyboardNavigation = () => {
         const handleGlobalKeyDown = (e) => {
             const activeElement = document.activeElement;
 
+            // Don't intercept if user is typing in an input field
+            if (activeElement &&
+                (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
+                activeElement.type !== 'button' &&
+                activeElement.type !== 'submit' &&
+                activeElement.type !== 'checkbox' &&
+                activeElement.type !== 'radio') {
+                return; // Let the input handle the event normally
+            }
+
             // Handle Enter and Space keys on:
             // 1. App cards themselves
             // 2. Menu buttons (3-dots)
@@ -1073,15 +1095,51 @@ const KeyboardNavigation = () => {
         };
     }, [isMenuOpen, isElementVisible]);
 
+    // Helper function to ensure sidebar search inputs work properly when dynamically shown
+    const ensureSidebarSearchWorks = useCallback(() => {
+        const sidebarSearchInputs = document.querySelectorAll(`
+            .tj-leftsidebar input[type="text"],
+            .folder-list input[type="text"],
+            .tj-common-search-input input,
+            input[data-cy*="query-manager"]
+        `);
+
+        sidebarSearchInputs.forEach(input => {
+            if (input && isElementVisible(input)) {
+                // Ensure the input is focusable
+                if (!input.hasAttribute('tabindex')) {
+                    input.setAttribute('tabindex', '0');
+                }
+
+                // Remove any disabled state that might block typing
+                input.removeAttribute('disabled');
+                input.removeAttribute('readonly');
+
+                // Ensure it can receive focus and typing
+                input.style.pointerEvents = 'auto';
+                input.style.userSelect = 'auto';
+            }
+        });
+    }, [isElementVisible]);
+
     // Helper function to check if user is actually typing in an input
     const isTypingInInput = () => {
         const activeElement = document.activeElement;
-        return activeElement &&
-            (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
+        if (!activeElement) return false;
+
+        // Check if it's a text-based input that allows typing
+        const isTextInput = (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
             activeElement.type !== 'button' &&
             activeElement.type !== 'submit' &&
             activeElement.type !== 'checkbox' &&
-            activeElement.type !== 'radio';
+            activeElement.type !== 'radio' &&
+            activeElement.type !== 'file' &&
+            activeElement.type !== 'range';
+
+        // Additional check: ensure the input is not disabled or readonly
+        const isInteractive = !activeElement.disabled && !activeElement.readOnly;
+
+        return isTextInput && isInteractive;
     };
 
     // Arrow key and tab navigation - only work when NOT actively typing
@@ -1490,12 +1548,14 @@ const KeyboardNavigation = () => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach(node => {
                         if (node.nodeType === 1) { // Element node
-                            // Check for dynamic list items or app cards being added
+                            // Check for dynamic list items, app cards, or search inputs being added
                             if (node.classList?.contains('folder-list-group-item') ||
                                 node.classList?.contains('list-group-item') ||
                                 node.classList?.contains('homepage-app-card') ||
                                 node.classList?.contains('app-card') ||
-                                node.querySelector?.('.folder-list-group-item, .list-group-item, .homepage-app-card, .app-card')) {
+                                node.classList?.contains('tj-common-search-input') ||
+                                node.tagName === 'INPUT' ||
+                                node.querySelector?.('.folder-list-group-item, .list-group-item, .homepage-app-card, .app-card, input, .tj-common-search-input')) {
                                 contentChanged = true;
                             }
                         }
@@ -1505,7 +1565,10 @@ const KeyboardNavigation = () => {
 
             if (contentChanged) {
                 // Delay to ensure content is fully rendered
-                setTimeout(makeMainPageElementsFocusable, 100);
+                setTimeout(() => {
+                    makeMainPageElementsFocusable();
+                    ensureSidebarSearchWorks();
+                }, 100);
             }
         });
 
@@ -1533,7 +1596,27 @@ const KeyboardNavigation = () => {
         return () => {
             mainPageObserver.disconnect();
         };
-    }, [isInModal]);    // Show keyboard navigation hint
+    }, [isInModal]);
+
+    // Add focus listener to ensure sidebar search inputs work when focused
+    useEffect(() => {
+        const handleFocus = (e) => {
+            const target = e.target;
+            if (target && target.tagName === 'INPUT' &&
+                (target.closest('.tj-leftsidebar') || target.closest('.folder-list') ||
+                    target.classList.contains('tj-common-search-input') ||
+                    target.getAttribute('data-cy')?.includes('query-manager'))) {
+                // This is a sidebar search input - ensure it works properly
+                ensureSidebarSearchWorks();
+            }
+        };
+
+        document.addEventListener('focusin', handleFocus);
+
+        return () => {
+            document.removeEventListener('focusin', handleFocus);
+        };
+    }, [ensureSidebarSearchWorks]);    // Show keyboard navigation hint
     return (
         <>
             <div className="keyboard-navigation-hint visible">
