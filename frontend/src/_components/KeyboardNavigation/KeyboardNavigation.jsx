@@ -519,11 +519,22 @@ const KeyboardNavigation = () => {
         `)).filter(el => isElementVisible(el) && el.hasAttribute('tabindex'));
         elements.push(...fileListItems);
 
-        // 3. Main area search input (if visible and not in sidebar)
-        const searchInput = document.querySelector('.homepage-content input[placeholder*="Search"], .main-content input[placeholder*="search"]');
-        if (searchInput && isElementVisible(searchInput) && !document.querySelector('.tj-leftsidebar').contains(searchInput)) {
-            elements.push(searchInput);
-        }
+        // 3. Main area search inputs (homepage search and folder search)
+        const searchInputs = Array.from(document.querySelectorAll(`
+            input[data-cy="home-page-search-bar"],
+            input[data-cy="query-manager-search-bar"], 
+            input[placeholder*="Search apps"],
+            input[placeholder*="Search for folders"],
+            .homepage-search input,
+            .home-search-holder input,
+            input.homepage-search,
+            input.ghost-search
+        `)).filter(input => {
+            // Only include if visible and not in sidebar (to avoid duplicate folder search)
+            return isElementVisible(input) &&
+                !document.querySelector('.tj-leftsidebar, .folder-list').contains(input);
+        });
+        elements.push(...searchInputs);
 
         // 4. App cards in main area - only the cards themselves (not their buttons)
         const appCards = Array.from(document.querySelectorAll('.homepage-app-card, .app-card'))
@@ -1062,8 +1073,24 @@ const KeyboardNavigation = () => {
         };
     }, [isMenuOpen, isElementVisible]);
 
-    // Arrow key and tab navigation - only work when NOT in input mode
+    // Helper function to check if user is actually typing in an input
+    const isTypingInInput = () => {
+        const activeElement = document.activeElement;
+        return activeElement &&
+            (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
+            activeElement.type !== 'button' &&
+            activeElement.type !== 'submit' &&
+            activeElement.type !== 'checkbox' &&
+            activeElement.type !== 'radio';
+    };
+
+    // Arrow key and tab navigation - only work when NOT actively typing
     useHotkeys('down', (e) => {
+        // Don't prevent default if user is typing in an input field
+        if (isTypingInInput()) {
+            return;
+        }
+
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             e.preventDefault();
@@ -1082,6 +1109,11 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('up', (e) => {
+        // Don't prevent default if user is typing in an input field
+        if (isTypingInInput()) {
+            return;
+        }
+
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             e.preventDefault();
@@ -1101,6 +1133,11 @@ const KeyboardNavigation = () => {
 
     // Left and Right arrow keys for navigation
     useHotkeys('left', (e) => {
+        // Don't prevent default if user is typing in an input field
+        if (isTypingInInput()) {
+            return;
+        }
+
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             e.preventDefault();
@@ -1119,6 +1156,11 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('right', (e) => {
+        // Don't prevent default if user is typing in an input field
+        if (isTypingInInput()) {
+            return;
+        }
+
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             e.preventDefault();
@@ -1137,6 +1179,11 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('tab', (e) => {
+        // Don't prevent default if user is typing in an input field
+        if (isTypingInInput()) {
+            return;
+        }
+
         // Focus trapping in modals - Tab stays within modal
         if (isInModal()) {
             e.preventDefault();
@@ -1149,6 +1196,11 @@ const KeyboardNavigation = () => {
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
     useHotkeys('shift+tab', (e) => {
+        // Don't prevent default if user is typing in an input field
+        if (isTypingInInput()) {
+            return;
+        }
+
         // Focus trapping in modals - Shift+Tab stays within modal
         if (isInModal()) {
             e.preventDefault();
@@ -1163,16 +1215,26 @@ const KeyboardNavigation = () => {
     // Enter key handling
     useHotkeys('enter', handleEnter, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
-    // Space key for buttons
+    // Space key for buttons - but not when typing in inputs
     useHotkeys('space', (e) => {
+        // Don't prevent default if user is typing in an input field
+        if (isTypingInInput()) {
+            return;
+        }
+
         if (document.activeElement && document.activeElement.getAttribute('role') === 'button') {
             e.preventDefault();
             document.activeElement.click();
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 
-    // ESC key to collapse expanded cards and close menus (hierarchical)
+    // ESC key to collapse expanded cards and close menus (hierarchical) - but not when typing
     useHotkeys('escape', (e) => {
+        // Don't prevent default if user is typing in an input field (let them clear the input naturally)
+        if (isTypingInInput()) {
+            return;
+        }
+
         e.preventDefault();
 
         // Priority 1: If there's an open modal, try to close it
