@@ -43,6 +43,9 @@ export const GlobalDataSources = ({ darkMode = false, updateSelectedDatasource }
     backdrop: false,
     dialogClassName: `datasource-edit-modal`,
     enforceFocus: false,
+    restoreFocus: false,
+    keyboard: false,
+    container: document.body,
   });
 
   const {
@@ -93,11 +96,23 @@ export const GlobalDataSources = ({ darkMode = false, updateSelectedDatasource }
   useEffect(() => {
     fetchAndSetWindowTitle({ page: `${selectedDataSource?.name || pageTitles.DATA_SOURCES}` });
     if (selectedDataSource) {
-      setModalProps({ ...modalProps, backdrop: false });
+      setModalProps({
+        ...modalProps,
+        backdrop: false,
+        enforceFocus: false,
+        restoreFocus: false,
+        keyboard: false,
+      });
     }
 
     if (!isEditing) {
-      setModalProps({ ...modalProps, backdrop: true });
+      setModalProps({
+        ...modalProps,
+        backdrop: true,
+        enforceFocus: false,
+        restoreFocus: false,
+        keyboard: false,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDataSource, isEditing]);
@@ -474,7 +489,7 @@ export const GlobalDataSources = ({ darkMode = false, updateSelectedDatasource }
     <div className="row gx-0">
       <Sidebar renderSidebarList={renderSidebarList} updateSelectedDatasource={updateSelectedDatasource} />
       <div ref={containerRef} className={cx('col animation-fade datasource-modal-container', {})}>
-        {containerRef && containerRef?.current && selectedDataSource && (
+        {containerRef && containerRef?.current && selectedDataSource && showDataSourceManagerModal && (
           <DataSourceManager
             showBackButton={selectedDataSource ? false : true}
             showDataSourceManagerModal={showDataSourceManagerModal}

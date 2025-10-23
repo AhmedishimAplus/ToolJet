@@ -972,12 +972,14 @@ class DataSourceManagerComponent extends React.Component {
           <Modal
             show={this.props.showDataSourceManagerModal}
             size={selectedDataSource ? 'lg' : 'xl'}
-            onEscapeKeyDown={this.hideModal}
             className={selectedDataSource ? 'animation-fade' : 'select-datasource-list-modal animation-fade'}
             contentClassName={`${this.props.darkMode ? 'dark-theme' : ''}`}
             animation={false}
             onExit={this.onExit}
             container={this.props.container}
+            enforceFocus={false}
+            restoreFocus={false}
+            keyboard={false}
             {...this.props.modalProps}
           >
             <Modal.Header className={'d-block'}>

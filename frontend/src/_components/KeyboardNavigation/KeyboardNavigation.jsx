@@ -10,6 +10,14 @@ const KeyboardNavigation = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false); // Track if 3-dots menu is open for navigation
     const [lastModalState, setLastModalState] = useState(false); // Track modal open/close state
 
+    // Helper function to check if we're in a problematic modal that blocks navigation
+    const isInBlockingModal = useCallback(() => {
+        const blockingModals = document.querySelectorAll('.modal.show, .select-datasource-list-modal, .datasource-edit-modal, .modal-backdrop');
+        // Force remove any modal backdrops that might be blocking interaction
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        return blockingModals.length > 0;
+    }, []);
+
     // Helper function for modal navigation
     const navigateInModal = useCallback((direction) => {
         const modal = document.querySelector('.modal.show');
@@ -529,11 +537,10 @@ const KeyboardNavigation = () => {
             input.ghost-search
         `)).filter(input => {
             // Only include main area search inputs (not in sidebar)
+            const sidebarElement = document.querySelector('.tj-leftsidebar, .folder-list');
             return isElementVisible(input) &&
-                !document.querySelector('.tj-leftsidebar, .folder-list').contains(input);
-        });
-
-        // 4. Sidebar search inputs (folder search)
+                !(sidebarElement && sidebarElement.contains(input));
+        });        // 4. Sidebar search inputs (folder search)
         const sidebarSearchInputs = Array.from(document.querySelectorAll(`
             input[data-cy="query-manager-search-bar"],
             input[placeholder*="Search for folders"],
@@ -542,8 +549,9 @@ const KeyboardNavigation = () => {
             .tj-common-search-input input
         `)).filter(input => {
             // Only include sidebar search inputs that are visible
+            const sidebarElement = document.querySelector('.tj-leftsidebar, .folder-list');
             return isElementVisible(input) &&
-                (document.querySelector('.tj-leftsidebar, .folder-list').contains(input));
+                (sidebarElement && sidebarElement.contains(input));
         });
 
         elements.push(...mainSearchInputs, ...sidebarSearchInputs);
@@ -1081,8 +1089,7 @@ const KeyboardNavigation = () => {
         // Also listen for clicks outside to close menu
         const handleClickOutside = (e) => {
             const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
-            if (menuPopover && !menuPopover.contains(e.target)) {
-
+            if (menuPopover && e.target && !menuPopover.contains(e.target)) {
                 setIsMenuOpen(false);
             }
         };
@@ -1094,6 +1101,49 @@ const KeyboardNavigation = () => {
             document.removeEventListener('click', handleClickOutside, true);
         };
     }, [isMenuOpen, isElementVisible]);
+
+    // Force clear any blocking modal elements that interfere with navigation
+    useEffect(() => {
+        const forceUnblockNavigation = () => {
+            // Remove any modal backdrops
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+            // Force enable body scrolling if disabled by modal
+            document.body.style.overflow = '';
+            document.body.classList.remove('modal-open');
+
+            // Clear any modal-open classes from html
+            document.documentElement.classList.remove('modal-open');
+        };
+
+        // Run immediately and on path changes
+        forceUnblockNavigation();
+
+        // Force enable sidebar interaction
+        const enableSidebarInteraction = () => {
+            const sidebar = document.querySelector('.left-sidebar, .tj-leftsidebar, aside');
+            if (sidebar) {
+                sidebar.style.pointerEvents = 'auto';
+                sidebar.style.zIndex = '9999';
+
+                // Ensure all sidebar buttons are clickable
+                const sidebarButtons = sidebar.querySelectorAll('button, a, [role="button"]');
+                sidebarButtons.forEach(btn => {
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.zIndex = '10000';
+                });
+            }
+        };
+
+        enableSidebarInteraction();
+
+        const interval = setInterval(() => {
+            forceUnblockNavigation();
+            enableSidebarInteraction();
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Helper function to ensure sidebar search inputs work properly when dynamically shown
     const ensureSidebarSearchWorks = useCallback(() => {
@@ -1149,6 +1199,17 @@ const KeyboardNavigation = () => {
             return;
         }
 
+        // Force navigation to work even if blocking modals are present
+        if (isInBlockingModal()) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Try main page navigation first
+            if (!navigateInMainPage('down')) {
+                navigateToNext();
+            }
+            return;
+        }
+
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             e.preventDefault();
@@ -1164,11 +1225,27 @@ const KeyboardNavigation = () => {
         if (!navigateInMainPage('down')) {
             navigateToNext();
         }
-    }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
+    }, {
+        enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'],
+        enableOnContentEditable: true,
+        enableOnFormTags: true,
+        preventDefault: false
+    });
 
     useHotkeys('up', (e) => {
         // Don't prevent default if user is typing in an input field
         if (isTypingInInput()) {
+            return;
+        }
+
+        // Force navigation to work even if blocking modals are present
+        if (isInBlockingModal()) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Try main page navigation first
+            if (!navigateInMainPage('up')) {
+                navigateToPrevious();
+            }
             return;
         }
 
@@ -1187,12 +1264,28 @@ const KeyboardNavigation = () => {
         if (!navigateInMainPage('up')) {
             navigateToPrevious();
         }
-    }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
+    }, {
+        enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'],
+        enableOnContentEditable: true,
+        enableOnFormTags: true,
+        preventDefault: false
+    });
 
     // Left and Right arrow keys for navigation
     useHotkeys('left', (e) => {
         // Don't prevent default if user is typing in an input field
         if (isTypingInInput()) {
+            return;
+        }
+
+        // Force navigation to work even if blocking modals are present
+        if (isInBlockingModal()) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Try main page navigation first
+            if (!navigateInMainPage('left')) {
+                navigateToPrevious();
+            }
             return;
         }
 
@@ -1219,6 +1312,17 @@ const KeyboardNavigation = () => {
             return;
         }
 
+        // Force navigation to work even if blocking modals are present
+        if (isInBlockingModal()) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Try main page navigation first
+            if (!navigateInMainPage('right')) {
+                navigateToNext();
+            }
+            return;
+        }
+
         // In modals, try grid navigation first, then fall back to linear
         if (isInModal()) {
             e.preventDefault();
@@ -1242,6 +1346,14 @@ const KeyboardNavigation = () => {
             return;
         }
 
+        // Force navigation to work even if blocking modals are present
+        if (isInBlockingModal()) {
+            e.preventDefault();
+            e.stopPropagation();
+            navigateToNext();
+            return;
+        }
+
         // Focus trapping in modals - Tab stays within modal
         if (isInModal()) {
             e.preventDefault();
@@ -1256,6 +1368,14 @@ const KeyboardNavigation = () => {
     useHotkeys('shift+tab', (e) => {
         // Don't prevent default if user is typing in an input field
         if (isTypingInInput()) {
+            return;
+        }
+
+        // Force navigation to work even if blocking modals are present
+        if (isInBlockingModal()) {
+            e.preventDefault();
+            e.stopPropagation();
+            navigateToPrevious();
             return;
         }
 
