@@ -1,6 +1,6 @@
-# Accessibility Improvements: Lighthouse Score 72 → 86
+w# Accessibility Improvements: Lighthouse Score 72 → 86+
 
-This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 86 points (+14 point improvement).
+This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 86+ points, plus additional keyboard navigation enhancements.
 
 ## Overview
 The improvements focused on addressing the main categories identified in the Lighthouse accessibility audit:
@@ -9,8 +9,16 @@ The improvements focused on addressing the main categories identified in the Lig
 - Image alt text
 - Form element labels
 - Touch target sizing
+- **Keyboard navigation (Data Sources page)**
 
-## Latest Update (Score 86+) - October 9, 2025
+## Latest Update - October 24, 2025
+**Data Sources Page Keyboard Navigation:**
+- Implemented comprehensive keyboard navigation for the Global Data Sources page
+- Fixed keyboard accessibility for data source category buttons (Commonly used, Databases, APIs, etc.)
+- Resolved conflicts between custom KeyboardNavigation component and native browser tab navigation
+- Enhanced data source cards to support keyboard interaction (Enter/Space keys)
+
+## Previous Update (Score 86+) - October 9, 2025
 **ARIA Role/Attribute Mismatch Fix:**
 - Fixed `aria-haspopup` attribute mismatch in popover components
 - Changed `aria-haspopup="dialog"` to `aria-haspopup="menu"` for better semantic accuracy
@@ -355,5 +363,261 @@ To continue improving beyond 86 points:
 
 ---
 
-*Generated on: October 9, 2025*
+*Generated on: October 24, 2025*
+*ToolJet Accessibility Improvement Initiative*
+
+---
+
+## Data Sources Page Keyboard Navigation Implementation (October 24, 2025)
+
+### Problem Statement
+The Global Data Sources page lacked comprehensive keyboard navigation support, making it difficult for keyboard-only users to navigate and interact with data source categories and cards.
+
+### Issues Identified
+
+#### 1. Category Buttons Not Keyboard Navigable
+**Problem:** 
+- The sidebar category buttons (Commonly used, Databases, APIs, Cloud Storages, Plugins) were not keyboard focusable
+- Elements had `role="button"` but lacked `tabIndex` attribute
+- No keyboard event handlers for Enter/Space keys
+
+**Root Cause:**
+- Missing `tabIndex="0"` on button elements
+- Missing `onKeyDown` event handlers
+
+#### 2. Native Tab Navigation Intercepted
+**Problem:**
+- Users could not use Tab key to navigate through data source page elements
+- Elements became keyboard-focusable (verified via DevTools) but Tab key did not reach them
+- Custom KeyboardNavigation component was intercepting all Tab keypresses globally
+
+**Root Cause:**
+- `KeyboardNavigation.jsx` used `useHotkeys('tab')` with `e.preventDefault()` 
+- This prevented native browser tab navigation from working
+- Custom navigation logic didn't properly detect/handle data sources page elements
+
+#### 3. Data Source Cards Keyboard Interaction
+**Problem:**
+- Some data source cards responded to keyboard (REST API, Appwrite) while others didn't
+- Inconsistent behavior across cards despite identical HTML structure
+- Action buttons inside cards created event conflicts
+
+**Root Cause:**
+- Data source cards had nested "Add" buttons with duplicate onClick handlers
+- Both card and button called `createDataSource()`, causing event propagation issues
+- Conflicted with homepage AppCard pattern which had clear separation of concerns
+
+### Solutions Implemented
+
+#### 1. Enhanced SegregatedList Component
+**File Modified:** `frontend/src/modules/dataSources/components/SegregatedList/index.js`
+
+**Changes Made:**
+```javascript
+// Added proper keyboard accessibility attributes
+<div
+  role="button"
+  tabIndex={0}  // Changed from string "0" to numeric 0
+  aria-label={`${dataSource.type} data sources category`}
+  onClick={() => handleCategoryClick(dataSource)}
+  onKeyDown={(e) => handleCategoryKeyDown(e, dataSource)}
+  className="col d-flex align-items-center overflow-hidden"
+>
+```
+
+**Key Improvements:**
+- Added `tabIndex={0}` to make elements focusable
+- Added `aria-label` for screen reader context
+- Implemented `handleCategoryKeyDown` function with Enter/Space key support
+- Added event prevention and propagation stopping
+- Added console logging for debugging
+
+#### 2. Disabled Custom Tab Navigation on Data Sources Page
+**File Modified:** `frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx`
+
+**Changes Made:**
+```javascript
+useHotkeys('tab', (e) => {
+    if (isTypingInInput()) {
+        return;
+    }
+
+    // On data sources page, use native browser tab navigation
+    if (isOnDataSourcesPage()) {
+        return;  // Skip custom navigation, allow native browser behavior
+    }
+
+    // ... rest of custom navigation logic
+});
+
+useHotkeys('shift+tab', (e) => {
+    if (isTypingInInput()) {
+        return;
+    }
+
+    // On data sources page, use native browser tab navigation
+    if (isOnDataSourcesPage()) {
+        return;  // Skip custom navigation, allow native browser behavior
+    }
+
+    // ... rest of custom navigation logic
+});
+```
+
+**Key Improvements:**
+- Added early return when on data sources page
+- Allows native browser Tab navigation to work properly
+- Maintains custom navigation for other pages (homepage, editor, etc.)
+- Applied to both Tab and Shift+Tab keys
+
+#### 3. Simplified Data Source Card Interaction
+**File Modified:** `frontend/src/modules/dataSources/components/GlobalDataSources/index.jsx`
+
+**Changes Made:**
+```javascript
+// Removed nested action button to eliminate conflicts
+<Card
+  key={item.key}
+  darkMode={darkMode}
+  title={item.title}
+  src={item?.src}
+  usePluginIcon={isEmpty(item?.iconFile?.data)}
+  height={'35px'}
+  width={'35px'}
+  handleClick={() => createDataSource(item)}
+  // actionButton={addDataSourceBtn(item)}  // REMOVED - was causing conflicts
+  className="datasource-card"
+  cardClassName="card--clickable"
+  titleClassName={'datasource-card-title'}
+  tags={tags}
+/>
+```
+
+**Key Improvements:**
+- Removed duplicate `actionButton` prop
+- Card now has single clear action (create data source)
+- Matches homepage AppCard pattern
+- Eliminates event propagation conflicts
+- Consistent keyboard behavior across all cards
+
+#### 4. Enhanced Card Component Keyboard Handling
+**File Modified:** `frontend/src/_ui/Card/Card.jsx`
+
+**Existing Implementation Verified:**
+```javascript
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    handleClick && handleClick();
+  }
+};
+
+<div
+  className={`card ${cardClassName}`}
+  role="button"
+  tabIndex={tabIndex}
+  onClick={(e) => {
+    e.preventDefault();
+    handleClick && handleClick();
+  }}
+  onKeyDown={handleKeyDown}
+>
+```
+
+**Status:** Already properly implemented - no changes needed
+
+### Technical Details
+
+#### Page Detection Logic
+```javascript
+const isOnDataSourcesPage = useCallback(() => {
+    return window.location.pathname.includes('/data-sources') ||
+        window.location.pathname.includes('/global-datasources') ||
+        document.querySelector('.datasource-list-container, .datasource-modal-container') !== null;
+}, []);
+```
+
+#### Event Handler Pattern
+```javascript
+const handleCategoryClick = (dataSource) => {
+  handleActions(() => handleOnSelect(dataSource.key, dataSource.type));
+};
+
+const handleCategoryKeyDown = (e, dataSource) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('SegregatedList: KeyDown triggered for', dataSource.type);
+    handleActions(() => handleOnSelect(dataSource.key, dataSource.type));
+  }
+};
+```
+
+### Testing Results
+
+#### Before Implementation:
+❌ Cannot Tab to category buttons  
+❌ Cannot activate categories with keyboard  
+❌ Inconsistent card keyboard behavior  
+❌ Some cards work (REST API, Appwrite), others don't  
+❌ KeyboardNavigation component interferes with native navigation  
+
+#### After Implementation:
+✅ Can Tab to all category buttons (Commonly used, Databases, APIs, etc.)  
+✅ Can activate categories with Enter or Space keys  
+✅ Consistent keyboard behavior across all data source cards  
+✅ Native browser Tab navigation works on data sources page  
+✅ Console logging confirms event handlers fire correctly  
+✅ Elements show as keyboard-focusable in DevTools (green checkmark)  
+
+### Files Modified
+1. `frontend/src/modules/dataSources/components/SegregatedList/index.js`
+2. `frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx`
+3. `frontend/src/modules/dataSources/components/GlobalDataSources/index.jsx`
+
+### Lessons Learned
+
+1. **Global Event Interception Risk:** Custom keyboard navigation systems must be carefully scoped to avoid interfering with native browser behavior
+
+2. **Event Handler Conflicts:** Nested interactive elements with duplicate handlers create unpredictable behavior - maintain single responsibility principle
+
+3. **Homepage Pattern Success:** The homepage AppCard pattern works well because it has clear separation:
+   - Card handles main navigation action
+   - Buttons inside card have distinct secondary actions (Edit, Launch)
+   - No duplicate handlers for the same action
+
+4. **Native vs Custom Navigation:** For simple tab navigation, native browser behavior is often more reliable than custom implementations
+
+5. **Debugging Strategy:** 
+   - Use DevTools accessibility inspector to verify focusability
+   - Add console logging to confirm event handlers fire
+   - Test both mouse and keyboard interactions
+   - Verify native browser behavior isn't being blocked
+
+### Future Enhancements
+
+1. **Complete Data Sources Navigation:**
+   - Add keyboard navigation for search input
+   - Add keyboard navigation for "DATA SOURCES ADDED" list items
+   - Implement proper focus management when creating new data sources
+   - Add keyboard shortcuts for common actions
+
+2. **Backend API Fix:**
+   - Resolve `/api/organization-variables` 404 error
+   - Fix delete button functionality for data sources
+
+3. **Accessibility Improvements:**
+   - Add visual focus indicators
+   - Implement skip-to-content links
+   - Add ARIA live regions for dynamic content updates
+   - Improve screen reader announcements
+
+### Related Documentation
+- [Homepage AppCard Pattern](./frontend/src/HomePage/AppCard.jsx)
+- [KeyboardNavigation Component](./frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx)
+- [Card UI Component](./frontend/src/_ui/Card/Card.jsx)
+
+---
+
+*Data Sources Keyboard Navigation Implementation completed on: October 24, 2025*
 *ToolJet Accessibility Improvement Initiative*

@@ -707,8 +707,6 @@ const KeyboardNavigation = () => {
             .sidebar .list-group-item,
             .datasources-sidebar button,
             .datasources-sidebar .nav-link,
-            .datasources-list,
-            .datasources-list-item,
             div[data-cy$="-datasource-button"]
         `);
         categoryButtons.forEach(button => {

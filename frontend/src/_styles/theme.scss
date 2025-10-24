@@ -8730,13 +8730,21 @@ tbody {
 }
 
 .ds-delete-btn {
-  display: none;
+  display: block;
+  visibility: visible;
   border: none;
   background: none;
-}
+  cursor: pointer;
 
-.ds-list-item:hover .ds-delete-btn {
-  display: block;
+  &:focus-visible {
+    outline: 2px solid var(--indigo7);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
 
 .toojet-db-table-footer,
@@ -18762,7 +18770,7 @@ section.ai-message-prompt-input-wrapper {
 .scrollbar-container {
   scrollbar-width: 8px;
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
-  
+
 
   &::-webkit-scrollbar {
     width: 16px;

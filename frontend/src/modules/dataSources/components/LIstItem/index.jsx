@@ -97,12 +97,21 @@ export const ListItem = ({
         </div>
         {showDeleteButton && (
           <div className="col-auto">
-            {}
+            { }
             <button
               title={'Delete'}
               disabled={disableDelButton}
               className="ds-delete-btn"
               onClick={() => onDelete(dataSource)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(dataSource);
+                }
+              }}
+              tabIndex={0}
+              aria-label={`Delete ${dataSource.name} data source`}
               data-cy={`${String(dataSource.name).toLowerCase().replace(/\s+/g, '-')}-delete-button`}
             >
               <div>

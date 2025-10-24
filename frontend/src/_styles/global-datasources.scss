@@ -41,8 +41,6 @@
             border-radius: 6px;
 
             .ds-delete-btn {
-                visibility: visible;
-
                 .disabled-button {
                     background-color: #FFFF;
                     width: 19px;
@@ -59,9 +57,20 @@
 
         .ds-delete-btn {
             display: block;
-            visibility: hidden;
+            visibility: visible;
             border: none;
             background: none;
+            cursor: pointer;
+
+            &:focus-visible {
+                outline: 2px solid var(--indigo7);
+                outline-offset: 2px;
+                border-radius: 4px;
+            }
+
+            &:disabled {
+                cursor: not-allowed;
+            }
         }
 
         .tooltip-sampl-db {
@@ -345,12 +354,12 @@
 }
 
 
-.add-plugin-card{
+.add-plugin-card {
     border: 1px dashed var(--border-default, #CCD1D5);
     background-color: var(--interactive-weak);
     height: 160px;
 
-    &:hover{
+    &:hover {
         border: 1px dashed var(--border-strong, #CCD1D5);
         background-color: var(--interactive-default);
     }
@@ -358,7 +367,7 @@
 
 
 
-.add-plugin-card-title{
+.add-plugin-card-title {
     font-weight: 500;
     font-size: 14px;
     line-height: 20px;
@@ -366,26 +375,26 @@
 }
 
 
-.dark-theme{
-    .add-plugin-card{
+.dark-theme {
+    .add-plugin-card {
         border: 1px dashed var(--border-default, #CCD1D5);
-    background-color: var(--interactive-weak);
+        background-color: var(--interactive-weak);
 
-    &:hover{
-        border: 1px dashed var(--border-strong, #CCD1D5);
-        background-color: var(--interactive-default);
-    }
+        &:hover {
+            border: 1px dashed var(--border-strong, #CCD1D5);
+            background-color: var(--interactive-default);
+        }
     }
 }
 
 
-.card-tag{
+.card-tag {
     position: relative;
     left: 85px;
     bottom: 10px;
 }
 
-.tag{
+.tag {
     flex-direction: row;
     align-items: center;
     padding: 1px 7px;
@@ -394,7 +403,7 @@
     background: linear-gradient(271.34deg, rgba(255, 95, 109, 0.12) -88.47%, rgba(255, 195, 113, 0.12) 94.89%);
     border-radius: 100px;
 
-    .p{
+    .p {
         background: linear-gradient(96.1deg, #FF5F6D -15.44%, #FFC371 99.37%);
     }
 }
