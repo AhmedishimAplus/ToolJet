@@ -1,5 +1,6 @@
 @import "./colors.scss";
 @import "./designtheme.scss";
+
 .left-sidebar {
   background: var(--page-weak) !important;
   display: flex;
@@ -12,6 +13,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    pointer-events: none;
 
     &:hover {
       background: var(--slate5);
@@ -31,13 +33,40 @@
     transition: all 0.2s ease-in-out;
     cursor: pointer;
     max-height: 32px;
+    min-height: 32px;
     width: 32px;
+    min-width: 32px;
     display: flex;
     align-items: center;
+    justify-content: center;
+    position: relative;
+
+    &:focus-visible {
+      outline: 2px solid var(--indigo7);
+      outline-offset: 2px;
+      border-radius: 6px;
+
+      .sidebar-svg-icon {
+        background: var(--slate5);
+        border-radius: 6px;
+      }
+    }
 
     &:hover {
       .debugger-badge {
         display: none;
+      }
+
+      .sidebar-svg-icon {
+        background: var(--slate5);
+        border-radius: 6px;
+      }
+    }
+
+    &:focus-visible:hover {
+      .sidebar-svg-icon {
+        background: var(--slate5);
+        border-radius: 6px;
       }
     }
   }
@@ -85,7 +114,7 @@
     max-width: 350px;
   }
 
- 
+
 
   .queryData {
     &.close {
@@ -169,11 +198,13 @@
 .global-settings-panel {
   .app-mode-switch {
     .ToggleGroup {
-     width : 100%;
+      width: 100%;
     }
+
     .ToggleGroupItem {
       font-size: 12px;
     }
+
     .ToggleGroupItem[data-state='on'] {
       .toggle-item {
         font-size: 12px;
@@ -261,7 +292,8 @@
     background-color: var(--slate3);
   }
 
-  .error-target, .error-target-custom-log {
+  .error-target,
+  .error-target-custom-log {
     background-color: var(--interactive-overlays-fill-hover) !important;
     padding: 4px 7px;
     border-radius: 7px;
@@ -302,7 +334,7 @@
   background: transparent !important;
 
   &:hover {
-    background: $primary  !important;
+    background: $primary !important;
     color: #fffffc !important;
   }
 }
@@ -611,7 +643,7 @@
   }
 }
 
-.accordion-item{
+.accordion-item {
   overflow: visible;
 }
 
@@ -625,29 +657,31 @@
 
   .tj-list-item-selected {
     .custom-icon {
-        svg {
-            color: var(--icon-accent);
-            stroke: var(--icon-accent);
-            
-        }
-    }
-  }
-    .custom-icon {
-        svg {
-          color: var(--icon-default);
-          stroke: var(--icon-default);
-      }
-    }
+      svg {
+        color: var(--icon-accent);
+        stroke: var(--icon-accent);
 
-    &.dark-theme {
-      .custom-icon {
-          svg {
-              color: #ffffff;
-              stroke: #ffffff;
-          }
       }
+    }
   }
-// }
+
+  .custom-icon {
+    svg {
+      color: var(--icon-default);
+      stroke: var(--icon-default);
+    }
+  }
+
+  &.dark-theme {
+    .custom-icon {
+      svg {
+        color: #ffffff;
+        stroke: #ffffff;
+      }
+    }
+  }
+
+  // }
 }
 
 
@@ -705,9 +739,11 @@
 
 .mobile-header {
   width: 100%;
+
   .header-container {
     background-color: unset !important;
   }
+
   .navbar {
     border-bottom: 0px !important;
   }
@@ -748,7 +784,7 @@
 .sidebar-h-100-popover {
   position: relative;
   height: 100vh;
-  overflow-y:scroll !important;
+  overflow-y: scroll !important;
   margin-top: 0px;
   border-radius: 0px !important;
   box-shadow: none !important;

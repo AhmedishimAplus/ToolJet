@@ -1,7 +1,7 @@
 import SolidIcon from '@/_ui/Icon/SolidIcons';
-import React, { forwardRef } from 'react';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import React, { forwardRef, useState } from 'react';
 import Tooltip from 'react-bootstrap/Tooltip';
+import Overlay from 'react-bootstrap/Overlay';
 import { useTranslation } from 'react-i18next';
 
 // TODO: remove refs and related dependancies
@@ -23,40 +23,95 @@ export const SidebarItem = forwardRef(
     ref
   ) => {
     const { t } = useTranslation();
+    const [showTooltip, setShowTooltip] = useState(false);
+    const [target, setTarget] = useState(null);
+
     let displayIcon = icon;
     if (icon == 'page') displayIcon = 'file01';
-    const content = (
-      <div {...rest} className={className} onClick={onClick && onClick} ref={ref}>
-        {icon && (
-          <div
-            className={`sidebar-svg-icon  position-relative ${
-              selectedSidebarItem === icon && selectedSidebarItem != 'comments' && 'sidebar-item'
-            }`}
-            data-cy={`left-sidebar-${icon.toLowerCase()}-button`}
-          >
-            <SolidIcon
-              name={displayIcon}
-              width={icon == 'settings' ? 22.4 : 20}
-              fill={selectedSidebarItem === icon ? '#3E63DD' : iconFill}
-            />
-            {commentBadge && <SidebarItem.CommentBadge />}
-          </div>
-        )}
-        {badge && <SidebarItem.Badge count={count} />}
-        <p>{text && t(`leftSidebar.${text}.text`, text)}</p>
-      </div>
-    );
 
-    if (!tip) return content;
+    const handleClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onClick) {
+        onClick(e);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onClick) {
+          onClick(e);
+        }
+      }
+    };
+
+    const handleMouseEnter = (e) => {
+      if (tip) {
+        setTarget(e.currentTarget);
+        setShowTooltip(true);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setShowTooltip(false);
+    };
+
+    const handleFocus = (e) => {
+      if (tip) {
+        setTarget(e.currentTarget);
+        setShowTooltip(true);
+      }
+    };
+
+    const handleBlur = () => {
+      setShowTooltip(false);
+    };
+
     return (
-      <OverlayTrigger
-        trigger={['click', 'hover', 'focus']}
-        placement="right"
-        delay={{ show: 250, hide: 200 }}
-        overlay={<Tooltip id="button-tooltip">{t(`leftSidebar.${tip}.tip`, tip)}</Tooltip>}
-      >
-        {content}
-      </OverlayTrigger>
+      <>
+        <div
+          {...rest}
+          className={className}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          tabIndex={0}
+          role="button"
+          aria-label={tip || text || icon}
+          ref={ref}
+        >
+          {icon && (
+            <div
+              className={`sidebar-svg-icon  position-relative ${selectedSidebarItem === icon && selectedSidebarItem != 'comments' && 'sidebar-item'
+                }`}
+              data-cy={`left-sidebar-${icon.toLowerCase()}-button`}
+            >
+              <SolidIcon
+                name={displayIcon}
+                width={icon == 'settings' ? 22.4 : 20}
+                fill={selectedSidebarItem === icon ? '#3E63DD' : iconFill}
+              />
+              {commentBadge && <SidebarItem.CommentBadge />}
+            </div>
+          )}
+          {badge && <SidebarItem.Badge count={count} />}
+          <p>{text && t(`leftSidebar.${text}.text`, text)}</p>
+        </div>
+        {tip && (
+          <Overlay target={target} show={showTooltip} placement="right">
+            {(props) => (
+              <Tooltip id="button-tooltip" {...props}>
+                {t(`leftSidebar.${tip}.tip`, tip)}
+              </Tooltip>
+            )}
+          </Overlay>
+        )}
+      </>
     );
   }
 );

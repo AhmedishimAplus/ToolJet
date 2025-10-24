@@ -193,8 +193,7 @@ export const BaseLeftSidebar = ({
           icon="debugger"
           selectedSidebarItem={selectedSidebarItem}
           darkMode={darkMode}
-          // eslint-disable-next-line no-unused-vars
-          onClick={(e) => handleSelectedSidebarItem('debugger')}
+          onClick={() => handleSelectedSidebarItem('debugger')}
           className={`left-sidebar-item  left-sidebar-layout`}
           badge={true}
           count={unreadErrorCount}
@@ -228,8 +227,7 @@ export const BaseLeftSidebar = ({
               icon="settings"
               selectedSidebarItem={selectedSidebarItem}
               darkMode={darkMode}
-              // eslint-disable-next-line no-unused-vars
-              onClick={(e) => handleSelectedSidebarItem('settings')}
+              onClick={() => handleSelectedSidebarItem('settings')}
               className={`left-sidebar-item  left-sidebar-layout`}
               badge={true}
               tip="Settings"
