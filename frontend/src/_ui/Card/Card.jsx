@@ -16,6 +16,7 @@ const Card = ({
   actionButton,
   darkMode,
   tags = [],
+  tabIndex = 0,
 }) => {
   const DisplayIcon = ({ src }) => {
     if (typeof src !== 'string') return;
@@ -35,15 +36,24 @@ const Card = ({
     return <img src={src} width={width} height={height} alt={title} className="card-icon" />;
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick && handleClick();
+    }
+  };
+
   return (
     <div style={{ height: '112px', width: '164px' }} className={`col-md-2  mb-4 ${className}`}>
       <div
         className={`card ${cardClassName}`}
         role="button"
+        tabIndex={tabIndex}
         onClick={(e) => {
           e.preventDefault();
           handleClick && handleClick();
         }}
+        onKeyDown={handleKeyDown}
         data-cy={`data-source-${String(title).toLocaleLowerCase()}`}
       >
         <div className="card-body">

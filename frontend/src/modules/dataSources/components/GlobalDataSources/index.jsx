@@ -387,7 +387,7 @@ export const GlobalDataSources = ({ darkMode = false, updateSelectedDatasource }
                 usePluginIcon={isEmpty(item?.iconFile?.data)}
                 height={'35px'}
                 width={'35px'}
-                actionButton={addDataSourceBtn(item)}
+                handleClick={() => createDataSource(item)}
                 className="datasource-card"
                 cardClassName="card--clickable"
                 titleClassName={'datasource-card-title'}

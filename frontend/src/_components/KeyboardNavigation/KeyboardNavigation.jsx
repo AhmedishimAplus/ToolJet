@@ -579,7 +579,7 @@ const KeyboardNavigation = () => {
         elements.push(...otherElements);
 
         return elements;
-    }, [isElementVisible, expandedCard, getCardButtons, isMenuOpen, getMenuItems]);
+    }, [isElementVisible, expandedCard, getCardButtons, isMenuOpen, getMenuItems, isOnDataSourcesPage, getDataSourcesPageElements]);
 
     // Helper function to check if element is visible
     const isElementVisible = useCallback((el) => {
@@ -635,6 +635,225 @@ const KeyboardNavigation = () => {
 
         return false;
     }, []);
+
+    // Check if we're on the data sources page
+    const isOnDataSourcesPage = useCallback(() => {
+        return window.location.pathname.includes('/data-sources') ||
+            window.location.pathname.includes('/global-datasources') ||
+            document.querySelector('.datasource-list-container, .datasource-modal-container') !== null;
+    }, []);
+
+    // Check if element is a data source card
+    const isDataSourceCard = useCallback((element) => {
+        return element && (
+            element.classList.contains('datasource-card') ||
+            element.classList.contains('card--clickable') ||
+            (element.classList.contains('card') && element.closest('.datasource-card')) ||
+            (element.classList.contains('card') && element.getAttribute('role') === 'button') ||
+            (element.getAttribute('data-cy') && element.getAttribute('data-cy').includes('data-source-'))
+        );
+    }, []);
+
+    // Check if element is a data source section button in sidebar
+    const isDataSourceSectionButton = useCallback((element) => {
+        if (!element) return false;
+
+        // Check if it's a data source section button
+        return (
+            element.getAttribute('role') === 'button' && element.closest('.datasources-list')
+        ) || (
+                element.classList.contains('col') &&
+                element.classList.contains('d-flex') &&
+                element.classList.contains('align-items-center') &&
+                element.closest('.datasources-list')
+            ) || (
+                element.getAttribute('data-cy') &&
+                (element.getAttribute('data-cy').includes('-datasource-button') ||
+                    element.getAttribute('data-cy').includes('-button'))
+            ) || (
+                // Check if it's inside a datasources-list container
+                element.closest('.datasources-list') &&
+                (element.getAttribute('onClick') || element.getAttribute('role') === 'button')
+            );
+    }, []);
+
+    // Make data source elements focusable
+    const makeDataSourceElementsFocusable = useCallback(() => {
+        if (!isOnDataSourcesPage()) return;
+
+        // First, make the search input focusable
+        const searchInput = document.querySelector('input[placeholder*="Search data sources"], .search-box input, input[type="text"]');
+        if (searchInput && !searchInput.hasAttribute('tabindex')) {
+            searchInput.setAttribute('tabindex', '0');
+            searchInput.classList.add('keyboard-navigable');
+        }
+
+        // Make "ALL DATA SOURCES" section header and category buttons focusable
+        const sectionHeaders = document.querySelectorAll('.datasources-info, .datasource-list-header, [data-cy="datasource-list-header"]');
+        sectionHeaders.forEach(header => {
+            if (!header.hasAttribute('tabindex')) {
+                header.setAttribute('tabindex', '0');
+                header.classList.add('keyboard-navigable');
+            }
+        });
+
+        // Make all sidebar category buttons focusable (Commonly used, Databases, APIs, etc.)
+        const categoryButtons = document.querySelectorAll(`
+            .datasources-list [role="button"], 
+            .datasources-list div[onclick],
+            .datasources-list .col.d-flex.align-items-center,
+            div[data-cy*="-datasource-button"],
+            div[data-cy*="-button"],
+            .sidebar .list-group-item,
+            .datasources-sidebar button,
+            .datasources-sidebar .nav-link,
+            .datasources-list,
+            .datasources-list-item,
+            div[data-cy$="-datasource-button"]
+        `);
+        categoryButtons.forEach(button => {
+            if (!button.hasAttribute('tabindex')) {
+                button.setAttribute('tabindex', '0');
+                button.classList.add('keyboard-navigable');
+            }
+        });
+
+        // Make ALL data source cards focusable - main cards area
+        const dataSourceCards = document.querySelectorAll(`
+            .row.row-deck .card,
+            .card--clickable, 
+            .datasource-card .card,
+            div[data-cy*="data-source-"],
+            .card[role="button"],
+            .card[onclick],
+            [data-cy$="-card"]
+        `);
+        dataSourceCards.forEach((card, index) => {
+            card.setAttribute('tabindex', '0');
+            card.classList.add('keyboard-navigable');
+            card.setAttribute('data-kb-index', index);
+        });
+
+        // Make data sources added section items focusable (the left sidebar list)
+        const addedDataSources = document.querySelectorAll(`
+            .datasource-added-item,
+            .data-sources-sidebar .list-item,
+            .datasource-list-item,
+            div[data-cy*="datasource-item"],
+            .sidebar-item,
+            .datasource-sidebar-item,
+            .global-datasources-sidebar .list-group-item,
+            .global-datasources-sidebar li,
+            .datasources-sidebar-item,
+            .datasource-item,
+            .appwrite,
+            .postgresql,
+            .restapi,
+            div[data-cy*="-item"]
+        `);
+        addedDataSources.forEach(item => {
+            if (!item.hasAttribute('tabindex')) {
+                item.setAttribute('tabindex', '0');
+                item.classList.add('keyboard-navigable');
+            }
+        });
+
+        // Make any delete buttons or action buttons focusable
+        const actionButtons = document.querySelectorAll(`
+            button[data-cy*="delete"],
+            .delete-btn,
+            .action-btn,
+            button[onclick],
+            .btn[onclick],
+            .close-btn,
+            button.tj-primary-btn,
+            button.tj-secondary-btn,
+            button.tj-tertiary-btn,
+            .ButtonSolid,
+            [role="button"]:not(.card)
+        `);
+        actionButtons.forEach(button => {
+            if (!button.hasAttribute('tabindex')) {
+                button.setAttribute('tabindex', '0');
+                button.classList.add('keyboard-navigable');
+            }
+        });
+
+        console.log('KeyboardNavigation: Made', dataSourceCards.length, 'cards,', actionButtons.length, 'action buttons, and', addedDataSources.length, 'sidebar items focusable');
+
+        // Continue with existing category button logic
+        categoryButtons.forEach(button => {
+            if (!button.hasAttribute('tabindex')) {
+                button.setAttribute('tabindex', '0');
+                button.classList.add('keyboard-navigable');
+            }
+        });
+
+        // Make search input focusable
+        const searchInputElement = document.querySelector('.datasource-search-holder input, input[placeholder*="Search data sources"]');
+        if (searchInputElement && !searchInputElement.hasAttribute('tabindex')) {
+            searchInputElement.setAttribute('tabindex', '0');
+        }
+    }, [isOnDataSourcesPage]);
+
+    // Get data sources page navigation elements in order
+    const getDataSourcesPageElements = useCallback(() => {
+        if (!isOnDataSourcesPage()) return [];
+
+        const elements = [];
+
+        // 1. Sidebar navigation (same as other pages)
+        const sidebarSelectors = [
+            '.tj-leftsidebar-icon-items[data-cy="icon-dashboard"]',
+            '.tj-leftsidebar-icon-items[data-cy="icon-workflows"]',
+            '.tj-leftsidebar-icon-items[data-cy="icon-database"]',
+            '.tj-leftsidebar-icon-items[data-cy="icon-global-datasources"]',
+            '.tj-leftsidebar-icon-items[data-cy="icon-workspace-constants"]',
+            '.notification-center-nav-item',
+            '.tj-leftsidebar-icon-items[data-cy="mode-switch-button"]',
+            '.settings-nav-item'
+        ];
+
+        sidebarSelectors.forEach(selector => {
+            const el = document.querySelector(selector);
+            if (el && isElementVisible(el)) {
+                elements.push(el);
+            }
+        });
+
+        // 2. Data source category/section buttons in sidebar
+        const categoryButtons = Array.from(document.querySelectorAll(`
+            .datasources-list [role="button"], 
+            .datasources-list div[onclick],
+            .datasources-list .col.d-flex.align-items-center,
+            div[data-cy*="-datasource-button"],
+            div[data-cy*="-button"]
+        `)).filter(el => isElementVisible(el));
+        elements.push(...categoryButtons);
+
+        // 3. "ALL DATA SOURCES" section header
+        const sectionHeaders = Array.from(document.querySelectorAll('.datasources-info, .datasource-list-header, [data-cy="datasource-list-header"]'))
+            .filter(el => isElementVisible(el));
+        elements.push(...sectionHeaders);
+
+        // 4. Search input
+        const searchInputInOrder = document.querySelector('.datasource-search-holder input, input[placeholder*="Search data sources"]');
+        if (searchInputInOrder && isElementVisible(searchInputInOrder)) {
+            elements.push(searchInputInOrder);
+        }
+
+        // 5. Data source cards - use the same selector as above
+        const dataSourceCards = Array.from(document.querySelectorAll(`
+            .row.row-deck .card,
+            .card--clickable, 
+            .datasource-card .card,
+            div[data-cy*="data-source-"],
+            .card[role="button"]
+        `)).filter(el => isElementVisible(el));
+        elements.push(...dataSourceCards);
+
+        return elements;
+    }, [isOnDataSourcesPage, isElementVisible]);
 
     // Get card buttons for expanded card navigation
     const getCardButtons = useCallback((cardElement) => {
@@ -947,6 +1166,18 @@ const KeyboardNavigation = () => {
                     }, 200); // Slightly longer delay to ensure CSS transition and tabindex setup
                 }
             }
+        } else if (isDataSourceCard(activeElement)) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // For data source cards, just click them to select/open
+            activeElement.click();
+        } else if (isDataSourceSectionButton(activeElement)) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // For data source section buttons, click them to select the section
+            activeElement.click();
         } else if (isMenuButton(activeElement)) {
             e.preventDefault();
             e.stopPropagation();
@@ -1017,7 +1248,7 @@ const KeyboardNavigation = () => {
                 activeElement.click();
             }
         }
-    }, [isInputElement, isInputMode, isAppCard, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, isMenuItem, makeMenuItemsFocusable]);
+    }, [isInputElement, isInputMode, isAppCard, isDataSourceCard, isDataSourceSectionButton, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, isMenuItem, makeMenuItemsFocusable]);
 
     // Global keydown handler to intercept card keyboard events before they reach the card's handler
     useEffect(() => {
@@ -1346,6 +1577,11 @@ const KeyboardNavigation = () => {
             return;
         }
 
+        // On data sources page, use native browser tab navigation
+        if (isOnDataSourcesPage()) {
+            return;
+        }
+
         // Force navigation to work even if blocking modals are present
         if (isInBlockingModal()) {
             e.preventDefault();
@@ -1368,6 +1604,11 @@ const KeyboardNavigation = () => {
     useHotkeys('shift+tab', (e) => {
         // Don't prevent default if user is typing in an input field
         if (isTypingInInput()) {
+            return;
+        }
+
+        // On data sources page, use native browser tab navigation
+        if (isOnDataSourcesPage()) {
             return;
         }
 
@@ -1717,6 +1958,67 @@ const KeyboardNavigation = () => {
             mainPageObserver.disconnect();
         };
     }, [isInModal]);
+
+    // Make data sources page elements focusable when on data sources page
+    useEffect(() => {
+        if (!isOnDataSourcesPage()) return;
+
+        const makeDataSourcesPageElementsFocusable = () => {
+            makeDataSourceElementsFocusable();
+        };
+
+        // Set up MutationObserver to watch for data sources page content changes
+        const dataSourcesObserver = new MutationObserver((mutations) => {
+            let contentChanged = false;
+
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) { // Element node
+                            // Check for data sources related content being added
+                            if (node.classList?.contains('datasource-card') ||
+                                node.classList?.contains('card--clickable') ||
+                                node.classList?.contains('datasources-list') ||
+                                node.classList?.contains('datasource-search-holder') ||
+                                node.querySelector?.('.datasource-card, .card--clickable, .datasources-list, .datasource-search-holder')) {
+                                contentChanged = true;
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (contentChanged) {
+                // Delay to ensure content is fully rendered
+                setTimeout(makeDataSourcesPageElementsFocusable, 100);
+            }
+        });
+
+        // Start observing the data sources content areas
+        const dataSourcesContainer = document.querySelector('.datasource-list-container, .datasource-modal-container');
+        const sidebarContainer = document.querySelector('.tj-leftsidebar');
+
+        if (dataSourcesContainer) {
+            dataSourcesObserver.observe(dataSourcesContainer, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        if (sidebarContainer) {
+            dataSourcesObserver.observe(sidebarContainer, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        // Initial check for existing data sources elements
+        makeDataSourcesPageElementsFocusable();
+
+        return () => {
+            dataSourcesObserver.disconnect();
+        };
+    }, [isOnDataSourcesPage, makeDataSourceElementsFocusable]);
 
     // Add focus listener to ensure sidebar search inputs work when focused
     useEffect(() => {

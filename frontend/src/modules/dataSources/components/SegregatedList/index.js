@@ -5,6 +5,20 @@ import useGlobalDatasourceUnsavedChanges from '@/_hooks/useGlobalDatasourceUnsav
 export const SegregatedList = ({ dataSources, activeDatasourceList, handleOnSelect }) => {
   const { handleActions } = useGlobalDatasourceUnsavedChanges();
   const totalDataSources = dataSources.reduce((acc, filteredGroup) => [...acc, ...filteredGroup.list], []).length;
+
+  const handleCategoryClick = (dataSource) => {
+    handleActions(() => handleOnSelect(dataSource.key, dataSource.type));
+  };
+
+  const handleCategoryKeyDown = (e, dataSource) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('SegregatedList: KeyDown triggered for', dataSource.type);
+      handleActions(() => handleOnSelect(dataSource.key, dataSource.type));
+    }
+  };
+
   return (
     <>
       <div className="datasources-info tj-text-xsm datasource-list-header" data-cy="datasource-list-header">
@@ -21,7 +35,10 @@ export const SegregatedList = ({ dataSources, activeDatasourceList, handleOnSele
           >
             <div
               role="button"
-              onClick={() => handleActions(() => handleOnSelect(dataSource.key, dataSource.type))}
+              tabIndex={0}
+              aria-label={`${dataSource.type} data sources category`}
+              onClick={() => handleCategoryClick(dataSource)}
+              onKeyDown={(e) => handleCategoryKeyDown(e, dataSource)}
               className="col d-flex align-items-center overflow-hidden"
               data-cy={`${dataSource.key
                 .toLowerCase()
