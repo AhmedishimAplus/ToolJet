@@ -11,7 +11,35 @@ The improvements focused on addressing the main categories identified in the Lig
 - Touch target sizing
 - **Keyboard navigation (Data Sources page)**
 
-## Latest Update - October 24, 2025
+## Latest Update - October 28, 2025
+**Code Editor Keyboard Navigation Mode:**
+- Implemented Enter-to-Edit and Escape-to-Exit navigation pattern for code editors
+- When tabbing to a code editor, it receives focus with a visible outline (navigation mode)
+- Press **Enter** to activate edit mode - allows typing and Tab for indentation
+- Press **Escape** to exit edit mode and return to navigation mode
+- Visual indicator shows current mode and available keyboard shortcuts
+- Prevents accidental Tab indentation when navigating through the UI
+- Follows accessibility best practices for complex interactive widgets
+
+**Right Sidebar Keyboard Navigation:**
+- Enhanced right sidebar icons (Components, Properties, Pages) with full keyboard support
+- Added `tabIndex={0}`, `role="button"`, and keyboard event handlers
+- Replaced OverlayTrigger with manual Overlay to prevent click interference
+- Added focus states matching left sidebar styling (blue outline on focus)
+- Icons now respond to Enter/Space keys in addition to mouse clicks
+- Consistent visual feedback between keyboard and mouse navigation
+
+**Implementation Details:**
+- Modified `SingleLineCodeEditor.jsx` to track edit mode state
+- Added wrapper div with `tabIndex={0}` for keyboard focus
+- Custom keymap for Tab (only indents in edit mode) and Escape (exits edit mode)
+- Editor is `readOnly` when not in edit mode
+- Visual feedback via outline and tooltip showing keyboard shortcuts
+- Accessible ARIA labels explaining interaction pattern
+- Updated `RightSideBar/SidebarItem.jsx` with keyboard navigation
+- Added CSS focus styles to `rightSidebarToggle.scss`
+
+## Previous Update - October 24, 2025
 **Data Sources Page Keyboard Navigation:**
 - Implemented comprehensive keyboard navigation for the Global Data Sources page
 - Fixed keyboard accessibility for data source category buttons (Commonly used, Databases, APIs, etc.)

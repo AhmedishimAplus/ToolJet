@@ -230,6 +230,8 @@ const EditorInput = ({
 
   const getSuggestions = useStore((state) => state.getSuggestions, shallow);
   const [codeMirrorView, setCodeMirrorView] = useState(undefined);
+  const [isEditMode, setIsEditMode] = useState(false); // Track if editor is in edit mode
+  const editorWrapperRef = useRef(null); // Ref for the editor wrapper
 
   const getServerSideGlobalResolveSuggestions = useStore(
     (state) => state.getServerSideGlobalResolveSuggestions,
@@ -321,6 +323,11 @@ const EditorInput = ({
     {
       key: 'Tab',
       run: (view) => {
+        // If not in edit mode, prevent Tab from indenting and let it move focus
+        if (!isEditMode) {
+          return false; // Let browser handle Tab navigation
+        }
+
         if (completionStatus(view.state)) {
           return acceptCompletion(view);
         }
@@ -336,6 +343,22 @@ const EditorInput = ({
           });
           return true;
         }
+      },
+    },
+    {
+      key: 'Escape',
+      run: (view) => {
+        // Exit edit mode on Escape
+        if (isEditMode) {
+          setIsEditMode(false);
+          view.contentDOM.blur();
+          // Focus the wrapper to show focus outline
+          if (editorWrapperRef.current) {
+            editorWrapperRef.current.focus();
+          }
+          return true;
+        }
+        return false;
       },
     },
     ...queryPanelKeybindings,
@@ -390,6 +413,31 @@ const EditorInput = ({
     setTimeout(() => {
       setFocus(true);
     }, 50);
+  };
+
+  const handleEditorWrapperKeyDown = (event) => {
+    // When wrapper is focused and Enter is pressed, enter edit mode
+    if (event.key === 'Enter' && !isEditMode) {
+      event.preventDefault();
+      setIsEditMode(true);
+      // Focus the CodeMirror editor
+      if (codeMirrorView) {
+        codeMirrorView.focus();
+      }
+    }
+  };
+
+  const handleEditorWrapperFocus = () => {
+    // When wrapper gains focus via Tab (not from clicking inside editor)
+    if (!isEditMode) {
+      handleFocus();
+    }
+  };
+
+  const handleEditorMouseDown = () => {
+    // Clicking directly on editor enters edit mode immediately
+    setIsEditMode(true);
+    handleFocus();
   };
 
   // in query panel we are allowing code editor to have dynamic height, this observer is to show/hide preview box based on the visibility of the editor
@@ -463,55 +511,76 @@ const EditorInput = ({
             className="check-here"
             ref={isOpen ? fullScreenPreviewRef : previewRef}
           >
-            <CodeMirror
-              onCreateEditor={(view) => {
-                setCodeMirrorView(view);
-                if (setCodeEditorView) {
-                  setCodeEditorView(view);
+            <div
+              ref={editorWrapperRef}
+              tabIndex={disabled || isEditMode ? -1 : 0}
+              onKeyDown={handleEditorWrapperKeyDown}
+              onFocus={handleEditorWrapperFocus}
+              className={`code-editor-navigation-wrapper ${!isEditMode && isFocused ? 'navigation-mode-focused' : ''}`}
+              role="textbox"
+              aria-label={`Code editor for ${paramLabel || componentName}. Press Enter to edit, Escape to exit edit mode.`}
+              style={{
+                outline: !isEditMode && isFocused ? '2px solid var(--indigo7)' : 'none',
+                outlineOffset: '2px',
+                borderRadius: '4px',
+              }}
+            >
+              <CodeMirror
+                onCreateEditor={(view) => {
+                  setCodeMirrorView(view);
+                  if (setCodeEditorView) {
+                    setCodeEditorView(view);
+                  }
+                }}
+                value={currentValue}
+                placeholder={placeholder}
+                height={isInsideQueryPane ? '100%' : showLineNumbers ? '400px' : '100%'}
+                width="100%"
+                extensions={
+                  showSuggestions
+                    ? [
+                      javascript({ jsx: lang === 'jsx' }),
+                      autoCompleteConfig,
+                      keymap.of([...customKeyMaps]),
+                      customTabKeymap,
+                    ]
+                    : [javascript({ jsx: lang === 'jsx' })]
                 }
-              }}
-              value={currentValue}
-              placeholder={placeholder}
-              height={isInsideQueryPane ? '100%' : showLineNumbers ? '400px' : '100%'}
-              width="100%"
-              extensions={
-                showSuggestions
-                  ? [
-                    javascript({ jsx: lang === 'jsx' }),
-                    autoCompleteConfig,
-                    keymap.of([...customKeyMaps]),
-                    customTabKeymap,
-                  ]
-                  : [javascript({ jsx: lang === 'jsx' })]
-              }
-              onChange={(val) => {
-                setFirstTimeFocus(false);
-                handleOnChange(val);
-                onInputChange && onInputChange(val);
-              }}
-              basicSetup={{
-                lineNumbers: showLineNumbers,
-                syntaxHighlighting: true,
-                bracketMatching: true,
-                foldGutter: false,
-                highlightActiveLine: false,
-                autocompletion: true,
-                defaultKeymap: false,
-                completionKeymap: true,
-                searchKeymap: false,
-              }}
-              onMouseDown={() => handleFocus()}
-              onBlur={() => handleOnBlur()}
-              className={customClassNames}
-              theme={theme}
-              indentWithTab={false}
-              readOnly={disabled}
-              onKeyDown={(event) => {
-                if (event.key === 'Backspace') {
-                  startCompletion(codeMirrorView);
-                }
-              }}
-            />
+                onChange={(val) => {
+                  setFirstTimeFocus(false);
+                  handleOnChange(val);
+                  onInputChange && onInputChange(val);
+                }}
+                basicSetup={{
+                  lineNumbers: showLineNumbers,
+                  syntaxHighlighting: true,
+                  bracketMatching: true,
+                  foldGutter: false,
+                  highlightActiveLine: false,
+                  autocompletion: true,
+                  defaultKeymap: false,
+                  completionKeymap: true,
+                  searchKeymap: false,
+                }}
+                onMouseDown={handleEditorMouseDown}
+                onBlur={() => {
+                  // Only exit edit mode and blur if clicking outside
+                  if (isEditMode) {
+                    setIsEditMode(false);
+                  }
+                  handleOnBlur();
+                }}
+                className={customClassNames}
+                theme={theme}
+                indentWithTab={false}
+                readOnly={disabled || !isEditMode}
+                onKeyDown={(event) => {
+                  if (event.key === 'Backspace' && isEditMode) {
+                    startCompletion(codeMirrorView);
+                  }
+                }}
+              />
+            </div>
           </div>
         </ErrorBoundary>
       </CodeHinter.Portal>

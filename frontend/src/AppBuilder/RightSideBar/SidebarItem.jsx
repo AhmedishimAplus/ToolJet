@@ -1,7 +1,8 @@
 import SolidIcon from '@/_ui/Icon/SolidIcons';
-import React, { forwardRef } from 'react';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import { ToolTip } from '@/_components';
+import React, { forwardRef, useState } from 'react';
+import Tooltip from 'react-bootstrap/Tooltip';
+import Overlay from 'react-bootstrap/Overlay';
+import { useTranslation } from 'react-i18next';
 
 // TODO: remove refs and related dependancies
 export const SidebarItem = forwardRef(
@@ -19,13 +20,71 @@ export const SidebarItem = forwardRef(
     },
     ref
   ) => {
+    const { t } = useTranslation();
+    const [showTooltip, setShowTooltip] = useState(false);
+    const [target, setTarget] = useState(null);
+
     let displayIcon = icon;
+
+    const handleClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onClick) {
+        onClick(e);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onClick) {
+          onClick(e);
+        }
+      }
+    };
+
+    const handleMouseEnter = (e) => {
+      if (tip) {
+        setTarget(e.currentTarget);
+        setShowTooltip(true);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setShowTooltip(false);
+    };
+
+    const handleFocus = (e) => {
+      if (tip) {
+        setTarget(e.currentTarget);
+        setShowTooltip(true);
+      }
+    };
+
+    const handleBlur = () => {
+      setShowTooltip(false);
+    };
+
     return (
-      <ToolTip placement="left" message={tip}>
-        <div {...rest} className={className} onClick={onClick && onClick} ref={ref}>
+      <>
+        <div
+          {...rest}
+          className={className}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          tabIndex={0}
+          role="button"
+          aria-label={tip || text || icon}
+          ref={ref}
+        >
           {icon && (
             <div
-              className={`sidebar-svg-icon  position-relative ${selectedSidebarItem && 'sidebar-item'}`}
+              className={`sidebar-svg-icon position-relative ${selectedSidebarItem && 'sidebar-item'}`}
               data-cy={`right-sidebar-${icon.toLowerCase()}-button`}
             >
               <SolidIcon name={displayIcon} width={iconWidth} fill={selectedSidebarItem ? '#3E63DD' : iconFill} />
@@ -33,7 +92,15 @@ export const SidebarItem = forwardRef(
           )}
           <p></p>
         </div>
-      </ToolTip>
+
+        <Overlay target={target} show={showTooltip} placement="left">
+          {(props) => (
+            <Tooltip id={`tooltip-${icon}`} {...props}>
+              {tip}
+            </Tooltip>
+          )}
+        </Overlay>
+      </>
     );
   }
 );

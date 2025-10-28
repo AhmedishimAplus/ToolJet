@@ -1935,3 +1935,39 @@ $border-radius: 4px;
     max-height: 100px;
   }
 }
+
+// Code editor navigation mode styles
+.code-editor-navigation-wrapper {
+  position: relative;
+  transition: outline 0.2s ease-in-out;
+
+  &:focus {
+    outline: 2px solid var(--indigo7);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  &.navigation-mode-focused {
+
+    // Visual indicator when in navigation mode
+    &::after {
+      content: 'Press Enter to edit, Esc to exit';
+      position: absolute;
+      top: -24px;
+      right: 0;
+      font-size: 11px;
+      color: var(--slate11);
+      background: var(--slate3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.9;
+    }
+  }
+
+  // Make CodeMirror take full size
+  .cm-editor {
+    height: 100%;
+  }
+}
