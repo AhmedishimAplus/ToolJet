@@ -29,6 +29,14 @@ The improvements focused on addressing the main categories identified in the Lig
 - Icons now respond to Enter/Space keys in addition to mouse clicks
 - Consistent visual feedback between keyboard and mouse navigation
 
+**Component Cards Keyboard Navigation:**
+- Made all component cards (Button, Table, Form, etc.) keyboard focusable
+- Added `tabIndex={0}` and `role="button"` to draggable component cards
+- Pressing **Enter** or **Space** on a component card adds it to the canvas
+- Visual focus indicator (blue outline + background highlight) when navigating with Tab
+- Hover effect also applies to focused components for consistent feedback
+- Works for both regular components and module components
+
 **Implementation Details:**
 - Modified `SingleLineCodeEditor.jsx` to track edit mode state
 - Added wrapper div with `tabIndex={0}` for keyboard focus
@@ -38,6 +46,8 @@ The improvements focused on addressing the main categories identified in the Lig
 - Accessible ARIA labels explaining interaction pattern
 - Updated `RightSideBar/SidebarItem.jsx` with keyboard navigation
 - Added CSS focus styles to `rightSidebarToggle.scss`
+- Updated `DragLayer.jsx` to handle keyboard events for adding components
+- Added focus and hover styles to `.draggable-box` in `theme.scss`
 
 ## Previous Update - October 24, 2025
 **Data Sources Page Keyboard Navigation:**

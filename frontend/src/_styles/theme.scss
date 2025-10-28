@@ -3035,6 +3035,18 @@ input:focus-visible {
 .components-container {
   .draggable-box {
     cursor: move;
+    border-radius: 4px;
+    transition: outline 0.2s ease-in-out, background-color 0.2s ease-in-out;
+
+    &:focus-visible {
+      outline: 2px solid var(--indigo7);
+      outline-offset: 2px;
+      background-color: var(--slate3);
+    }
+
+    &:hover {
+      background-color: var(--slate3);
+    }
   }
 }
 

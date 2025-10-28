@@ -19,6 +19,7 @@ export const DragLayer = ({ index, component, isModuleTab = false, disabled = fa
   const { isModuleEditor } = useModuleContext();
   const setShowModuleBorder = useStore((state) => state.setShowModuleBorder, shallow) || noop;
   const { handleDrop } = useCanvasDropHandler() || noop;
+  const dragRef = useRef(null);
 
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
@@ -46,6 +47,23 @@ export const DragLayer = ({ index, component, isModuleTab = false, disabled = fa
     }
   }, [isDragging, setShowModuleBorder, isModuleEditor, toggleRightSidebar]);
 
+  const handleKeyDown = (e) => {
+    if (disabled) return;
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      // Trigger the drop action when Enter or Space is pressed
+      const item = { componentType: component.component, component };
+      const currentDragCanvasId = useGridStore.getState().currentDragCanvasId;
+      handleDrop(item, currentDragCanvasId);
+
+      // Close sidebar if not pinned
+      if (!isModuleEditor && !isRightSidebarPinned) {
+        toggleRightSidebar(false);
+      }
+    }
+  };
+
   // const size = isModuleTab
   //   ? component.module_container.layouts[currentLayout]
   //   : component.defaultSize || { width: 30, height: 40 };
@@ -53,9 +71,18 @@ export const DragLayer = ({ index, component, isModuleTab = false, disabled = fa
   return (
     <>
       <div
-        ref={disabled ? undefined : drag}
+        ref={(node) => {
+          dragRef.current = node;
+          if (!disabled) {
+            drag(node);
+          }
+        }}
         className={`draggable-box${disabled ? ' disabled' : ''}`}
         style={{ height: '100%', width: isModuleTab && '100%' }}
+        tabIndex={disabled ? -1 : 0}
+        role="button"
+        aria-label={`Add ${component.displayName} component to canvas`}
+        onKeyDown={handleKeyDown}
       >
         {isModuleTab ? <ModuleWidgetBox module={component} /> : <WidgetBox index={index} component={component} />}
       </div>
