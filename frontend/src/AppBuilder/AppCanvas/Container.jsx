@@ -51,6 +51,10 @@ const Container = React.memo(
     const currentLayout = useStore((state) => state.currentLayout, shallow);
     const setFocusedParentId = useStore((state) => state.setFocusedParentId, shallow);
 
+    // Get keyboard placement mode to show grid
+    const keyboardPlacementMode = useStore((state) => state.getKeyboardPlacementMode?.(), shallow);
+    const isKeyboardPlacing = keyboardPlacementMode?.active || false;
+
     // Initialize ghost moveable hook
     const { activateMoveableGhost, deactivateMoveableGhost } = useDropVirtualMoveableGhost();
 
@@ -105,7 +109,8 @@ const Container = React.memo(
       currentMode === 'edit' &&
       (id === 'canvas' || componentType === 'ModuleContainer') &&
       components.length === 0 &&
-      !isDragging;
+      !isDragging &&
+      !isKeyboardPlacing;
 
     function getContainerCanvasWidth() {
       if (canvasWidth !== undefined) {
@@ -170,8 +175,8 @@ const Container = React.memo(
             currentMode === 'view'
               ? computeViewerBackgroundColor(darkMode, canvasBgColor)
               : id === 'canvas'
-              ? canvasBgColor
-              : '#f0f0f0',
+                ? canvasBgColor
+                : '#f0f0f0',
           width: '100%',
           maxWidth: (() => {
             // For Main Canvas
@@ -194,7 +199,7 @@ const Container = React.memo(
         }}
         className={cx('real-canvas', {
           'sub-canvas': id !== 'canvas' && appType !== 'module',
-          'show-grid': isDragging && (index === 0 || index === null) && currentMode === 'edit' && appType !== 'module',
+          'show-grid': (isDragging || isKeyboardPlacing) && (index === 0 || index === null) && currentMode === 'edit' && appType !== 'module',
           'module-container': appType === 'module',
           'is-module-editor': isModuleEditor,
         })}

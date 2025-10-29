@@ -42,18 +42,34 @@ export const addNewWidgetToTheEditor = (
   const defaultWidth = componentData.defaultSize.width;
   const defaultHeight = componentData.defaultSize.height;
 
-  const { e } = useGridStore.getState().getGhostDragPosition();
+  // Calculate gridWidth early - needed for both keyboard and mouse placement
   const subContainerWidth = canvasBoundingRect?.width;
-
-  const { left: _left, top: _top } = getMouseDistanceFromParentDiv(
-    e,
-    parentId === 'canvas' ? 'real-canvas' : parentId,
-    parentCanvasType
-  );
-  let [left, top] = snapToGrid(subContainerWidth, _left, _top);
-
   const gridWidth = subContainerWidth / NO_OF_GRIDS;
-  left = Math.round(left / gridWidth);
+
+  // Check if this is a keyboard placement
+  const keyboardDropPosition = realCanvasRef?.getAttribute('data-keyboard-drop-position');
+  let left, top;
+
+  if (keyboardDropPosition) {
+    // Use keyboard placement position
+    const position = JSON.parse(keyboardDropPosition);
+    left = position.left;
+    top = position.top;
+    // Clear the attribute after use
+    realCanvasRef.removeAttribute('data-keyboard-drop-position');
+  } else {
+    // Use mouse position (original behavior)
+    const { e } = useGridStore.getState().getGhostDragPosition();
+
+    const { left: _left, top: _top } = getMouseDistanceFromParentDiv(
+      e,
+      parentId === 'canvas' ? 'real-canvas' : parentId,
+      parentCanvasType
+    );
+    [left, top] = snapToGrid(subContainerWidth, _left, _top);
+
+    left = Math.round(left / gridWidth);
+  }
 
   // Adjust widget width based on the dropping canvas width
   const mainCanvasWidth = useGridStore.getState().subContainerWidths['canvas'];

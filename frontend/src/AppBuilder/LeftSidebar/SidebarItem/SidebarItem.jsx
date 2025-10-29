@@ -25,6 +25,7 @@ export const SidebarItem = forwardRef(
     const { t } = useTranslation();
     const [showTooltip, setShowTooltip] = useState(false);
     const [target, setTarget] = useState(null);
+    const tooltipTimerRef = React.useRef(null);
 
     let displayIcon = icon;
     if (icon == 'page') displayIcon = 'file01';
@@ -50,24 +51,47 @@ export const SidebarItem = forwardRef(
     const handleMouseEnter = (e) => {
       if (tip) {
         setTarget(e.currentTarget);
-        setShowTooltip(true);
+        // Add delay to prevent flashing
+        tooltipTimerRef.current = setTimeout(() => {
+          setShowTooltip(true);
+        }, 500); // 500ms delay
       }
     };
 
     const handleMouseLeave = () => {
+      // Clear timeout if mouse leaves before tooltip shows
+      if (tooltipTimerRef.current) {
+        clearTimeout(tooltipTimerRef.current);
+        tooltipTimerRef.current = null;
+      }
       setShowTooltip(false);
     };
 
     const handleFocus = (e) => {
       if (tip) {
         setTarget(e.currentTarget);
+        // Show immediately on keyboard focus for accessibility
         setShowTooltip(true);
       }
     };
 
     const handleBlur = () => {
+      // Clear timeout on blur
+      if (tooltipTimerRef.current) {
+        clearTimeout(tooltipTimerRef.current);
+        tooltipTimerRef.current = null;
+      }
       setShowTooltip(false);
     };
+
+    // Cleanup on unmount
+    React.useEffect(() => {
+      return () => {
+        if (tooltipTimerRef.current) {
+          clearTimeout(tooltipTimerRef.current);
+        }
+      };
+    }, []);
 
     return (
       <>

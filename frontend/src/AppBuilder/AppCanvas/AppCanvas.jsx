@@ -26,6 +26,7 @@ import PagesSidebarNavigation from '../RightSideBar/PageSettingsTab/PageMenu/Pag
 import { DragGhostWidget, ResizeGhostWidget } from './GhostWidgets';
 import AppCanvasBanner from '../../AppBuilder/Header/AppCanvasBanner';
 import { debounce } from 'lodash';
+import { KeyboardPlacementOverlay } from './KeyboardPlacementOverlay';
 
 export const AppCanvas = ({ appId, switchDarkMode, darkMode }) => {
   const { moduleId, isModuleMode, appType } = useModuleContext();
@@ -118,8 +119,8 @@ export const AppCanvas = ({ appId, switchDarkMode, darkMode }) => {
       currentMode === 'view'
         ? computeViewerBackgroundColor(isAppDarkMode, canvasBgColor)
         : !isAppDarkMode
-        ? '#EBEBEF'
-        : '#2F3C4C';
+          ? '#EBEBEF'
+          : '#2F3C4C';
 
     if (isModuleMode) {
       return {
@@ -254,6 +255,7 @@ export const AppCanvas = ({ appId, switchDarkMode, darkMode }) => {
                     <>
                       <DragGhostWidget />
                       <ResizeGhostWidget />
+                      <KeyboardPlacementOverlay />
                     </>
                   )}
                   <div id="component-portal" />

@@ -32,10 +32,17 @@ The improvements focused on addressing the main categories identified in the Lig
 **Component Cards Keyboard Navigation:**
 - Made all component cards (Button, Table, Form, etc.) keyboard focusable
 - Added `tabIndex={0}` and `role="button"` to draggable component cards
-- Pressing **Enter** or **Space** on a component card adds it to the canvas
+- Pressing **Enter** or **Space** on a component card starts keyboard placement mode
+- **Keyboard Placement Mode:**
+  - Shows a ghost/preview of the component on the canvas
+  - Use **Arrow keys** (↑ ↓ ← →) to move the preview around the canvas
+  - Press **Enter** to place the component at the current position
+  - Press **Escape** to cancel and exit placement mode
+  - Visual indicator shows available keyboard shortcuts
 - Visual focus indicator (blue outline + background highlight) when navigating with Tab
 - Hover effect also applies to focused components for consistent feedback
 - Works for both regular components and module components
+- Mouse drag-and-drop functionality remains unchanged
 
 **Implementation Details:**
 - Modified `SingleLineCodeEditor.jsx` to track edit mode state

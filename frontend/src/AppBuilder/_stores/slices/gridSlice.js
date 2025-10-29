@@ -15,6 +15,11 @@ const initialState = {
     containerId: null,
     triggerUpdate: 0,
   },
+  keyboardPlacementMode: {
+    active: false,
+    component: null,
+    position: { top: 100, left: 20 }, // Initial position in pixels/grid units
+  },
 };
 
 export const createGridSlice = (set, get) => ({
@@ -83,6 +88,52 @@ export const createGridSlice = (set, get) => ({
     setComponentLayout(layouts);
     debouncedToggleCanvasUpdater();
   },
+  // Keyboard placement mode actions
+  startKeyboardPlacement: (component) =>
+    set(() => ({
+      keyboardPlacementMode: {
+        active: true,
+        component,
+        position: { top: 100, left: 20 },
+      },
+    })),
+  moveKeyboardPlacementPosition: (direction) => {
+    const { keyboardPlacementMode } = get();
+    if (!keyboardPlacementMode.active) return;
+
+    let { top, left } = keyboardPlacementMode.position;
+
+    switch (direction) {
+      case 'ArrowLeft':
+        left = Math.max(0, left - 1);
+        break;
+      case 'ArrowRight':
+        left = Math.min(NO_OF_GRIDS - 10, left + 1); // Assuming component width ~10
+        break;
+      case 'ArrowDown':
+        top = top + 10;
+        break;
+      case 'ArrowUp':
+        top = Math.max(0, top - 10);
+        break;
+    }
+
+    set(() => ({
+      keyboardPlacementMode: {
+        ...keyboardPlacementMode,
+        position: { top, left },
+      },
+    }));
+  },
+  cancelKeyboardPlacement: () =>
+    set(() => ({
+      keyboardPlacementMode: {
+        active: false,
+        component: null,
+        position: { top: 100, left: 20 },
+      },
+    })),
+  getKeyboardPlacementMode: () => get().keyboardPlacementMode,
   setLastCanvasIdClick: (id) => set(() => ({ lastCanvasIdClick: id })),
   setLastCanvasClickPosition: (position) => {
     set({ lastCanvasClickPosition: position });

@@ -52,19 +52,17 @@ export const DragLayer = ({ index, component, isModuleTab = false, disabled = fa
 
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      // Trigger the drop action when Enter or Space is pressed
-      const item = { componentType: component.component, component };
-      const currentDragCanvasId = useGridStore.getState().currentDragCanvasId;
-      handleDrop(item, currentDragCanvasId);
+
+      // Start keyboard placement mode
+      const startKeyboardPlacement = useStore.getState().startKeyboardPlacement;
+      startKeyboardPlacement(component);
 
       // Close sidebar if not pinned
       if (!isModuleEditor && !isRightSidebarPinned) {
         toggleRightSidebar(false);
       }
     }
-  };
-
-  // const size = isModuleTab
+  };  // const size = isModuleTab
   //   ? component.module_container.layouts[currentLayout]
   //   : component.defaultSize || { width: 30, height: 40 };
 
