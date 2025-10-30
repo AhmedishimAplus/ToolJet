@@ -29,20 +29,27 @@ The improvements focused on addressing the main categories identified in the Lig
 - Icons now respond to Enter/Space keys in addition to mouse clicks
 - Consistent visual feedback between keyboard and mouse navigation
 
-**Component Cards Keyboard Navigation:**
-- Made all component cards (Button, Table, Form, etc.) keyboard focusable
-- Added `tabIndex={0}` and `role="button"` to draggable component cards
-- Pressing **Enter** or **Space** on a component card starts keyboard placement mode
+
+**Component Cards Keyboard Navigation & Keyboard Placement Mode:**
+- All component cards (Button, Table, Form, etc.) are now fully keyboard focusable (`tabIndex={0}` and `role="button"`).
+- Press **Enter** or **Space** on a component card to start keyboard placement mode.
 - **Keyboard Placement Mode:**
-  - Shows a ghost/preview of the component on the canvas
-  - Use **Arrow keys** (↑ ↓ ← →) to move the preview around the canvas
-  - Press **Enter** to place the component at the current position
-  - Press **Escape** to cancel and exit placement mode
-  - Visual indicator shows available keyboard shortcuts
-- Visual focus indicator (blue outline + background highlight) when navigating with Tab
-- Hover effect also applies to focused components for consistent feedback
-- Works for both regular components and module components
-- Mouse drag-and-drop functionality remains unchanged
+  - Canvas switches to grid mode (even from empty state) and shows a light grey ghost/preview of the component, matching the mouse drag-and-drop style.
+  - Use **Arrow keys** (↑ ↓ ← →) to move the preview around the canvas grid.
+  - Press **Enter** to place the component at the current position.
+  - Press **Escape** to cancel and exit placement mode.
+  - Visual tooltip above the preview shows available keyboard shortcuts.
+- Visual focus indicator (blue outline + background highlight) when navigating with Tab.
+- Hover effect also applies to focused components for consistent feedback.
+- Works for both regular components and module components.
+- Mouse drag-and-drop functionality remains unchanged and is not affected by keyboard improvements.
+
+**Documentation Keyboard Navigation:**
+- All documentation pages (including sidebar, search, and content) are fully keyboard accessible.
+- Use **Tab** and **Shift+Tab** to move between navigation, sidebar, and main content.
+- Sidebar links and expand/collapse toggles are focusable and operable with **Enter** or **Space**.
+- Search input is focusable and can be activated with keyboard shortcuts (typically `/` or `Ctrl+K`).
+- All links and buttons in documentation have visible focus indicators and ARIA labels where appropriate.
 
 **Implementation Details:**
 - Modified `SingleLineCodeEditor.jsx` to track edit mode state
