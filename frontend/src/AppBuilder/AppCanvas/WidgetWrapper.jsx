@@ -40,6 +40,9 @@ const WidgetWrapper = memo(
     );
     const setHoveredComponentForGrid = useStore((state) => state.setHoveredComponentForGrid, shallow);
     const setSelectedComponents = useStore((state) => state.setSelectedComponents, shallow);
+    const setSelectedNodePath = useStore((state) => state.setSelectedNodePath, shallow);
+    const selectedSidebarItem = useStore((state) => state.selectedSidebarItem, shallow);
+    const componentName = useStore((state) => state.getComponentDefinition(id, moduleId)?.component?.name || '', shallow);
     const canShowInCurrentLayout = useStore((state) => {
       const others = state.getResolvedComponent(id, subContainerIndex, moduleId)?.others;
       return others?.[currentLayout === 'mobile' ? 'showOnMobile' : 'showOnDesktop'];
@@ -109,9 +112,25 @@ const WidgetWrapper = memo(
           onMouseEnter={() => {
             if (isDragging || isModuleContainer) return;
             setHoveredComponentForGrid(id);
+            // Update State Inspector to show this component when inspect tab is active
+            if (selectedSidebarItem === 'inspect' && componentName) {
+              setSelectedNodePath(`components.${componentName}`);
+            }
           }}
           onMouseLeave={() => {
             if (isDragging || isModuleContainer) return;
+            setHoveredComponentForGrid('');
+          }}
+          onFocus={() => {
+            if (isDragging || isModuleContainer || readOnly) return;
+            setHoveredComponentForGrid(id);
+            // Update State Inspector to show this component when inspect tab is active
+            if (selectedSidebarItem === 'inspect' && componentName) {
+              setSelectedNodePath(`components.${componentName}`);
+            }
+          }}
+          onBlur={() => {
+            if (isDragging || isModuleContainer || readOnly) return;
             setHoveredComponentForGrid('');
           }}
         >

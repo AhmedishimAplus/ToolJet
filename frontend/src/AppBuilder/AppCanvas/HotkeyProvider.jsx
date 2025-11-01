@@ -21,9 +21,23 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
   const setSelectedComponents = useStore((state) => state.setSelectedComponents, shallow);
   const containerChildrenMapping = useStore((state) => state.containerChildrenMapping, shallow);
   const getComponentTypeFromId = useStore((state) => state.getComponentTypeFromId, shallow);
+  const setSelectedSidebarItem = useStore((state) => state.setSelectedSidebarItem, shallow);
+  const toggleLeftSidebar = useStore((state) => state.toggleLeftSidebar, shallow);
+  const selectedSidebarItem = useStore((state) => state.selectedSidebarItem, shallow);
 
   useHotkeys('meta+z, control+z', handleUndo, { enabled: mode === 'edit' });
   useHotkeys('meta+shift+z, control+shift+z', handleRedo, { enabled: mode === 'edit' });
+
+  // Ctrl+I to open State Inspector
+  useHotkeys(
+    'ctrl+i, meta+i',
+    (e) => {
+      e.preventDefault();
+      setSelectedSidebarItem('inspect');
+      toggleLeftSidebar(true);
+    },
+    { enabled: mode === 'edit' }
+  );
 
   const paste = async () => {
     if (isModuleEditor && !focusedParentId) return;
@@ -40,6 +54,13 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
   };
 
   const handleEscapeKeyPress = () => {
+    // Close State Inspector, Debugger, or Global Settings if any is open
+    if (selectedSidebarItem === 'inspect' || selectedSidebarItem === 'debugger' || selectedSidebarItem === 'settings') {
+      toggleLeftSidebar(false);
+      setSelectedSidebarItem(null);
+      return;
+    }
+
     clearSelectedComponents();
     const selectedComponents = getSelectedComponents();
     if (selectedComponents.length > 1) {
