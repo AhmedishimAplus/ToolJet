@@ -39,6 +39,7 @@ const WidgetWrapper = memo(
       shallow
     );
     const setHoveredComponentForGrid = useStore((state) => state.setHoveredComponentForGrid, shallow);
+    const setSelectedComponents = useStore((state) => state.setSelectedComponents, shallow);
     const canShowInCurrentLayout = useStore((state) => {
       const others = state.getResolvedComponent(id, subContainerIndex, moduleId)?.others;
       return others?.[currentLayout === 'mobile' ? 'showOnMobile' : 'showOnDesktop'];
@@ -73,6 +74,15 @@ const WidgetWrapper = memo(
 
     const isModuleContainer = componentType === 'ModuleContainer';
 
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' && !readOnly && !isModuleContainer) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Select the component when Enter is pressed
+        setSelectedComponents([id]);
+      }
+    };
+
     if (!componentType) return null;
     return (
       <>
@@ -90,6 +100,8 @@ const WidgetWrapper = memo(
           widgetid={id}
           component-type={componentType}
           parent-id={parentId}
+          tabIndex={!readOnly && !isModuleContainer ? 0 : undefined}
+          onKeyDown={handleKeyDown}
           style={{
             // zIndex: mode === 'view' && widget.component.component == 'Datepicker' ? 2 : null,
             ...styles,
