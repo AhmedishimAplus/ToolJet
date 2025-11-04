@@ -15587,29 +15587,84 @@ textarea.tj-text-input-widget {
 }
 
 .canvas-container {
-  scrollbar-color: transparent;
+  scrollbar-color: #6a727c4d;
   scrollbar-width: thin;
 
+  // Force scrollbars to always show in edit mode
+  &.overflow-x-auto {
+    overflow-x: scroll !important;
+    overflow-y: scroll !important;
+  }
+
+  // Vertical scrollbar - always visible
   &::-webkit-scrollbar {
-    background-color: transparent;
-    width: 6px;
-    scrollbar-width: thin;
+    background-color: #f0f0f0;
+  }
+
+  &::-webkit-scrollbar:vertical {
+    width: 12px;
+    background-color: #f0f0f0;
+  }
+
+  // Horizontal scrollbar - always visible
+  &::-webkit-scrollbar:horizontal {
+    height: 12px;
+    background-color: #f0f0f0;
   }
 
   &::-webkit-scrollbar-track {
-    background-color: transparent;
+    background-color: #f0f0f0;
     scrollbar-width: thin;
   }
 
+  &::-webkit-scrollbar-track:horizontal {
+    background-color: #f0f0f0;
+  }
+
+  &::-webkit-scrollbar-track:vertical {
+    background-color: #f0f0f0;
+  }
+
   &::-webkit-scrollbar-thumb {
-    background-color: transparent;
+    background-color: #6a727c4d;
+    border-radius: 6px;
+
+    &:hover {
+      background-color: #6a727c80;
+    }
+  }
+
+  &::-webkit-scrollbar-thumb:horizontal {
+    background-color: #6a727c4d;
+    border-radius: 6px;
+
+    &:hover {
+      background-color: #6a727c80;
+    }
+  }
+
+  &::-webkit-scrollbar-thumb:vertical {
+    background-color: #6a727c4d;
+    border-radius: 6px;
+
+    &:hover {
+      background-color: #6a727c80;
+    }
   }
 
   &:hover {
-    scrollbar-color: #6a727c4d;
+    scrollbar-color: #6a727c80;
 
     &::-webkit-scrollbar-thumb {
-      background-color: #6a727c4d !important;
+      background-color: #6a727c80 !important;
+    }
+
+    &::-webkit-scrollbar-thumb:horizontal {
+      background-color: #6a727c80 !important;
+    }
+
+    &::-webkit-scrollbar-thumb:vertical {
+      background-color: #6a727c80 !important;
     }
   }
 }
@@ -15624,11 +15679,69 @@ textarea.tj-text-input-widget {
 
 .dark-theme {
   .canvas-container {
+    scrollbar-color: #6a727c4d;
+
+    &::-webkit-scrollbar {
+      background-color: #2d2d2d;
+    }
+
+    &::-webkit-scrollbar:horizontal {
+      background-color: #2d2d2d;
+    }
+
+    &::-webkit-scrollbar:vertical {
+      background-color: #2d2d2d;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: #2d2d2d;
+    }
+
+    &::-webkit-scrollbar-track:horizontal {
+      background-color: #2d2d2d;
+    }
+
+    &::-webkit-scrollbar-track:vertical {
+      background-color: #2d2d2d;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #6a727c4d;
+
+      &:hover {
+        background-color: #6a727c80;
+      }
+    }
+
+    &::-webkit-scrollbar-thumb:horizontal {
+      background-color: #6a727c4d;
+
+      &:hover {
+        background-color: #6a727c80;
+      }
+    }
+
+    &::-webkit-scrollbar-thumb:vertical {
+      background-color: #6a727c4d;
+
+      &:hover {
+        background-color: #6a727c80;
+      }
+    }
+
     &:hover {
-      scrollbar-color: #6a727c4d;
+      scrollbar-color: #6a727c80;
 
       &::-webkit-scrollbar-thumb {
-        background-color: #6a727c4d !important;
+        background-color: #6a727c80 !important;
+      }
+
+      &::-webkit-scrollbar-thumb:horizontal {
+        background-color: #6a727c80 !important;
+      }
+
+      &::-webkit-scrollbar-thumb:vertical {
+        background-color: #6a727c80 !important;
       }
     }
   }

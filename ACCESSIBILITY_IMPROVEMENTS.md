@@ -1,6 +1,6 @@
 w# Accessibility Improvements: Lighthouse Score 72 → 86+
 
-This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 86+ points, plus additional keyboard navigation enhancements.
+This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 86+ points, plus additional keyboard navigation and canvas scrolling enhancements.
 
 ## Overview
 The improvements focused on addressing the main categories identified in the Lighthouse accessibility audit:
@@ -10,8 +10,52 @@ The improvements focused on addressing the main categories identified in the Lig
 - Form element labels
 - Touch target sizing
 - **Keyboard navigation (Data Sources page)**
+- **Canvas scrollbar accessibility and keyboard scrolling**
 
-## Latest Update - October 28, 2025
+## Latest Update - November 4, 2025
+**Canvas Scrollbar Accessibility & Keyboard Scrolling:**
+- Made both horizontal and vertical canvas scrollbars always visible and accessible
+- **Scrollbar Visibility:**
+  - Both scrollbars now use `overflow: scroll` to remain permanently visible
+  - Scrollbar size increased to 12px (both width and height) for easier mouse interaction
+  - Rounded corners (6px border-radius) for better aesthetics
+  - Hover effect makes scrollbar thumbs darker for visual feedback
+- **Keyboard Shortcuts for Canvas Navigation:**
+  - **Ctrl + Right Arrow**: Scrolls canvas 100px to the right
+  - **Ctrl + Left Arrow**: Scrolls canvas 100px to the left
+  - **Ctrl + Down Arrow**: Scrolls canvas 100px down (targets .canvas-content div)
+  - **Ctrl + Up Arrow**: Scrolls canvas 100px up (targets .canvas-content div)
+  - All shortcuts prevent default browser behavior
+  - Works in edit mode when focused on the canvas
+- **Component Management Keyboard Shortcuts:**
+  - **Arrow Keys (↑ ↓ ← →)**: Move selected component(s) on the canvas grid
+  - **Delete**: Remove selected component(s) from the canvas
+  - **Ctrl + D**: Duplicate selected component
+  - **Ctrl + Z**: Undo last action
+  - **Ctrl + Y** or **Ctrl + Shift + Z**: Redo last undone action
+  - **Ctrl + C**: Copy selected component
+  - **Ctrl + V**: Paste copied component
+  - **Ctrl + X**: Cut selected component
+  - **Ctrl + I**: Inspect selected component (opens properties in right sidebar)
+- **Component Resizing Keyboard Shortcuts:**
+  - **- (Minus)**: Shrink/reduce selected component
+  - **= (Equals)**: Expand selected component 
+- **Component Resizing:**
+  - Components can be resized using mouse drag handles
+  - Keyboard-based resize controls using -, = keys for quick adjustments with arrow keys
+- **Implementation Details:**
+  - Modified `theme.scss` to style both horizontal and vertical scrollbars
+  - Updated `.canvas-container` with separate styling for `:horizontal` and `:vertical` scrollbars
+  - Added keyboard event listener in `AppCanvas.jsx` for Ctrl+Arrow key combinations
+  - Vertical scrolling targets the `.canvas-content` div (the actual scrollable element)
+  - Horizontal scrolling targets the `.canvas-container` element
+- **Benefits:**
+  - Users can now easily access and use scrollbars with mouse without hover
+  - Full keyboard control for canvas navigation without using mouse
+  - Complete keyboard-based workflow for component manipulation
+  - Improves accessibility for users who prefer keyboard navigation
+
+## Previous Update - October 28, 2025
 **Code Editor Keyboard Navigation Mode:**
 - Implemented Enter-to-Edit and Escape-to-Exit navigation pattern for code editors
 - When tabbing to a code editor, it receives focus with a visible outline (navigation mode)

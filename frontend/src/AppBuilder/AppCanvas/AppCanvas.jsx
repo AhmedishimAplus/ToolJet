@@ -149,6 +149,59 @@ export const AppCanvas = ({ appId, switchDarkMode, darkMode }) => {
     localStorage.setItem('isPagesSidebarPinned', JSON.stringify(newValue));
   }, [isViewerSidebarPinned]);
 
+  // Keyboard shortcuts for canvas scrolling: Ctrl+Arrow keys
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const canvasContainer = canvasContainerRef.current;
+
+      // Ctrl + Left Arrow - Scroll canvas left
+      if (e.ctrlKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (canvasContainer) {
+          canvasContainer.scrollLeft -= 100; // Scroll 100px to the left
+        }
+      }
+      // Ctrl + Right Arrow - Scroll canvas right
+      else if (e.ctrlKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (canvasContainer) {
+          canvasContainer.scrollLeft += 100; // Scroll 100px to the right
+        }
+      }
+      // Ctrl + Up Arrow - Scroll canvas up
+      else if (e.ctrlKey && e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (canvasContainer) {
+          // The canvas-content div is the actual scrollable element for vertical scroll
+          const canvasContent = canvasContainer.querySelector('.canvas-content');
+          if (canvasContent) {
+            canvasContent.scrollTop -= 100; // Scroll 100px up
+          } else {
+            canvasContainer.scrollTop -= 100;
+          }
+        }
+      }
+      // Ctrl + Down Arrow - Scroll canvas down
+      else if (e.ctrlKey && e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (canvasContainer) {
+          // The canvas-content div is the actual scrollable element for vertical scroll
+          const canvasContent = canvasContainer.querySelector('.canvas-content');
+          if (canvasContent) {
+            canvasContent.scrollTop += 100; // Scroll 100px down
+          } else {
+            canvasContainer.scrollTop += 100;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   function getMinWidth() {
     if (isModuleMode) return '100%';
 
