@@ -11,8 +11,70 @@ The improvements focused on addressing the main categories identified in the Lig
 - Touch target sizing
 - **Keyboard navigation (Data Sources page)**
 - **Canvas scrollbar accessibility and keyboard scrolling**
+- **Inspector sidebar keyboard navigation and focus management**
 
-## Latest Update - November 4, 2025
+## Latest Update - November 4, 2025 (Part 2)
+**Inspector Sidebar Keyboard Navigation & Focus Management:**
+
+**Share Button Keyboard Accessibility:**
+- Made the Share button in the Editor and AppBuilder headers fully keyboard accessible
+- Changed from `<span>` to `<a>` element with proper ARIA attributes
+- Added `role="button"`, `tabIndex={0}`, and `aria-label="Share"`
+- Implemented Enter and Space key handlers for activation
+- Fixed hot module replacement issue by updating both Editor and AppBuilder versions
+
+**Inspector Component Menu Focus Trap:**
+- Implemented focus trap for the 3-dot menu in the Inspector sidebar
+- When menu opens (Enter/Space on button), focus automatically moves to first item (Inspect/Rename)
+- **Tab**: Cycles forward through menu items, wraps from last to first
+- **Shift+Tab**: Cycles backward through menu items, wraps from first to last
+- **Escape**: Closes menu and returns focus to 3-dot button
+- **Enter/Space** on menu item: Executes action, closes menu, returns focus to button
+- Focus is trapped inside the menu until user selects an option or presses Escape
+- Menu items use `tabIndex={-1}` to prevent interference with normal tab flow
+- Implemented in both Editor (`Inspector.jsx`) and AppBuilder (`RightSideBar/Inspector/Inspector.jsx`)
+
+**Inspector Close/Back Button Keyboard Support:**
+- Added keyboard accessibility to the arrow-left close/back button
+- Added `role="button"`, `tabIndex={0}`, and `aria-label="Close inspector"`
+- Implemented Enter and Space key handlers
+- Works in both Editor and AppBuilder Inspector components
+
+**Inspector Menu Button Keyboard Support:**
+- Enhanced the 3-dot menu button with full keyboard support
+- Added `role="button"`, `tabIndex={0}`, `aria-label="Open menu"`, and `aria-expanded` state
+- Escape key on button also closes the menu when open
+- Proper ref management for focus return after menu closes
+
+**Inspector Toggle Switches (Checkboxes):**
+- Enhanced all toggle switches in Inspector (Visibility, Loading state, Disable, etc.)
+- Changed from `onClick` to `onChange` for proper React checkbox behavior
+- Space key now works natively for toggling (native checkbox behavior)
+- All toggles are keyboard focusable and accessible
+- Updated both Editor (`Elements/Toggle.jsx`) and AppBuilder (`RightSideBar/Inspector/Elements/Toggle.jsx`)
+
+**Add Navigation Item Menu Focus Trap:**
+- Implemented focus trap for "Add nav item" menu (3-dot menu next to "New page" button)
+- When menu opens, focus automatically jumps to first item ("Add nav item with URL")
+- **Tab**: Cycles forward through 3 menu items, wraps to first from last
+- **Shift+Tab**: Cycles backward through menu items, wraps to last from first
+- **Escape**: Closes menu and returns focus to 3-dot button
+- **Enter/Space** on menu item: Executes action, closes menu, returns focus
+- Protected premium "Add nav group" feature (only executes if licensed)
+- Updated `PageOptions.jsx` to support React.forwardRef for ref management
+- Implemented in `AddNewPageMenu.jsx` with proper keyboard navigation hooks
+
+**Implementation Files:**
+- `frontend/src/Editor/Header/RightTopHeaderButtons/ManageAppUsers.jsx`
+- `frontend/src/AppBuilder/Header/RightTopHeaderButtons/ManageAppUsers.jsx`
+- `frontend/src/Editor/Inspector/Inspector.jsx`
+- `frontend/src/AppBuilder/RightSideBar/Inspector/Inspector.jsx`
+- `frontend/src/Editor/Inspector/Elements/Toggle.jsx`
+- `frontend/src/AppBuilder/RightSideBar/Inspector/Elements/Toggle.jsx`
+- `frontend/src/AppBuilder/RightSideBar/PageSettingsTab/PageMenu/AddNewPageMenu.jsx`
+- `frontend/src/AppBuilder/RightSideBar/PageSettingsTab/PageMenu/PageOptions.jsx`
+
+## Latest Update - November 4, 2025 (Part 1)
 **Canvas Scrollbar Accessibility & Keyboard Scrolling:**
 - Made both horizontal and vertical canvas scrollbars always visible and accessible
 - **Scrollbar Visibility:**
