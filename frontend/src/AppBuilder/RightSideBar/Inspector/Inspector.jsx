@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table } from './Components/Table/Table.jsx';
 import { TabsLayout } from './Components/TabComponent';
 import { Chart } from './Components/Chart';
@@ -168,10 +168,48 @@ export const Inspector = ({
 
   const [showHeaderActionsMenu, setShowHeaderActionsMenu] = useState(false);
   const isRevampedComponent = NEW_REVAMPED_COMPONENTS.includes(component.component.component);
+  const menuButtonRef = useRef(null);
+  const menuItemsRef = useRef([]);
 
   const { t } = useTranslation();
 
   const isMounted = useMounted();
+
+  // Focus first menu item when menu opens
+  useEffect(() => {
+    if (showHeaderActionsMenu && menuItemsRef.current[0]) {
+      menuItemsRef.current[0].focus();
+    }
+  }, [showHeaderActionsMenu]);
+
+  // Handle menu close and return focus to button
+  const closeMenu = () => {
+    setShowHeaderActionsMenu(false);
+    if (menuButtonRef.current) {
+      menuButtonRef.current.focus();
+    }
+  };
+
+  // Handle keyboard navigation within menu
+  const handleMenuKeyDown = (e, index) => {
+    const menuItems = menuItemsRef.current.filter(item => item !== null);
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        // Shift+Tab: go to previous item or wrap to last
+        const prevIndex = index === 0 ? menuItems.length - 1 : index - 1;
+        menuItems[prevIndex]?.focus();
+      } else {
+        // Tab: go to next item or wrap to first
+        const nextIndex = index === menuItems.length - 1 ? 0 : index + 1;
+        menuItems[nextIndex]?.focus();
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeMenu();
+    }
+  };
 
   useEffect(() => {
     setNewComponentName(allComponents[selectedComponentId]?.component?.name);
@@ -405,6 +443,9 @@ export const Inspector = ({
   }
 
   const handleInspectorHeaderActions = (value) => {
+    // Close menu and return focus
+    closeMenu();
+
     if (value === 'inspect') {
       setComponentToInspect(component.component.name);
     }
@@ -421,7 +462,6 @@ export const Inspector = ({
     if (value === 'duplicate') {
       copyComponents({ isCloning: true });
     }
-    setShowHeaderActionsMenu(false);
   };
   const buildGeneralStyle = () => {
     if (!componentMeta?.definition?.generalStyles) {
@@ -463,8 +503,8 @@ export const Inspector = ({
                   componentMeta.displayName === 'Toggle Switch (Legacy)'
                     ? 'Toggle (Legacy)'
                     : componentMeta.displayName === 'Toggle Switch'
-                    ? 'Toggle Switch'
-                    : componentMeta.component,
+                      ? 'Toggle Switch'
+                      : componentMeta.component,
               })}
             </small>
           </span>
@@ -561,11 +601,21 @@ export const Inspector = ({
     <div className={`inspector ${isModuleContainer && 'module-editor-inspector'}`}>
       <div>
         <div className={`row inspector-component-title-input-holder ${shouldFreeze && 'disabled'}`}>
-          <div className="p-0 width-unset flex-shrink-0" onClick={() => clearSelectedComponents()}>
+          <div className="p-0 width-unset flex-shrink-0">
             <span
               data-cy={`inspector-close-icon`}
               className="cursor-pointer d-flex align-items-center "
               style={{ height: '28px' }}
+              role="button"
+              tabIndex={0}
+              aria-label="Close inspector"
+              onClick={() => clearSelectedComponents()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  clearSelectedComponents();
+                }
+              }}
             >
               <ArrowLeft fill={'var(--slate12)'} width={'14'} />
             </span>
@@ -582,15 +632,27 @@ export const Inspector = ({
                   overlay={
                     <Popover id="list-menu" className={darkMode && 'dark-theme'}>
                       <Popover.Body bsPrefix="list-item-popover-body">
-                        {INSPECTOR_HEADER_OPTIONS.map((option) => {
+                        {INSPECTOR_HEADER_OPTIONS.map((option, index) => {
                           const optionBody = (
                             <div
+                              ref={(el) => (menuItemsRef.current[index] = el)}
                               data-cy={`component-inspector-${String(option?.value).toLowerCase()}-button`}
                               className="list-item-popover-option"
                               key={option?.value}
+                              role="button"
+                              tabIndex={-1}
+                              aria-label={option?.label}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleInspectorHeaderActions(option.value);
+                              }}
+                              onKeyDown={(e) => {
+                                handleMenuKeyDown(e, index);
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleInspectorHeaderActions(option.value);
+                                }
                               }}
                             >
                               <div className="list-item-popover-menu-option-icon">{option.icon}</div>
@@ -626,7 +688,24 @@ export const Inspector = ({
                     </Popover>
                   }
                 >
-                  <span className="cursor-pointer" onClick={() => setShowHeaderActionsMenu(true)}>
+                  <span
+                    ref={menuButtonRef}
+                    className="cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Open menu"
+                    aria-expanded={showHeaderActionsMenu}
+                    onClick={() => setShowHeaderActionsMenu(true)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setShowHeaderActionsMenu(true);
+                      } else if (e.key === 'Escape' && showHeaderActionsMenu) {
+                        e.preventDefault();
+                        closeMenu();
+                      }
+                    }}
+                  >
                     <SolidIcon data-cy={'menu-icon'} name="morevertical" width="24" fill={'var(--slate12)'} />
                   </span>
                 </OverlayTrigger>
@@ -646,7 +725,19 @@ export const Inspector = ({
               />
             </>
           )}
-          <div className="icon-btn cursor-pointer flex-shrink-0 p-2 h-4 w-4" onClick={handleRightSidebarToggle}>
+          <div
+            className="icon-btn cursor-pointer flex-shrink-0 p-2 h-4 w-4"
+            role="button"
+            tabIndex={0}
+            aria-label="Close sidebar"
+            onClick={handleRightSidebarToggle}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleRightSidebarToggle();
+              }
+            }}
+          >
             <SolidIcon fill="var(--icon-strong)" name={'remove03'} width="16" viewBox="0 0 16 16" />
           </div>
         </div>

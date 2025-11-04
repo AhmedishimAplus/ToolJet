@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table } from './Components/Table/Table.jsx';
 import { Chart } from './Components/Chart';
 import { Form } from './Components/Form';
@@ -100,6 +100,8 @@ export const Inspector = ({
 
   const [showHeaderActionsMenu, setShowHeaderActionsMenu] = useState(false);
   const isRevampedComponent = NEW_REVAMPED_COMPONENTS.includes(component.component.component);
+  const menuButtonRef = useRef(null);
+  const menuItemsRef = useRef([]);
 
   const { isVersionReleased, isEditorFreezed } = useAppVersionStore(
     (state) => ({
@@ -120,6 +122,45 @@ export const Inspector = ({
   useHotkeys('escape', () => setSelectedComponents(EMPTY_ARRAY), {
     scopes: 'editor',
   });
+
+  // Focus first menu item when menu opens
+  useEffect(() => {
+    if (showHeaderActionsMenu && menuItemsRef.current[0]) {
+      menuItemsRef.current[0].focus();
+    }
+  }, [showHeaderActionsMenu]);
+
+  // Handle menu close and return focus to button
+  const closeMenu = () => {
+    setShowHeaderActionsMenu(false);
+    if (menuButtonRef.current) {
+      menuButtonRef.current.focus();
+    }
+  };
+
+  // Handle keyboard navigation within menu
+  const handleMenuKeyDown = (e, index) => {
+    const menuItems = menuItemsRef.current.filter(item => item !== null);
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        // Shift+Tab: go to previous item or wrap to last
+        const prevIndex = index === 0 ? menuItems.length - 1 : index - 1;
+        menuItems[prevIndex]?.focus();
+      } else {
+        // Tab: go to next item or wrap to first
+        const nextIndex = index === menuItems.length - 1 ? 0 : index + 1;
+        menuItems[nextIndex]?.focus();
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeMenu();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      // Let the item's own handler deal with this
+      // Menu will close via handleInspectorHeaderActions
+    }
+  };
 
   const componentMeta = JSON.parse(JSON.stringify(allComponents?.[selectedComponentId]?.component));
 
@@ -352,6 +393,9 @@ export const Inspector = ({
   }
 
   const handleInspectorHeaderActions = (value) => {
+    // Close menu and return focus
+    closeMenu();
+
     if (value === 'rename') {
       setTimeout(() => setInputFocus(), 0);
     }
@@ -449,15 +493,24 @@ export const Inspector = ({
       />
       <div>
         <div
-          className={`row inspector-component-title-input-holder ${
-            (isVersionReleased || isEditorFreezed) && 'disabled'
-          }`}
+          className={`row inspector-component-title-input-holder ${(isVersionReleased || isEditorFreezed) && 'disabled'
+            }`}
         >
-          <div className="col-1" onClick={() => setSelectedComponents(EMPTY_ARRAY)}>
+          <div className="col-1">
             <span
               data-cy={`inspector-close-icon`}
               className="cursor-pointer d-flex align-items-center "
               style={{ height: '28px', width: '28px' }}
+              role="button"
+              tabIndex={0}
+              aria-label="Close inspector"
+              onClick={() => setSelectedComponents(EMPTY_ARRAY)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedComponents(EMPTY_ARRAY);
+                }
+              }}
             >
               <ArrowLeft fill={'var(--slate12)'} width={'14'} />
             </span>
@@ -484,14 +537,26 @@ export const Inspector = ({
               overlay={
                 <Popover id="list-menu" className={darkMode && 'dark-theme'}>
                   <Popover.Body bsPrefix="list-item-popover-body">
-                    {INSPECTOR_HEADER_OPTIONS.map((option) => (
+                    {INSPECTOR_HEADER_OPTIONS.map((option, index) => (
                       <div
+                        ref={(el) => (menuItemsRef.current[index] = el)}
                         data-cy={`component-inspector-${String(option?.value).toLowerCase()}-button`}
                         className="list-item-popover-option"
                         key={option?.value}
+                        role="button"
+                        tabIndex={-1}
+                        aria-label={option?.label}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleInspectorHeaderActions(option.value);
+                        }}
+                        onKeyDown={(e) => {
+                          handleMenuKeyDown(e, index);
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleInspectorHeaderActions(option.value);
+                          }
                         }}
                       >
                         <div className="list-item-popover-menu-option-icon">{option.icon}</div>
@@ -508,7 +573,24 @@ export const Inspector = ({
                 </Popover>
               }
             >
-              <span className="cursor-pointer" onClick={() => setShowHeaderActionsMenu(true)}>
+              <span
+                ref={menuButtonRef}
+                className="cursor-pointer"
+                role="button"
+                tabIndex={0}
+                aria-label="Open menu"
+                aria-expanded={showHeaderActionsMenu}
+                onClick={() => setShowHeaderActionsMenu(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowHeaderActionsMenu(true);
+                  } else if (e.key === 'Escape' && showHeaderActionsMenu) {
+                    e.preventDefault();
+                    closeMenu();
+                  }
+                }}
+              >
                 <SolidIcon data-cy={'menu-icon'} name="morevertical" width="24" fill={'var(--slate12)'} />
               </span>
             </OverlayTrigger>
@@ -535,8 +617,8 @@ export const Inspector = ({
                   componentMeta.displayName === 'Toggle Switch (Legacy)'
                     ? 'Toggle (Legacy)'
                     : componentMeta.displayName === 'Toggle Switch'
-                    ? 'Toggle Switch'
-                    : componentMeta.component,
+                      ? 'Toggle Switch'
+                      : componentMeta.component,
               })}
             </small>
           </span>
