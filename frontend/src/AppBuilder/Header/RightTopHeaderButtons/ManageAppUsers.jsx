@@ -188,22 +188,28 @@ class ManageAppUsersComponent extends React.Component {
     const { isHovered } = this.state.isHovered;
 
     return (
-      <div title={'Share'} className="manage-app-users" data-cy="share-button-link">
-        <span
-          className="manage-app-users tj-secondary-btn editor-header-icon cursor-pointer"
+      <>
+        <a
+          className="editor-header-icon tj-secondary-btn"
+          role="button"
+          tabIndex={0}
+          title="Share"
+          aria-label="Share"
+          data-cy="share-button-link"
           onClick={() => {
             this.validateThePreExistingSlugs();
             this.setState({ showModal: true });
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.validateThePreExistingSlugs();
+              this.setState({ showModal: true });
+            }
+          }}
         >
-          <span
-            className={cx('d-flex', {
-              'share-disabled': false,
-            })}
-          >
-            <SolidIcon name="share" width="14" className="cursor-pointer" fill="#3E63DD" />
-          </span>
-        </span>
+          <SolidIcon name="share" width="14" fill="#3E63DD" />
+        </a>
         <Modal
           show={this.state.showModal}
           size="lg"
@@ -455,7 +461,7 @@ class ManageAppUsersComponent extends React.Component {
             )}
           </Modal.Footer>
         </Modal>
-      </div>
+      </>
     );
   }
 }
