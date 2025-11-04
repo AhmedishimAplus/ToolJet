@@ -6,13 +6,22 @@ export const Toggle = ({ param, definition, onChange, paramType, componentMeta }
   const paramMeta = componentMeta[paramType][param.name];
   const displayName = paramMeta.displayName || param.name;
 
+  const handleToggle = () => {
+    onChange(param, 'value', !value, paramType);
+  };
+
   return (
     <div className="field mb-3">
       <label className="form-check form-switch my-2">
         <input
           className="form-check-input"
           type="checkbox"
-          onClick={() => onChange(param, 'value', !value, paramType)}
+          onChange={handleToggle}
+          onKeyUp={(e) => {
+            if (e.key === 'Enter') {
+              handleToggle();
+            }
+          }}
           checked={value}
         />
         <ToolTip label={displayName} meta={paramMeta} labelClass="form-check-label" />
