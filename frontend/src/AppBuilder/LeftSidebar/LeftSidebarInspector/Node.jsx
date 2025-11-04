@@ -105,7 +105,19 @@ export const Node = (props) => {
         // borderLeft: level > 1 ? '1px solid var(--slate6, #D7DBDF)' : 'none',
         cursor: level === 1 ? 'pointer' : 'default',
       }}
-      {...(level === 1 && { onClick: () => onExpand(props) })}
+      {...(level === 1 && {
+        onClick: () => onExpand(props),
+        tabIndex: 0,
+        role: 'button',
+        'aria-expanded': isExpanded,
+        'aria-label': `${element.name}, ${isExpanded ? 'expanded' : 'collapsed'}`,
+        onKeyDown: (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onExpand(props);
+          }
+        }
+      })}
     >
       {/* {!['queries', 'globals', 'variables'].includes(type) && ( */}
       <div className="node-expansion-icon">
@@ -128,6 +140,24 @@ export const Node = (props) => {
         className={cx('node-content', {
           'node-content-hoverable': level !== 1 && !metadata.noData,
           'node-content-active': actionClicked,
+        })}
+        {...(level !== 1 && !metadata.noData && {
+          tabIndex: 0,
+          role: isBranch ? 'button' : 'treeitem',
+          'aria-label': isBranch
+            ? `${element.name}, ${isExpanded ? 'expanded' : 'collapsed'}`
+            : `${element.name}, ${type || 'item'}`,
+          ...(isBranch && { 'aria-expanded': isExpanded }),
+          onKeyDown: (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (isBranch) {
+                onExpand(props);
+              } else {
+                onSelect(props);
+              }
+            }
+          }
         })}
       >
         {nodeIcon && <div className="node-icon">{nodeIcon}</div>}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { SketchPicker } from 'react-color';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
@@ -25,6 +25,7 @@ const BaseColorSwatches = ({
 }) => {
   value = component == 'Button' ? computeColor(styleDefinition, value, meta) : value;
   const [showPicker, setShowPicker] = useState(false);
+  const popoverRef = useRef(null);
   const darkMode = localStorage.getItem('darkMode') === 'true';
   const colorPickerPosition = meta?.colorPickerPosition ?? '';
   const coverStyles = {
@@ -56,9 +57,22 @@ const BaseColorSwatches = ({
     const hexCode = `${color.hex}${decimalToHex(color?.rgb?.a ?? 1.0)}`;
     onChange(hexCode);
   };
+
+  // Helper function to focus hex input when picker opens
+  const focusHexInput = () => {
+    setTimeout(() => {
+      const hexInput = popoverRef.current?.querySelector('input:not([disabled])');
+      if (hexInput) {
+        hexInput.focus();
+        hexInput.select();
+      }
+    }, 150);
+  };
+
   const eventPopover = () => {
     return (
       <Popover
+        ref={popoverRef}
         className={classNames(
           { 'dark-theme': darkMode },
           { 'inspector-color-input-popover': colorPickerPosition === 'top' }
@@ -119,7 +133,19 @@ const BaseColorSwatches = ({
     return (
       <div
         className="row mx-0 color-picker-input d-flex"
-        onClick={() => setShowPicker(true)}
+        onClick={() => {
+          setShowPicker(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setShowPicker(true);
+          }
+        }}
+        tabIndex={0}
+        role="button"
+        aria-label="Open color picker"
+        aria-expanded={showPicker}
         data-cy={`${String(cyLabel)}-picker`}
         style={outerStyles}
       >
@@ -165,8 +191,11 @@ const BaseColorSwatches = ({
             </>
           ) : (
             <OverlayTrigger
-              onToggle={(showPicker) => {
-                setShowPicker(showPicker);
+              onToggle={(isShown) => {
+                setShowPicker(isShown);
+                if (isShown) {
+                  focusHexInput();
+                }
               }}
               show={showPicker}
               trigger="click"
