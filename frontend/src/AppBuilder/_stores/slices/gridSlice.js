@@ -11,6 +11,7 @@ const initialState = {
   temporaryLayouts: {},
   draggingComponentId: null,
   resizingComponentId: null,
+  isKeyboardResizing: false, // Track if = or - is being held for resizing
   reorderContainerChildren: {
     containerId: null,
     triggerUpdate: 0,
@@ -42,8 +43,13 @@ export const createGridSlice = (set, get) => ({
   }, 200),
   setDraggingComponentId: (id) => set(() => ({ draggingComponentId: id })),
   setResizingComponentId: (id) => set(() => ({ resizingComponentId: id })),
+  setIsKeyboardResizing: (isResizing) => set(() => ({ isKeyboardResizing: isResizing })),
   moveComponentPosition: (direction) => {
-    const { setComponentLayout, currentLayout, getSelectedComponentsDefinition, debouncedToggleCanvasUpdater } = get();
+    const { setComponentLayout, currentLayout, getSelectedComponentsDefinition, debouncedToggleCanvasUpdater, isKeyboardResizing } = get();
+
+    // Don't move if we're in keyboard resize mode
+    if (isKeyboardResizing) return;
+
     let layouts = {};
     const selectedComponents = getSelectedComponentsDefinition();
     selectedComponents.forEach((selectedComponent) => {
@@ -85,6 +91,95 @@ export const createGridSlice = (set, get) => ({
         },
       };
     });
+    setComponentLayout(layouts);
+    debouncedToggleCanvasUpdater();
+  },
+  // Keyboard component resizing with = (expand) and - (shrink) modifiers
+  resizeComponentWithKeyboard: (direction, isExpanding) => {
+    const { setComponentLayout, currentLayout, getSelectedComponentsDefinition, debouncedToggleCanvasUpdater } = get();
+    let layouts = {};
+    const selectedComponents = getSelectedComponentsDefinition();
+
+    selectedComponents.forEach((selectedComponent) => {
+      const componentId = selectedComponent?.id;
+
+      let top = selectedComponent.layouts?.[currentLayout].top;
+      let left = selectedComponent?.layouts?.[currentLayout].left;
+      let width = selectedComponent?.layouts?.[currentLayout]?.width;
+      let height = selectedComponent?.layouts?.[currentLayout]?.height;
+
+      const step = 1; // Grid unit step for width
+      const heightStep = 10; // Pixel step for height
+
+      switch (direction) {
+        case 'ArrowLeft':
+          if (isExpanding) {
+            // Expand left: move left edge to the left and increase width
+            left = Math.max(0, left - step);
+            width = width + step;
+          } else {
+            // Shrink from left: move left edge to the right and decrease width
+            if (width > 2) { // Minimum width
+              left = left + step;
+              width = width - step;
+            }
+          }
+          break;
+        case 'ArrowRight':
+          if (isExpanding) {
+            // Expand right: increase width
+            if (left + width + step <= NO_OF_GRIDS) {
+              width = width + step;
+            }
+          } else {
+            // Shrink from right: decrease width
+            if (width > 2) { // Minimum width
+              width = width - step;
+            }
+          }
+          break;
+        case 'ArrowUp':
+          if (isExpanding) {
+            // Expand up: move top edge up and increase height
+            top = Math.max(0, top - heightStep);
+            height = height + heightStep;
+          } else {
+            // Shrink from top: move top edge down and decrease height
+            if (height > 20) { // Minimum height
+              top = top + heightStep;
+              height = height - heightStep;
+            }
+          }
+          break;
+        case 'ArrowDown':
+          if (isExpanding) {
+            // Expand down: increase height
+            height = height + heightStep;
+          } else {
+            // Shrink from bottom: decrease height
+            if (height > 20) { // Minimum height
+              height = height - heightStep;
+            }
+          }
+          break;
+      }
+
+      // Validate bounds
+      if (left < 0 || top < 0 || left + width > NO_OF_GRIDS || width < 2 || height < 20) {
+        return;
+      }
+
+      layouts = {
+        ...layouts,
+        [componentId]: {
+          top,
+          left,
+          width,
+          height,
+        },
+      };
+    });
+
     setComponentLayout(layouts);
     debouncedToggleCanvasUpdater();
   },

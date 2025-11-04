@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState, useCallback } from 'react';
 import useStore from '@/AppBuilder/_stores/store';
 import { shallow } from 'zustand/shallow';
 import { ConfigHandle } from './ConfigHandle/ConfigHandle';
@@ -47,6 +47,63 @@ const WidgetWrapper = memo(
       const others = state.getResolvedComponent(id, subContainerIndex, moduleId)?.others;
       return others?.[currentLayout === 'mobile' ? 'showOnMobile' : 'showOnDesktop'];
     });
+
+    // Track if = or - key is being held down for resizing
+    const [resizeModifier, setResizeModifier] = useState(null); // 'expand' or 'shrink'
+
+    // Listen for = or - key being held down
+    useEffect(() => {
+      if (!isWidgetActive || readOnly) return;
+
+      const handleKeyDown = (e) => {
+        const isArrowKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+
+        // Check for = (equal/plus) or - (minus) key
+        if (e.key === '=' || e.code === 'Equal') {
+          e.preventDefault();
+          setResizeModifier('expand');
+          // Set global state to prevent movement
+          const { setIsKeyboardResizing } = useStore.getState();
+          setIsKeyboardResizing(true);
+          return;
+        } else if (e.key === '-' || e.code === 'Minus') {
+          e.preventDefault();
+          setResizeModifier('shrink');
+          // Set global state to prevent movement
+          const { setIsKeyboardResizing } = useStore.getState();
+          setIsKeyboardResizing(true);
+          return;
+        }
+
+        // If arrow key is pressed while resize modifier is active
+        if (isArrowKey && resizeModifier) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const { resizeComponentWithKeyboard } = useStore.getState();
+          resizeComponentWithKeyboard(e.key, resizeModifier === 'expand');
+        }
+      };
+
+      const handleKeyUp = (e) => {
+        // Clear resize modifier when = or - is released
+        if (e.key === '=' || e.code === 'Equal' || e.key === '-' || e.code === 'Minus') {
+          setResizeModifier(null);
+          // Clear global state to allow movement again
+          const { setIsKeyboardResizing } = useStore.getState();
+          setIsKeyboardResizing(false);
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+      };
+    }, [isWidgetActive, readOnly, resizeModifier]);
+
     const visibility = useStore((state) => {
       const component = state.getResolvedComponent(id, subContainerIndex, moduleId);
       const componentExposedVisibility = state.getExposedValueOfComponent(id, moduleId)?.isVisible;
@@ -78,6 +135,7 @@ const WidgetWrapper = memo(
     const isModuleContainer = componentType === 'ModuleContainer';
 
     const handleKeyDown = (e) => {
+      // Handle Enter key for selection
       if (e.key === 'Enter' && !readOnly && !isModuleContainer) {
         e.preventDefault();
         e.stopPropagation();
