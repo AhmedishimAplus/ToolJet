@@ -26,15 +26,16 @@ const Button = ({
   };
 
   return (
-    <div
+    <button
       type="button"
       title={title}
       style={{ height: baseHeight, width: baseWidth, ...styles, ...(disabled ? diabledStyles : {}) }}
       className={`btn base-button ${darkMode && 'dark'} ${classNames} ${isLoading && 'btn-loading'}`}
       onClick={onClick}
+      disabled={disabled}
     >
       {!isLoading && children}
-    </div>
+    </button>
   );
 };
 
@@ -87,14 +88,15 @@ const UnstyledButton = ({ children, onClick, classNames = '', styles = {}, disab
   const cursorNotPointer = onClick === undefined && { cursor: 'default' };
 
   return (
-    <div
+    <button
       type="button"
       style={{ ...styles, ...(disabled ? defaultDisabledStyles : {}), ...cursorNotPointer }}
       className={`unstyled-button ${classNames} ${disabled && 'disabled'} ${darkMode && 'dark'}`}
       onMouseDown={onClick}
+      disabled={disabled}
     >
       {children}
-    </div>
+    </button>
   );
 };
 

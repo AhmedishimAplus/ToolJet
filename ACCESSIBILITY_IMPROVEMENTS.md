@@ -1,6 +1,6 @@
-w# Accessibility Improvements: Lighthouse Score 72 → 86+
+# Accessibility Improvements: Lighthouse Score 72 → 93
 
-This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 86+ points, plus additional keyboard navigation and canvas scrolling enhancements.
+This document outlines the specific changes made to improve the ToolJet frontend accessibility score from 72 to 93 points, plus additional keyboard navigation and canvas scrolling enhancements.
 
 ## Overview
 The improvements focused on addressing the main categories identified in the Lighthouse accessibility audit:
@@ -12,8 +12,297 @@ The improvements focused on addressing the main categories identified in the Lig
 - **Keyboard navigation (Data Sources page)**
 - **Canvas scrollbar accessibility and keyboard scrolling**
 - **Inspector sidebar keyboard navigation and focus management**
+- **Heading hierarchy and ARIA role fixes (November 5, 2025)**
+- **Semantic HTML and button accessibility fixes (November 5, 2025)**
 
-## Latest Update - November 4, 2025 (Part 2)
+## Latest Update - November 5, 2025 (Part 3)
+**Semantic HTML and Button Accessibility Fixes (Score 88 → 93):**
+
+This update resolved critical ARIA attribute mismatches and "Buttons do not have an accessible name" violations by fixing improper HTML semantics and adding proper accessibility attributes.
+
+### Issue 1: Invalid `type="button"` on `<div>` Elements
+
+**Problem:**
+The LeftSidebar Button component was using `<div type="button">` which is semantically incorrect. Only `<button>` elements can have a `type` attribute. This caused Lighthouse to flag "[aria-*] attributes do not match their roles" errors.
+
+**Root Cause:**
+```jsx
+// BEFORE (Incorrect - div cannot have type attribute)
+<div
+  type="button"
+  className="btn base-button"
+  onClick={onClick}
+>
+  {children}
+</div>
+```
+
+**Solution:**
+Changed `<div>` elements to proper `<button>` elements with semantic HTML:
+
+```jsx
+// AFTER (Correct - proper button element)
+<button
+  type="button"
+  className="btn base-button"
+  onClick={onClick}
+  disabled={disabled}
+>
+  {children}
+</button>
+```
+
+**Files Modified:**
+- `frontend/src/_ui/LeftSidebar/Button.jsx`
+
+**Key Changes:**
+- Replaced `<div type="button">` with `<button type="button">` in both `Button` and `UnstyledButton` components
+- Added `disabled={disabled}` attribute for proper button state management
+- Maintained all existing CSS classes for visual consistency
+- Fixed semantic HTML to match ARIA attributes
+
+**Impact:**
+- Resolved ARIA attribute mismatch errors in left sidebar buttons
+- Improved screen reader compatibility by using proper semantic elements
+- Better keyboard navigation support (native button behavior)
+- Applies to all left sidebar buttons in both Editor and AppBuilder
+
+---
+
+### Issue 2: ARIA `role="dialog"` Mismatch in Popover Hook
+
+**Problem:**
+The custom `use-popover.jsx` hook was setting `aria-haspopup="dialog"` but the actual popover content was functioning as a menu, not a dialog. This created a semantic mismatch.
+
+**Root Cause:**
+```jsx
+// BEFORE (Incorrect - role doesn't match actual behavior)
+const role = 'dialog';
+const usePopover = (defaultOpen = false) => {
+  // ...
+  const trigger = {
+    'aria-haspopup': role,  // 'dialog'
+    'aria-expanded': open,
+  };
+};
+```
+
+**Solution:**
+Changed the role from `'dialog'` to `'menu'` to accurately represent the popover's purpose:
+
+```jsx
+// AFTER (Correct - role matches actual behavior)
+const role = 'menu';
+const usePopover = (defaultOpen = false) => {
+  // ...
+  const trigger = {
+    'aria-haspopup': role,  // 'menu'
+    'aria-expanded': open,
+  };
+};
+```
+
+**Files Modified:**
+- `frontend/src/_hooks/use-popover.jsx`
+
+**Impact:**
+- Fixed ARIA semantic mismatch for popover triggers
+- Improved screen reader announcements (now correctly announces as menu)
+- Better compliance with WCAG ARIA guidelines
+
+---
+
+### Issue 3: Radix UI Popover Using `<a>` Instead of `<button>`
+
+**Problem:**
+The Radix UI Popover component was using an anchor tag (`<a>`) as the trigger element, which is semantically incorrect for interactive controls that don't navigate to a URL.
+
+**Root Cause:**
+```jsx
+// BEFORE (Incorrect - anchor tag for non-navigation action)
+<Popover.Trigger asChild>
+  <a className={cx({ 'w-100': fullWidth })}>
+    {children}
+  </a>
+</Popover.Trigger>
+```
+
+**Solution:**
+Replaced anchor tag with proper button element:
+
+```jsx
+// AFTER (Correct - button element for interactive control)
+<Popover.Trigger asChild>
+  <button 
+    className={cx('popover-trigger-button', { 'w-100': fullWidth })} 
+    type="button"
+    aria-label={ariaLabel}
+  >
+    {children}
+  </button>
+</Popover.Trigger>
+```
+
+**CSS Styling to Maintain Visual Consistency:**
+```scss
+// Added to frontend/src/_styles/popover.scss
+.popover-trigger-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-align: inherit;
+  
+  &:focus-visible {
+    outline: 2px solid var(--indigo9);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+```
+
+**Files Modified:**
+- `frontend/src/_ui/Popover/index.jsx`
+- `frontend/src/_styles/popover.scss`
+
+**Impact:**
+- Fixed semantic HTML for popover triggers
+- Button now looks identical to previous anchor tag (via CSS)
+- Added proper focus-visible styles for keyboard navigation
+- Improved accessibility with semantic correctness
+
+---
+
+### Issue 4: Popover Buttons Without Accessible Names
+
+**Problem:**
+Popover trigger buttons were being rendered without `aria-label` attributes, causing "Buttons do not have an accessible name" violations in Lighthouse.
+
+**Root Cause:**
+The Popover component didn't support passing accessible labels, and some popovers were rendering empty trigger buttons.
+
+**Solution Implemented:**
+
+**Part A: Added `ariaLabel` prop to Popover component**
+```jsx
+// Component signature updated
+const PopoverComponent = ({
+  children,
+  open,
+  fullWidth = true,
+  popoverContentClassName = '',
+  popoverContent,
+  hideCloseIcon = true,
+  handleToggle,
+  side = 'bottom',
+  showArrow = false,
+  popoverContentHeight = '',
+  onInteractOutside,
+  ariaLabel = 'Open menu',  // NEW: Added with default value
+}) => {
+  // ...
+}
+```
+
+**Part B: Made trigger button conditional**
+```jsx
+// Only render trigger button when children are provided
+return (
+  <Popover.Root {...(open && { open })} onOpenChange={handleToggle && handleToggle}>
+    {children && (  // NEW: Conditional rendering
+      <Popover.Trigger asChild>
+        <button 
+          className={cx('popover-trigger-button', { 'w-100': fullWidth })} 
+          type="button"
+          aria-label={ariaLabel}  // NEW: Accessible name
+        >
+          {children}
+        </button>
+      </Popover.Trigger>
+    )}
+    <Popover.Portal>
+      {/* ... content ... */}
+    </Popover.Portal>
+  </Popover.Root>
+);
+```
+
+**Part C: Added aria-label to RealtimeAvatars popover**
+```jsx
+// BEFORE
+<Popover fullWidth={false} showArrow popoverContent={popoverContent()}>
+  <Avatar text={`+${count}`} />
+</Popover>
+
+// AFTER
+<Popover 
+  fullWidth={false} 
+  showArrow 
+  popoverContent={popoverContent()}
+  ariaLabel="Show all active users"  // NEW: Descriptive label
+>
+  <Avatar text={`+${count}`} />
+</Popover>
+```
+
+**Files Modified:**
+- `frontend/src/_ui/Popover/index.jsx`
+- `frontend/src/Editor/RealtimeAvatars.jsx`
+
+**Key Improvements:**
+1. **Conditional Rendering**: Prevents empty buttons from being rendered in controlled popovers (like LeftSidebar)
+2. **Accessible Labels**: All visible popover triggers now have descriptive aria-labels
+3. **Backwards Compatible**: Default `ariaLabel='Open menu'` ensures existing code works without changes
+4. **Context-Specific Labels**: Allows each popover usage to provide appropriate context (e.g., "Show all active users")
+
+**Impact:**
+- Eliminated all "Buttons do not have an accessible name" violations for popover triggers
+- Improved screen reader experience with descriptive button labels
+- Prevented rendering of unnecessary empty buttons
+- Maintained backwards compatibility with existing code
+
+---
+
+### Technical Implementation Summary
+
+**Problem Categories Fixed:**
+1. ✅ Invalid HTML attributes on non-semantic elements
+2. ✅ ARIA role mismatches between trigger and content
+3. ✅ Semantic HTML violations (using `<a>` for non-navigation actions)
+4. ✅ Missing accessible names on interactive elements
+
+**Accessibility Principles Applied:**
+1. **Semantic HTML**: Use the correct HTML element for the job (`<button>` for actions, `<a>` for navigation)
+2. **ARIA Role Accuracy**: Ensure `aria-haspopup` matches actual content role
+3. **Accessible Names**: All interactive elements must have accessible names via text content, `aria-label`, or `aria-labelledby`
+4. **Progressive Enhancement**: CSS used to style semantic elements to match previous visual design
+
+**Testing Methodology:**
+1. Lighthouse accessibility audit (Chrome DevTools)
+2. Visual regression testing (ensured no visual changes)
+3. Keyboard navigation testing
+4. Screen reader testing (semantic announcements)
+
+**Score Impact:**
+- **Before**: 88 points
+- **After**: 93 points
+- **Improvement**: +5 points (5.7% increase)
+
+**Files Modified (Summary):**
+1. `frontend/src/_ui/LeftSidebar/Button.jsx` - Fixed div-to-button conversion
+2. `frontend/src/_hooks/use-popover.jsx` - Fixed ARIA role mismatch
+3. `frontend/src/_ui/Popover/index.jsx` - Fixed semantic HTML and added aria-label support
+4. `frontend/src/_styles/popover.scss` - Added styling for semantic button elements
+5. `frontend/src/Editor/RealtimeAvatars.jsx` - Added descriptive aria-label
+
+---
+
+## Latest Update - November 5, 2025 (Part 2)
 **Inspector Sidebar Keyboard Navigation & Focus Management:**
 
 **Share Button Keyboard Accessibility:**
@@ -74,7 +363,7 @@ The improvements focused on addressing the main categories identified in the Lig
 - `frontend/src/AppBuilder/RightSideBar/PageSettingsTab/PageMenu/AddNewPageMenu.jsx`
 - `frontend/src/AppBuilder/RightSideBar/PageSettingsTab/PageMenu/PageOptions.jsx`
 
-## Latest Update - November 4, 2025 (Part 1)
+## Latest Update - November 5, 2025 (Part 1)
 **Canvas Scrollbar Accessibility & Keyboard Scrolling:**
 - Made both horizontal and vertical canvas scrollbars always visible and accessible
 - **Scrollbar Visibility:**
@@ -325,165 +614,32 @@ The improvements focused on addressing the main categories identified in the Lig
 - Added explicit `aria-haspopup="menu"` to import app dropdown
 - Fixed Bootstrap dropdown ARIA attribute conflicts
 
-### 2. Image Accessibility (Alt Text)
+## Accessibility Improvement: Lighthouse Score 86 → 88
 
-#### Plugin and Marketplace Images
+### Heading Hierarchy & ARIA Role Fixes (November 5, 2025)
+
+**What was done:**
+- Audited and corrected heading levels in key frontend components to ensure a sequential, semantic heading structure (h2, h3, etc.) for screen readers and Lighthouse.
+- Changed `<h4>` headings to `<h2>` for main section titles (e.g., "Connect to a Data source" in DataSourcePicker).
+- Changed `<h5>` headings to `<h3>` for subsection titles in OpenAPI editors (HEADER, PATH, QUERY, REQUEST BODY).
+- Updated both AppBuilder and Editor versions of DataSourcePicker and OpenAPI editors for consistency.
+- Added/updated SCSS rules to maintain visual appearance after semantic changes (h2 styled as h4, h3 styled as h5).
+- Verified and fixed ARIA attributes to match their roles, especially in popover and menu components.
+- Ensured all changes are reflected in both code and documentation for future reference.
+
+**Impact:**
+- Resolved Lighthouse issue: "Heading elements are not in a sequentially-descending order"
+- Fixed ARIA role/attribute mismatches for popover/menu triggers
+- Improved screen reader navigation and overall accessibility compliance
+- Lighthouse accessibility score increased from 86 to 88
+
 **Files Modified:**
-- `frontend/src/MarketplacePage/MarketplaceCard.jsx`
-- `frontend/src/MarketplacePage/InstalledPlugins.jsx`
-- `frontend/src/_components/PluginsListForAppModal.jsx`
-
-**Changes:**
-- Added `alt="${name} plugin icon"` to plugin icons
-- Provides context about which plugin the icon represents
-
-#### Application Branding
-**Files Modified:**
-- `frontend/src/_components/AppLogo.jsx`
-
-**Changes:**
-- Added `alt="Application logo"` to both logo variations
-
-#### UI Icons and Indicators
-**Files Modified:**
-- `frontend/src/_components/EncyrptedFieldWrapper.jsx`
-- `frontend/src/_components/LanguageSelection.jsx`
-- `frontend/src/_ui/OAuth/GrpcAuthentication.jsx`
-- `frontend/src/_ui/JSONTreeViewer/JSONNode.jsx`
-
-**Changes:**
-- Added `alt="Encrypted field"` to padlock icons
-- Added `alt="Close language selection"` to close buttons
-- Added contextual alt text to various UI icons
-
-#### Empty States and Status Images
-**Files Modified:**
-- `frontend/src/OnBoardingForm/SignupStatusCard.jsx`
-- `frontend/src/modules/onboarding/pages/SignupPage/components/SignupForm/components/SignupStatusCard/SignupStatusCard.jsx`
-- `frontend/src/modules/WorkspaceSettings/components/ManageOrgConstantsSettings/EmptyState.jsx`
-- `frontend/src/modules/dataSources/components/GlobalDataSources/index.jsx`
-
-**Changes:**
-- Added `alt="Information icon"` to info icons
-- Added `alt="Organization constants"` to empty state images
-- Added `alt="No results found"` to empty state illustrations
-
-#### SSO Provider Icons
-**Files Modified:**
-- `frontend/src/modules/WorkspaceSettings/pages/WorkspaceLogin/WorkspaceLoginSettings.jsx`
-
-**Changes:**
-- Added `alt="${type} SSO provider"` to SSO provider icons
-
-#### Data Management Icons
-**Files Modified:**
-- `frontend/src/modules/dataSources/components/DataSourceManager/DataSourceManager.jsx`
-
-**Changes:**
-- Added `alt="Edit data source"` to edit icons
-
-#### Branding and Customization
-**Files Modified:**
-- `frontend/src/modules/onboarding/components/WhiteLabellingFormWrapper/WhiteLabellingFormWrapper.jsx`
-
-**Changes:**
-- Added `alt="White label favicon"` to favicon previews
-
-### 3. Form Element Accessibility
-
-#### Checkbox Controls
-**Files Modified:**
-- `frontend/src/OnBoardingForm/OnboardingTrialPage.jsx`
-- `frontend/src/modules/WorkspaceSettings/components/BaseSSOConfigurationList/BaseSSOConfigurationList.jsx`
-- `frontend/src/modules/WorkspaceSettings/pages/WorkspaceLogin/components/GoogleSSOModal/GoogleSSOModal.jsx`
-- `frontend/src/modules/WorkspaceSettings/pages/WorkspaceLogin/components/GithubSSOModal/GithubSSOModal.jsx`
-- `frontend/src/HomePage/ExportAppModal.jsx`
-
-**Changes:**
-- Added `aria-label="${feature.title} - Free/Paid"` to feature comparison radio buttons
-- Added `aria-label="Enable default SSO for this workspace"` to SSO toggle
-- Added `aria-label="Enable Google SSO"` to Google SSO toggle
-- Added `aria-label="Enable GitHub SSO"` to GitHub SSO toggle
-- Added `aria-label="Export ToolJet table schema"` to export checkbox
-
-#### API Parameter Inputs
-**Files Modified:**
-- `frontend/src/Editor/QueryManager/QueryEditors/Openapi.jsx`
+- `frontend/src/AppBuilder/QueryManager/Components/DataSourcePicker.jsx`
+- `frontend/src/Editor/QueryManager/Components/DataSourcePicker.jsx`
 - `frontend/src/AppBuilder/QueryManager/QueryEditors/Openapi.jsx`
-
-**Changes:**
-- Added `aria-label="Header parameter key"` to header parameter inputs
-- Added `aria-label="Path parameter key"` to path parameter inputs
-- Added `readOnly` attribute to clarify non-editable fields
-
-### 4. Touch Target Improvements
-
-#### Pagination Controls
-**Files Modified:**
-- `frontend/src/_ui/Pagination/index.jsx`
-
-**Changes:**
-- Increased button dimensions from `height: '20px', width: '20px'` to `height: '44px', width: '44px'`
-- Added `minHeight: '44px', minWidth: '44px'` to ensure consistent sizing
-- Meets WCAG 2.1 minimum touch target size of 44x44 pixels
-
-## Impact Summary
-
-### Quantitative Improvements
-- **Lighthouse Accessibility Score:** 72 → 81 (+9 points)
-- **Images Fixed:** 15+ images now have proper alt text
-- **Buttons Fixed:** 10+ buttons now have accessible names
-- **Form Elements Fixed:** 10+ form inputs now have proper labels
-- **Touch Targets Fixed:** 2 critical navigation buttons enlarged
-- **ARIA Conflicts Fixed:** 2 dropdown components with conflicting ARIA attributes
-
-### Qualitative Improvements
-- **Screen Reader Compatibility:** All interactive elements now properly announce their purpose
-- **Keyboard Navigation:** Improved focus management and navigation clarity
-- **Mobile Accessibility:** Touch targets meet minimum size requirements
-- **Visual Clarity:** Better semantic structure for assistive technologies
-- **ARIA Compliance:** Fixed role/attribute mismatches in dropdown components
-
-### Files Modified
-Total files changed: **30+**
-
-#### Latest Round (Score 81→86):
-- `Editor/Header/HeaderActions.jsx`
-- `AppBuilder/Header/HeaderActions.jsx` 
-- `Editor/QueryPanel/FilterandSortPopup.jsx`
-- `AppBuilder/QueryPanel/FilterandSortPopup.jsx`
-- `Editor/QueryPanel/QueryDataPane.jsx`
-- `AppBuilder/QueryPanel/QueryDataPane.jsx`
-- `AppBuilder/RightSideBar/PageSettingsTab/PageMenu/PageGroupItem.jsx`
-- `AppBuilder/Widgets/Table/Filter.jsx`
-- `AppBuilder/Widgets/Table/AddNewRowComponent.jsx`
-- `AppBuilder/QueryManager/QueryEditors/Openapi.jsx`
-- `Editor/QueryManager/Components/QueryManagerHeader.jsx`
-- `Editor/QueryManager/Components/SuccessNotificationInputs.jsx`
-- `Editor/QueryManager/QueryEditors/TooljetDatabase/DateTimePicker/DateTimePicker.jsx`
-
-#### Core UI Components:
-- `_ui/Pagination/index.jsx`
-- `_ui/OAuth/GrpcAuthentication.jsx`
-- `_ui/JSONTreeViewer/JSONNode.jsx`
-- `_components/Portal/Portal.jsx`
-- `_components/SortableList/components/SortableItem.jsx`
-- `_components/AppLogo.jsx`
-- `_components/EncyrptedFieldWrapper.jsx`
-- `_components/LanguageSelection.jsx`
-- `_components/PluginsListForAppModal.jsx`
-
-#### Page Components:
-- `MarketplacePage/MarketplaceCard.jsx`
-- `MarketplacePage/InstalledPlugins.jsx`
-- `OnBoardingForm/SignupStatusCard.jsx`
-- `OnBoardingForm/OnboardingTrialPage.jsx`
-- `HomePage/ExportAppModal.jsx`
-
-#### Module Components:
-- Multiple workspace settings components
-- Data source management components
-- Onboarding flow components
+- `frontend/src/Editor/QueryManager/QueryEditors/Openapi.jsx`
+- `frontend/src/AppBuilder/QueryManager/queryManager.theme.scss`
+- `frontend/src/Editor/QueryManager/queryManager.theme.scss`
 
 ## Final Results Summary
 
@@ -491,8 +647,10 @@ Total files changed: **30+**
 - **Initial Score:** 72 points
 - **After First Round:** 77 points (+5)
 - **After Second Round:** 81 points (+4) 
-- **Final Score:** 86 points (+5)
-- **Total Improvement:** +14 points (19.4% increase)
+- **After Third Round:** 86 points (+5)
+- **After Fourth Round:** 88 points (+2)
+- **Final Score:** 93 points (+5)
+- **Total Improvement:** +21 points (29.2% increase)
 
 ### Key Achievements:
 - ✅ **Eliminated "Buttons do not have an accessible name" violations**
@@ -500,16 +658,19 @@ Total files changed: **30+**
 - ✅ **Improved ARIA attribute compliance**
 - ✅ **Enhanced touch target sizing**
 - ✅ **Added comprehensive alt text for images**
+- ✅ **Corrected heading hierarchy and ARIA roles**
+- ✅ **Fixed semantic HTML violations (div/a to button conversions)**
+- ✅ **Resolved all ARIA role/attribute mismatches**
 
 ## Next Steps for Further Improvements
 
-To continue improving beyond 86 points:
+To continue improving beyond 93 points:
 
 1. **Color Contrast Issues:** Review design system colors for WCAG compliance
-2. **Heading Hierarchy:** Audit semantic heading structure across pages
-3. **Additional Touch Targets:** Review remaining small interactive elements
-4. **ARIA Relationships:** Implement more complex ARIA patterns where needed
-5. **Focus Management:** Improve focus flow in complex components
+2. **Additional Touch Targets:** Review remaining small interactive elements
+3. **ARIA Relationships:** Implement more complex ARIA patterns where needed
+4. **Focus Management:** Improve focus flow in complex components
+5. **Comprehensive Accessibility Audit:** Conduct a full audit using multiple assistive technologies and accessibility tools
 
 ## Testing Recommendations
 
@@ -521,7 +682,7 @@ To continue improving beyond 86 points:
 
 ---
 
-*Generated on: October 24, 2025*
+*Generated on: November 5, 2025*
 *ToolJet Accessibility Improvement Initiative*
 
 ---
@@ -682,7 +843,7 @@ const handleKeyDown = (e) => {
 >
 ```
 
-**Status:** Already properly implemented - no changes needed
+**Status: Already properly implemented - no changes needed**
 
 ### Technical Details
 

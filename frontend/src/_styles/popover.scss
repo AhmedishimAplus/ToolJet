@@ -20,6 +20,26 @@
   }
 }
 
+// Style popover trigger button to look like inline element
+.popover-trigger-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-align: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--indigo9);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
 .PopoverContent.global-settings-popover-content {
   will-change: initial;
 }

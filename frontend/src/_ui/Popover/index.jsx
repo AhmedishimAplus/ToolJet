@@ -16,6 +16,7 @@ const PopoverComponent = ({
   showArrow = false,
   popoverContentHeight = '',
   onInteractOutside,
+  ariaLabel = 'Open menu',
 }) => {
   const darkMode = localStorage.getItem('darkMode') === 'true';
   const computeStyle = () => {
@@ -29,17 +30,24 @@ const PopoverComponent = ({
   };
   return (
     <Popover.Root {...(open && { open })} onOpenChange={handleToggle && handleToggle}>
-      <Popover.Trigger asChild>
-        <a className={cx({ 'w-100': fullWidth })}>{children}</a>
-      </Popover.Trigger>
+      {children && (
+        <Popover.Trigger asChild>
+          <button
+            className={cx('popover-trigger-button', { 'w-100': fullWidth })}
+            type="button"
+            aria-label={ariaLabel}
+          >
+            {children}
+          </button>
+        </Popover.Trigger>
+      )}
       <Popover.Portal>
         <Popover.Content
           style={computeStyle()}
           {...(onInteractOutside && { onInteractOutside })}
           side={side}
-          className={`PopoverContent ${popoverContentClassName} ${darkMode && 'dark dark-theme'} ${
-            popoverContentHeight && 'drawer-height'
-          }`}
+          className={`PopoverContent ${popoverContentClassName} ${darkMode && 'dark dark-theme'} ${popoverContentHeight && 'drawer-height'
+            }`}
         >
           {popoverContent}
           {!hideCloseIcon && (

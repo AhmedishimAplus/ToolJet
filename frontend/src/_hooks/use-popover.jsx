@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { isEmpty } from 'lodash';
 
-const noop = () => {};
+const noop = () => { };
 const useEscapeHandler = (handler = noop, dependencies = []) => {
   const escapeHandler = (e) => {
     if (e.code === 'Escape') {
@@ -33,7 +33,7 @@ const useClickOutside = (dependencies, handler = noop) => {
   }, dependencies);
   return ref;
 };
-const role = 'dialog';
+const role = 'menu';
 const usePopover = (defaultOpen = false) => {
   const triggerRef = useRef(null);
   const [open, setOpen] = useState(defaultOpen);
