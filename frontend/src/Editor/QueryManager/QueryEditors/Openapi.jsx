@@ -279,7 +279,7 @@ class OpenapiComponent extends React.Component {
           <div className={`row openApi-fields-row ${this.props.darkMode && 'theme-dark'}`}>
             {headerParams.length > 0 && (
               <div className={`path-fields `}>
-                <h5 className="text-heading">{this.props.t('globals.header', 'HEADER')}</h5>
+                <h3 className="text-heading">{this.props.t('globals.header', 'HEADER')}</h3>
                 <div className="input-group-parent-container">
                   {headerParams.map((param) => (
                     <div className="input-group-wrapper" key={param.name}>
@@ -339,7 +339,7 @@ class OpenapiComponent extends React.Component {
 
             {pathParams.length > 0 && (
               <div className={`path-fields `}>
-                <h5 className="text-heading">{this.props.t('globals.path', 'PATH')}</h5>
+                <h3 className="text-heading">{this.props.t('globals.path', 'PATH')}</h3>
                 <div className="input-group-parent-container">
                   {pathParams.map((param) => (
                     <div className="input-group-wrapper" key={param.name}>
@@ -400,7 +400,7 @@ class OpenapiComponent extends React.Component {
 
             {queryParams.length > 0 && (
               <div className={`query-fields `}>
-                <h5 className="text-heading">{this.props.t('globals.query'.toUpperCase(), 'QUERY')}</h5>
+                <h3 className="text-heading">{this.props.t('globals.query'.toUpperCase(), 'QUERY')}</h3>
                 <div className="input-group-parent-container">
                   {queryParams.map((param) => (
                     <div className="input-group-wrapper" key={param.name}>
@@ -445,7 +445,7 @@ class OpenapiComponent extends React.Component {
 
             {requestBody?.schema?.properties && (
               <div className={`request-body-fields  `}>
-                <h5 className="text-heading">{this.props.t('globals.requestBody', 'REQUEST BODY')}</h5>
+                <h3 className="text-heading">{this.props.t('globals.requestBody', 'REQUEST BODY')}</h3>
                 <div
                   className={`${Object.keys(requestBody.schema.properties).length >= 1 && 'input-group-parent-container'
                     }`}

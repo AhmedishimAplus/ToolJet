@@ -53,9 +53,9 @@ function DataSourcePicker({ dataSources, sampleDataSource, staticDataSources, da
 
   return (
     <>
-      <h4 className="w-100 text-center" data-cy={'label-select-datasource'} style={{ fontWeight: 500 }}>
+      <h2 className="w-100 text-center" data-cy={'label-select-datasource'} style={{ fontWeight: 500 }}>
         Connect to a Data source
-      </h4>
+      </h2>
       <p className="mb-3" style={{ textAlign: 'center' }}>
         Select a Data source to start creating a new query. To know more about queries in ToolJet, you can read our
         &nbsp;
