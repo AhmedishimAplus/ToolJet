@@ -24,6 +24,7 @@ function BaseSettingsMenu({
 }) {
   const edition = fetchEdition();
   const [showOverlay, setShowOverlay] = useState(false);
+  const overlayTriggerRef = React.useRef(null);
   const { tooljetVersion } = useAppDataStore(
     (state) => ({
       tooljetVersion: state?.metadata?.installed_version,
@@ -145,17 +146,26 @@ function BaseSettingsMenu({
   };
 
   return (
-    <OverlayTrigger onToggle={setShowOverlay} rootClose={true} trigger="click" placement="top" overlay={getOverlay()}>
+    <OverlayTrigger
+      ref={overlayTriggerRef}
+      onToggle={setShowOverlay}
+      rootClose={true}
+      trigger="click"
+      placement="top"
+      overlay={getOverlay()}
+    >
       <div
         className={cx('settings-nav-item cursor-pointer', { active: showOverlay })}
         data-cy="settings-icon"
         tabIndex="0"
         role="button"
         aria-label="Open settings menu"
+        aria-expanded={showOverlay}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            e.currentTarget.click();
+            // Toggle the overlay directly
+            setShowOverlay(!showOverlay);
           }
         }}
       >
