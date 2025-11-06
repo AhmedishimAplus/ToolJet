@@ -1,5 +1,5 @@
 // src/modules/common/components/BaseSettingsMenu/BaseSettingsMenu.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import cx from 'classnames';
 import { Link } from 'react-router-dom';
 import { authenticationService, appService, sessionService } from '@/_services';
@@ -24,7 +24,7 @@ function BaseSettingsMenu({
 }) {
   const edition = fetchEdition();
   const [showOverlay, setShowOverlay] = useState(false);
-  const overlayTriggerRef = React.useRef(null);
+  const overlayTriggerRef = useRef(null);
   const { tooljetVersion } = useAppDataStore(
     (state) => ({
       tooljetVersion: state?.metadata?.installed_version,
@@ -80,15 +80,20 @@ function BaseSettingsMenu({
       featureAccess,
       checkForUnsavedChanges,
     });
+
     return (
       <div className={`settings-card tj-text card ${darkMode ? 'dark-theme' : ''}`}>
         {/* Marketplace section */}
         {marketplaceEnabled && tooljetVersion && !checkIfToolJetCloud(tooljetVersion) && (
           <Link
-            onClick={(event) => checkForUnsavedChanges('/integrations/marketplace', event)}
+            onClick={(event) => {
+              checkForUnsavedChanges('/integrations/marketplace', event);
+              setShowOverlay(false);
+            }}
             to={'/integrations/marketplace'}
             className="dropdown-item tj-text-xsm"
             data-cy="marketplace-option"
+            tabIndex={-1}
           >
             <span>Marketplace</span>
           </Link>
@@ -109,10 +114,14 @@ function BaseSettingsMenu({
         {/* Admin section - Workspace settings */}
         {admin && (
           <Link
-            onClick={(event) => checkForUnsavedChanges(getPrivateRoute('workspace_settings'), event)}
+            onClick={(event) => {
+              checkForUnsavedChanges(getPrivateRoute('workspace_settings'), event);
+              setShowOverlay(false);
+            }}
             to={getPrivateRoute('workspace_settings')}
             className="dropdown-item tj-text-xsm"
             data-cy="workspace-settings"
+            tabIndex={-1}
           >
             <span>Workspace settings</span>
           </Link>
@@ -120,10 +129,14 @@ function BaseSettingsMenu({
 
         {/* Profile settings */}
         <Link
-          onClick={(event) => checkForUnsavedChanges(getPrivateRoute('profile_settings'), event)}
+          onClick={(event) => {
+            checkForUnsavedChanges(getPrivateRoute('profile_settings'), event);
+            setShowOverlay(false);
+          }}
           to={getPrivateRoute('profile_settings')}
           className="dropdown-item tj-text-xsm"
           data-cy="profile-settings"
+          tabIndex={-1}
         >
           <span>Profile settings</span>
         </Link>
@@ -135,9 +148,14 @@ function BaseSettingsMenu({
         <Link
           data-testid="logoutBtn"
           to="#"
-          onClick={handleLogout}
+          onClick={(e) => {
+            e.preventDefault();
+            handleLogout();
+            setShowOverlay(false);
+          }}
           className="dropdown-item text-danger tj-text-xsm"
           data-cy="logout-link"
+          tabIndex={-1}
         >
           <span>{t('header.logout', 'Logout')}</span>
         </Link>
@@ -151,7 +169,7 @@ function BaseSettingsMenu({
       onToggle={setShowOverlay}
       rootClose={true}
       trigger="click"
-      placement="top"
+      placement="right"
       overlay={getOverlay()}
     >
       <div
@@ -161,13 +179,6 @@ function BaseSettingsMenu({
         role="button"
         aria-label="Open settings menu"
         aria-expanded={showOverlay}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            // Toggle the overlay directly
-            setShowOverlay(!showOverlay);
-          }
-        }}
       >
         <div className="d-xl-block">
           <SolidIcon name="settings" fill={showOverlay ? '#3E63DD' : 'var(--slate8)'} width={28} />

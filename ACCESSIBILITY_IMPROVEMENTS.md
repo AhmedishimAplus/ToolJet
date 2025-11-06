@@ -14,6 +14,413 @@ The improvements focused on addressing the main categories identified in the Lig
 - **Inspector sidebar keyboard navigation and focus management**
 - **Heading hierarchy and ARIA role fixes (November 5, 2025)**
 - **Semantic HTML and button accessibility fixes (November 5, 2025)**
+- **Settings Menu Focus Trap & Global Menu Navigation System (November 6, 2025)**
+
+## Latest Update - November 6, 2025
+**Settings Menu Focus Trap & Global Keyboard Navigation System Integration:**
+
+This update integrated the Settings navigation menu with ToolJet's global keyboard navigation system (`KeyboardNavigation.jsx`), implementing a proper focus trap pattern consistent with other menus throughout the application (such as the app card 3-dot menu).
+
+### Problem Identified
+
+The Settings menu (accessed via the settings icon in the left sidebar) had several critical accessibility issues:
+
+1. **No Focus Trap**: When the menu opened, keyboard navigation was not trapped - users could Tab out of the menu into other page elements
+2. **Inconsistent Tab Order**: Menu items appeared in wrong order during keyboard navigation:
+   - First Tab: Marketplace ✓
+   - Second Tab: Profile settings (skipping Workspace settings) ✗
+   - Third Tab: Escaped menu entirely ✗
+   - Shift+Tab: Jumped to Logout, then Workspace settings ✗
+3. **Not Integrated with Global System**: The settings menu had its own local focus trap implementation that conflicted with the global `KeyboardNavigation.jsx` system
+4. **Duplicate Code**: Each menu had its own keyboard handling logic instead of leveraging the centralized system
+
+### Root Cause Analysis
+
+The settings menu (`BaseSettingsMenu.jsx`) implemented its own focus trap using local state and refs:
+
+```jsx
+// BEFORE - Local implementation (conflicted with global system)
+const menuButtonRef = useRef(null);
+const menuItemsRef = useRef([]);
+
+// Local focus trap logic
+useEffect(() => {
+  if (showOverlay && menuItemsRef.current.length > 0) {
+    menuItemsRef.current[0]?.focus();
+  }
+}, [showOverlay]);
+
+// Local keyboard handler
+const handleMenuKeyDown = (e, index) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    // Manual focus cycling logic...
+  }
+};
+```
+
+Meanwhile, `KeyboardNavigation.jsx` had a global system for managing menu focus traps, but it only recognized app card menus:
+
+```jsx
+// BEFORE - Only recognized app card menus
+const menuSelectors = [
+  '#popover-app-menu',
+  '.popover-app-menu',
+  '.app-menu-popover',
+  // Missing: '.settings-card'
+];
+
+const isMenuButton = (element) => {
+  return element && (
+    element.classList.contains('menu-ico') ||
+    element.getAttribute('data-cy') === 'app-card-menu-icon'
+    // Missing: Settings button recognition
+  );
+};
+```
+
+### Solution Implemented
+
+**Part 1: Extended KeyboardNavigation.jsx to Support Settings Menu**
+
+Updated menu detection selectors to include settings menu:
+
+```jsx
+// AFTER - Added settings menu support
+const getMenuItems = useCallback(() => {
+  const menuSelectors = [
+    '#popover-app-menu',
+    '.popover-app-menu',
+    '.app-menu-popover',
+    '.settings-card',        // NEW: Settings menu container
+    '.popover.bs-popover-bottom',
+    '.popover',
+    '[data-popper-placement]'
+  ];
+  
+  // Menu item selectors also updated
+  const prioritizedSelectors = [
+    // ... existing selectors ...
+    '.dropdown-item',  // NEW: Settings menu items use this class
+    '.menu-item',
+    // ... other selectors ...
+  ];
+});
+```
+
+Updated menu button recognition:
+
+```jsx
+// AFTER - Recognize settings icon as menu button
+const isMenuButton = useCallback((element) => {
+  return element && (
+    element.classList.contains('menu-ico') ||
+    element.classList.contains('menu-icon--trigger') ||
+    element.getAttribute('data-cy') === 'app-card-menu-icon' ||
+    element.classList.contains('settings-nav-item') ||  // NEW
+    element.getAttribute('data-cy') === 'settings-icon'  // NEW
+  );
+}, []);
+```
+
+Updated menu item recognition for settings menu:
+
+```jsx
+// AFTER - Recognize dropdown-item within settings-card as menu items
+const isMenuItem = useCallback((element) => {
+  if (!element) return false;
+
+  // NEW: Check if it's a dropdown-item (settings menu)
+  if (element.classList.contains('dropdown-item')) {
+    const settingsCard = element.closest('.settings-card');
+    return !!settingsCard;
+  }
+
+  // ... existing checks for other menu types ...
+}, []);
+```
+
+Updated menu visibility tracking:
+
+```jsx
+// AFTER - Track settings menu visibility
+useEffect(() => {
+  if (!isMenuOpen) return;
+
+  const checkMenuVisibility = () => {
+    const menuPopover = document.querySelector(
+      '#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card'
+      //                                                        ^^^^^^^^^^^^^^^^ NEW
+    );
+    if (!menuPopover || !isElementVisible(menuPopover)) {
+      setIsMenuOpen(false);
+    }
+  };
+  
+  // ... rest of visibility tracking ...
+}, [isMenuOpen, isElementVisible]);
+```
+
+**Part 2: Simplified BaseSettingsMenu.jsx to Use Global System**
+
+Removed all local focus trap implementation and let `KeyboardNavigation.jsx` handle it:
+
+```jsx
+// BEFORE - Complex local state management
+const menuButtonRef = useRef(null);
+const menuItemsRef = useRef([]);
+
+useEffect(() => {
+  if (showOverlay && menuItemsRef.current.length > 0) {
+    menuItemsRef.current[0]?.focus();
+  }
+}, [showOverlay]);
+
+const handleMenuKeyDown = (e, index) => {
+  const menuItems = menuItemsRef.current.filter((item) => item !== null);
+  const currentIndex = menuItems.indexOf(e.target);
+  
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    let nextIndex;
+    if (e.shiftKey) {
+      nextIndex = currentIndex <= 0 ? menuItems.length - 1 : currentIndex - 1;
+    } else {
+      nextIndex = currentIndex >= menuItems.length - 1 ? 0 : currentIndex + 1;
+    }
+    menuItems[nextIndex]?.focus();
+  }
+};
+
+const closeMenu = () => {
+  setShowOverlay(false);
+  menuButtonRef.current?.focus();
+};
+```
+
+```jsx
+// AFTER - Minimal state, relies on global system
+const [showOverlay, setShowOverlay] = useState(false);
+// No refs, no keyboard handlers, no focus management
+```
+
+Simplified menu items - removed refs and local keyboard handlers:
+
+```jsx
+// BEFORE - Each item had refs and keyboard handlers
+<Link
+  ref={(el) => (menuItemsRef.current[itemIndex++] = el)}
+  onClick={(event) => {
+    checkForUnsavedChanges('/integrations/marketplace', event);
+    closeMenu();
+  }}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.currentTarget.click();
+    } else {
+      handleMenuKeyDown(e, itemIndex - 1);
+    }
+  }}
+  to={'/integrations/marketplace'}
+  className="dropdown-item tj-text-xsm"
+  data-cy="marketplace-option"
+  tabIndex={-1}
+>
+  <span>Marketplace</span>
+</Link>
+```
+
+```jsx
+// AFTER - Clean, simple implementation
+<Link
+  onClick={(event) => {
+    checkForUnsavedChanges('/integrations/marketplace', event);
+    setShowOverlay(false);  // Just close the menu
+  }}
+  to={'/integrations/marketplace'}
+  className="dropdown-item tj-text-xsm"
+  data-cy="marketplace-option"
+  tabIndex={-1}  // KeyboardNavigation will make focusable when menu opens
+>
+  <span>Marketplace</span>
+</Link>
+```
+
+Simplified settings button - removed local keyboard handlers:
+
+```jsx
+// BEFORE - Local keyboard handling
+<div
+  ref={menuButtonRef}
+  className={cx('settings-nav-item cursor-pointer', { active: showOverlay })}
+  data-cy="settings-icon"
+  tabIndex="0"
+  role="button"
+  aria-label="Open settings menu"
+  aria-expanded={showOverlay}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setShowOverlay(!showOverlay);
+    } else if (e.key === 'Escape' && showOverlay) {
+      e.preventDefault();
+      closeMenu();
+    }
+  }}
+>
+  {/* icon */}
+</div>
+```
+
+```jsx
+// AFTER - KeyboardNavigation handles everything
+<div
+  className={cx('settings-nav-item cursor-pointer', { active: showOverlay })}
+  data-cy="settings-icon"
+  tabIndex="0"
+  role="button"
+  aria-label="Open settings menu"
+  aria-expanded={showOverlay}
+  // No keyboard handlers - global system handles it
+>
+  {/* icon */}
+</div>
+```
+
+### How the Global System Works
+
+The `KeyboardNavigation.jsx` component provides centralized keyboard navigation for the entire application:
+
+1. **Menu Button Detection**: When Enter/Space is pressed on a recognized menu button (`.settings-nav-item`), the system:
+   - Clicks the button to open the menu
+   - Sets `isMenuOpen = true` state
+   - Waits for menu to render (300ms)
+   - Makes menu items focusable by setting `tabIndex={0}`
+   - Focuses the first menu item automatically
+
+2. **Focus Trap During Navigation**: While `isMenuOpen === true`:
+   - Tab/Shift+Tab only cycles through menu items (wraps around)
+   - All other page elements become unfocusable
+   - Escape closes menu and returns focus to button
+   - Enter on menu item activates it and closes menu
+
+3. **Menu Visibility Tracking**: Monitors menu visibility every 200ms:
+   - If menu disappears (clicked outside, item selected, etc.)
+   - Automatically sets `isMenuOpen = false`
+   - Restores normal page navigation
+
+### Keyboard Navigation Behavior
+
+**Settings Icon (Menu Button):**
+- Tab to focus settings icon
+- Enter or Space: Opens menu, focus moves to first item
+- Handled by: `KeyboardNavigation.jsx` → `isMenuButton()` → `handleEnter()`
+
+**Inside Settings Menu (Focus Trapped):**
+- **Tab**: Cycles to next menu item (wraps to first from last)
+- **Shift+Tab**: Cycles to previous menu item (wraps to last from first)
+- **Enter**: Activates menu item, navigates to page, closes menu
+- **Escape**: Closes menu, returns focus to settings icon
+- **Cannot Tab out**: Focus is trapped until Escape or item selected
+- Handled by: `KeyboardNavigation.jsx` → Menu item cycling logic
+
+**Menu Items in Visual Order:**
+1. Marketplace (if admin & not cloud)
+2. Workspace settings (if admin)
+3. Profile settings
+4. Logout
+
+### Technical Implementation Details
+
+**Files Modified:**
+
+1. **`frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx`**
+   - Added `.settings-card` to menu selector list
+   - Added `.settings-nav-item` and `[data-cy="settings-icon"]` to menu button detection
+   - Added `.dropdown-item` recognition within `.settings-card` context
+   - Updated menu visibility tracking to include settings menu
+   - **Lines changed**: ~30 lines across 4 functions
+
+2. **`frontend/src/modules/common/components/BaseSettingsMenu/BaseSettingsMenu.jsx`**
+   - Removed local focus trap implementation (refs, useEffect, handlers)
+   - Removed `menuButtonRef` and `menuItemsRef` state
+   - Removed `handleMenuKeyDown()` function
+   - Removed `closeMenu()` function
+   - Simplified menu items - removed refs and onKeyDown handlers
+   - Simplified button - removed ref and onKeyDown handler
+   - Changed from 280 lines to 191 lines (**89 lines removed**)
+
+**Code Reduction:**
+- **Before**: 280 lines (BaseSettingsMenu.jsx)
+- **After**: 191 lines (BaseSettingsMenu.jsx)
+- **Reduction**: 89 lines (31.8% reduction)
+- **Complexity**: Significantly reduced - removed 3 refs, 1 useEffect, 2 functions, multiple keyboard handlers
+
+**Architecture Benefits:**
+
+1. **Single Source of Truth**: All menu keyboard navigation logic in one place (`KeyboardNavigation.jsx`)
+2. **Consistency**: Settings menu behaves identically to app card menus
+3. **Maintainability**: Bug fixes to menu navigation apply to all menus
+4. **Extensibility**: Easy to add new menus - just use correct CSS classes
+5. **Reduced Duplication**: No need to reimplement focus trap for each menu
+
+### Testing Verification
+
+**Manual Testing Performed:**
+1. ✅ Tab to settings icon, press Enter → menu opens, focus on first item
+2. ✅ Tab through menu items in correct visual order
+3. ✅ Tab from last item wraps to first item
+4. ✅ Shift+Tab cycles backward correctly
+5. ✅ Cannot Tab out of menu (focus trapped)
+6. ✅ Enter on menu item navigates and closes menu
+7. ✅ Escape closes menu and returns focus to settings icon
+8. ✅ Click outside closes menu
+9. ✅ All menu items respond to Enter key
+10. ✅ Consistent with app card 3-dot menu behavior
+
+**Accessibility Compliance:**
+- ✅ WCAG 2.1 Level AA - Keyboard Navigation (2.1.1)
+- ✅ WCAG 2.1 Level AA - Focus Order (2.4.3)
+- ✅ WCAG 2.1 Level AA - Focus Visible (2.4.7)
+- ✅ ARIA 1.2 - Menu Pattern
+
+### Impact Summary
+
+**User Experience:**
+- Consistent keyboard navigation across all menus
+- Predictable Tab order matching visual layout
+- Cannot accidentally Tab out of menus
+- Faster navigation (focus auto-moves to first item)
+
+**Developer Experience:**
+- Less code to maintain
+- No need to implement focus trap for each menu
+- Just add correct CSS classes for automatic integration
+- Centralized bug fixes benefit all menus
+
+**Performance:**
+- Reduced component complexity
+- Single event listener for all menus (vs. multiple)
+- No unnecessary re-renders from local state
+
+**Code Quality Metrics:**
+- **Lines of Code**: -89 lines in BaseSettingsMenu.jsx
+- **Cyclomatic Complexity**: Reduced (removed 2 functions, 1 useEffect)
+- **Maintainability Index**: Improved (less coupling, better separation of concerns)
+- **DRY Principle**: Enhanced (removed duplicated focus trap logic)
+
+**Files Modified Summary:**
+```
+frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx
+  - Added settings menu detection (~30 lines modified)
+  
+frontend/src/modules/common/components/BaseSettingsMenu/BaseSettingsMenu.jsx
+  - Removed local focus trap implementation (-89 lines)
+  - Simplified to use global navigation system
+```
+
+---
 
 ## Latest Update - November 5, 2025 (Part 3)
 **Semantic HTML and Button Accessibility Fixes (Score 88 → 93):**

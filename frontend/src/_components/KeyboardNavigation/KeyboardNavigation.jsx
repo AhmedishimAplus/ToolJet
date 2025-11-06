@@ -613,13 +613,21 @@ const KeyboardNavigation = () => {
         return element && (
             element.classList.contains('menu-ico') ||
             element.classList.contains('menu-icon--trigger') ||
-            element.getAttribute('data-cy') === 'app-card-menu-icon'
+            element.getAttribute('data-cy') === 'app-card-menu-icon' ||
+            element.classList.contains('settings-nav-item') || // Settings menu button
+            element.getAttribute('data-cy') === 'settings-icon'
         );
     }, []);
 
     // Check if element is a menu item (within a popover menu)
     const isMenuItem = useCallback((element) => {
         if (!element) return false;
+
+        // Check if it's a dropdown-item (settings menu)
+        if (element.classList.contains('dropdown-item')) {
+            const settingsCard = element.closest('.settings-card');
+            return !!settingsCard;
+        }
 
         // Check if it's a span with role="button" inside a field div
         if (element.tagName === 'SPAN' && element.getAttribute('role') === 'button') {
@@ -908,6 +916,7 @@ const KeyboardNavigation = () => {
             '#popover-app-menu',
             '.popover-app-menu',
             '.app-menu-popover',
+            '.settings-card', // Add settings menu
             '.popover.bs-popover-bottom',
             '.popover',
             '[data-popper-placement]'
@@ -952,7 +961,7 @@ const KeyboardNavigation = () => {
             'div[class*="cursor-pointer"]',
             'span[class*="cursor-pointer"]',
             '[role="menuitem"]',
-            '.dropdown-item',
+            '.dropdown-item', // Settings menu items
             '.menu-item',
             '.app-menu-item',
             'div[role="button"]',
@@ -1305,7 +1314,7 @@ const KeyboardNavigation = () => {
         if (!isMenuOpen) return;
 
         const checkMenuVisibility = () => {
-            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card');
             if (!menuPopover || !isElementVisible(menuPopover)) {
 
                 setIsMenuOpen(false);
@@ -1317,7 +1326,7 @@ const KeyboardNavigation = () => {
 
         // Also listen for clicks outside to close menu
         const handleClickOutside = (e) => {
-            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover');
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card');
             if (menuPopover && e.target && !menuPopover.contains(e.target)) {
                 setIsMenuOpen(false);
             }
@@ -2039,7 +2048,7 @@ const KeyboardNavigation = () => {
     }, [ensureSidebarSearchWorks]);    // Show keyboard navigation hint
     return (
         <>
-            <div className="keyboard-navigation-hint visible">
+            <div className="keyboard-navigation-hint" style={{ display: 'none' }}>
                 {isMenuOpen ? (
                     '📋 Menu Open • ↑↓ Navigate Items • Enter Activate • ESC Back to Card'
                 ) : expandedCard ? (
