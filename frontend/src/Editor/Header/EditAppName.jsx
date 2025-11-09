@@ -100,8 +100,8 @@ function EditAppName({ appId, appName = '', onNameChanged, appCreationMode, page
   const borderColor = isError
     ? 'var(--light-tomato-10, #DB4324)' // Apply error border color
     : darkMode
-    ? 'var(--dark-border-color, #2D3748)' // Change this to the appropriate dark border color
-    : 'var(--light-border-color, #FFF0EE)';
+      ? 'var(--dark-border-color, #2D3748)' // Change this to the appropriate dark border color
+      : 'var(--light-border-color, #FFF0EE)';
 
   // Define the message based on the pageType prop
   const messageType = pageType === 'workflow' ? 'Workflow' : 'App';
@@ -125,13 +125,13 @@ function EditAppName({ appId, appName = '', onNameChanged, appCreationMode, page
             inputRef.current.select();
             setIsEditing(true);
           }}
-          className={`form-control-plaintext form-control-plaintext-sm ${
-            (!isError && !isEditing) || isValid ? '' : 'is-invalid'
-          } ${isError ? 'error' : ''}`} // Add the 'error' class when there's an error
+          className={`form-control-plaintext form-control-plaintext-sm ${(!isError && !isEditing) || isValid ? '' : 'is-invalid'
+            } ${isError ? 'error' : ''}`} // Add the 'error' class when there's an error
           style={{ border: `1px solid ${borderColor}` }}
           value={name}
           maxLength={50}
           data-cy="app-name-input"
+          aria-label={`App name ${name}`}
         />
       </ToolTip>
       <InfoOrErrorBox

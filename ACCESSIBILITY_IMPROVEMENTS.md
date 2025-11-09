@@ -18,8 +18,8 @@ The improvements focused on addressing the main categories identified in the Lig
 - **Semantic HTML and button accessibility fixes (November 5, 2025)**
 - **Settings Menu Focus Trap & Global Menu Navigation System (November 6, 2025)**
 
-### Dark Mode & Light Mode Color Contrast Management
-All color contrast improvements were carefully scoped to **dark mode only** (`.dark-theme` and `.theme-dark` classes), ensuring light mode design remains unchanged. The implementation uses fixed hex color values instead of CSS custom properties to guarantee WCAG compliance:
+### Dark Mode Color Contrast Management
+All color contrast improvements target **dark mode** (`.dark-theme` and `.theme-dark` classes). The implementation uses fixed hex color values instead of CSS custom properties to guarantee WCAG compliance:
 
 - **WCAG AA Compliance:** All text elements exceed 4.5:1 contrast ratio minimum
 - **WCAG AAA Compliance:** Most elements achieve 7:1+ contrast ratio for enhanced accessibility
