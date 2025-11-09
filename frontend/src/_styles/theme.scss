@@ -12105,6 +12105,16 @@ tbody {
     background-color: #3a3f41 !important;
     border-color: #4d5156 !important;
   }
+
+  // Improved contrast for app version text in dark mode
+  .tj-app-version-text {
+    color: var(--pink11);
+  }
+
+  // Improved contrast for links in dark mode  
+  .link-but {
+    color: #6E9EFF !important; // Lighter blue for better contrast on dark background
+  }
 }
 
 .add-icon-column {

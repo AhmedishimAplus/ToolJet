@@ -1,5 +1,5 @@
-.canvas-container{
-    &:focus-visible{
+.canvas-container {
+    &:focus-visible {
         outline: none;
     }
 
@@ -23,12 +23,12 @@
 //     }
 //   }
 
-.empty-box-cont{
+.empty-box-cont {
     display: flex;
     justify-content: center;
     margin: unset !important;
 
-    .dotted-cont{
+    .dotted-cont {
         border: 1px dashed var(--indigo8);
         border-radius: 6px;
         margin: 0 10px 0 10px;
@@ -38,20 +38,20 @@
         margin-bottom: 10px;
     }
 
-    .title-text{
+    .title-text {
         margin-top: 10px;
         font-size: 16px;
         font-weight: 600px;
-        
+
     }
 
-    .title-desc{
+    .title-desc {
         font-size: 14px;
         margin-top: 5px;
         font-weight: 400;
     }
 
-    .box-link{
+    .box-link {
         display: flex;
         margin-top: 10px;
 
@@ -60,8 +60,8 @@
             width: auto;
         }
 
-        .link-but{
-            
+        .link-but {
+
             font-weight: 500;
             font-size: 14px;
             color: #3E63DD;
@@ -69,6 +69,16 @@
     }
 }
 
+// Dark mode contrast improvements
+.dark-theme,
+.theme-dark {
+    .empty-editor-container {
+        .link-but {
+            color: #6E9EFF !important; // Lighter blue for better contrast on dark background
+        }
+    }
+}
+
 *:focus-visible {
-    outline: none;  // Rewriting it to replace outline coming from browser styles
-  }
+    outline: none; // Rewriting it to replace outline coming from browser styles
+}
