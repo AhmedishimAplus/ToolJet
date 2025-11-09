@@ -49,6 +49,7 @@
     .empty-editor-container {
         .link-but {
             color: #6E9EFF !important; // Lighter blue for better contrast on dark background
+            text-decoration: underline !important; // Make links distinguishable by more than color
         }
     }
 }

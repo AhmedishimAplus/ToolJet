@@ -12108,12 +12108,77 @@ tbody {
 
   // Improved contrast for app version text in dark mode
   .tj-app-version-text {
-    color: var(--pink11);
+    color: #FFC2F5 !important; // Even lighter pink for better contrast
   }
 
   // Improved contrast for links in dark mode  
   .link-but {
     color: #6E9EFF !important; // Lighter blue for better contrast on dark background
+    text-decoration: underline !important; // Make links distinguishable
+  }
+
+  // Improved contrast for "Changes saved" text
+  .text-center {
+    color: #FFFFFF !important;
+  }
+
+  // Improved contrast for avatar text
+  .tj-avatar {
+    color: #FFFFFF !important;
+    font-weight: 700 !important; // Bolder for better readability
+  }
+
+  // Improved contrast for header avatar text (AT, user initials)
+  .tj-header-avatar {
+    color: #FFFFFF !important;
+    background-color: var(--slate8) !important; // Darker background for better contrast
+    font-weight: 700 !important;
+  }
+
+  // Improved contrast for "Read documentation" and similar links
+  .read-documentation {
+    color: #6E9EFF !important;
+    text-decoration: underline !important;
+  }
+
+  // Improved contrast for form labels (Default, Sample data sources, etc.)
+  .form-label,
+  .sample-db-data-query-picker-form-label,
+  label[data-cy='landing-page-label-default'],
+  .datasource-picker .form-label,
+  .query-datasource-card-container~.form-label {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+  }
+
+  // Query details form labels
+  .query-details .form-label {
+    color: #FFFFFF !important;
+  }
+
+  // Improved contrast for query manager descriptions and headers
+  h2[data-cy='label-select-datasource'] {
+    color: #FFFFFF !important;
+  }
+
+  // Improved contrast for paragraph text in query manager
+  .mb-3,
+  p[style*="text-align"] {
+    color: #E8E8E8 !important;
+  }
+
+  // Make all links distinguishable by more than color
+  a[data-cy="querymanager-doc-link"],
+  a[target="_blank"] {
+    color: #6E9EFF !important;
+    text-decoration: underline !important;
+  }
+
+  // Query manager theme specific
+  .query-manager-desc-link,
+  a[data-cy*="link"] {
+    color: #6E9EFF !important;
+    text-decoration: underline !important;
   }
 }
 

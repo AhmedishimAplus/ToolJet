@@ -5,6 +5,15 @@
 	text-decoration: none !important;
 }
 
+// Dark mode contrast improvement
+.dark-theme,
+.theme-dark {
+	.read-documentation {
+		color: #6E9EFF !important;
+		text-decoration: underline !important; // Make links distinguishable by more than color
+	}
+}
+
 .action-btns {
 	align-items: center !important;
 	gap: 10px !important;

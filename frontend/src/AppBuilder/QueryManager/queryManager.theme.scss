@@ -97,3 +97,15 @@
     margin-top: 1rem;
   }
 }
+
+// Dark mode accessibility - ensure labels have high contrast
+.dark-theme,
+.theme-dark {
+
+  .form-label,
+  .sample-db-data-query-picker-form-label,
+  label[data-cy='landing-page-label-default'] {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+  }
+}

@@ -1971,3 +1971,13 @@ $border-radius: 4px;
     height: 100%;
   }
 }
+
+// Dark mode accessibility improvements
+.dark-theme,
+.theme-dark {
+  .query-details {
+    .form-label {
+      color: #FFFFFF !important;
+    }
+  }
+}
