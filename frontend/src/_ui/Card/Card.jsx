@@ -39,11 +39,17 @@ const Card = ({
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
+      e.stopPropagation();
       handleClick && handleClick();
     }
   };
 
   const handleClickEvent = (e) => {
+    // Ignore click events triggered by keyboard (Enter/Space)
+    // These have e.detail === 0
+    if (e.detail === 0) {
+      return;
+    }
     e.preventDefault();
     handleClick && handleClick();
   };
