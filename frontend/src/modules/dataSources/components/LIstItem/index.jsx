@@ -64,69 +64,71 @@ export const ListItem = ({
   const isSampleDb = dataSource.type == DATA_SOURCE_TYPE.SAMPLE;
   const showDeleteButton = !isSampleDb && canDeleteDataSource();
 
+  const renderDeleteButton = () => {
+    if (!showDeleteButton) return null;
+
+    const deleteButton = (
+      <button
+        title={'Delete'}
+        disabled={disableDelButton}
+        className="ds-delete-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(dataSource);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete(dataSource);
+          }
+        }}
+        tabIndex={0}
+        aria-label={`Delete ${dataSource.name} data source`}
+        data-cy={`${String(dataSource.name).toLowerCase().replace(/\s+/g, '-')}-delete-button`}
+      >
+        <div>
+          <SolidIcon
+            width="14"
+            height="14"
+            name="delete"
+            fill={disableDelButton ? '#E6E8EB' : '#E54D2E'}
+            className={disableDelButton ? 'disabled-button' : ''}
+          />
+        </div>
+      </button>
+    );
+
+    return <div className="col-auto">{deleteButton}</div>;
+  };
+
   return (
-    <ToolTip
-      placement="right"
-      show={toolTipText ? true : false}
-      message={'Sample data source\ncannot be deleted'}
-      tooltipClassName="tooltip-sampl-db"
+    <div
+      key={key}
+      className={cx('mx-3 rounded-3 datasources-list', {
+        'datasources-list-item': active,
+      })}
+      title={isSampleDb ? 'Sample data source\ncannot be deleted' : ''}
     >
       <div
-        key={key}
-        className={cx('mx-3 rounded-3 datasources-list', {
-          'datasources-list-item': active,
-        })}
+        role="button"
+        onClick={() => handleActions(selectDataSource)}
+        className="col d-flex align-items-center overflow-hidden"
+        data-cy={`${String(dataSource.name).toLowerCase().replace(/\s+/g, '-')}-button`}
       >
-        <div
-          role="button"
-          onClick={() => handleActions(selectDataSource)}
-          className="col d-flex align-items-center overflow-hidden"
-          data-cy={`${String(dataSource.name).toLowerCase().replace(/\s+/g, '-')}-button`}
-        >
-          <div className="ds-svg-container">{icon}</div>
+        <div className="ds-svg-container">{icon}</div>
 
-          <div className="font-400 tj-text-xsm text-truncate" style={{ paddingLeft: '6px', display: 'flex' }}>
-            {decodeEntities(dataSource.name)}
-            {isSampleDb && (
-              <div
-                className="font-400 tj-text-xxsm text-truncate"
-                style={{ paddingTop: '3px', paddingLeft: '2px', color: '#687076' }}
-              >{`(postgres)`}</div>
-            )}
-          </div>
+        <div className="font-400 tj-text-xsm text-truncate" style={{ paddingLeft: '6px', display: 'flex' }}>
+          {decodeEntities(dataSource.name)}
+          {isSampleDb && (
+            <div
+              className="font-400 tj-text-xxsm text-truncate"
+              style={{ paddingTop: '3px', paddingLeft: '2px', color: '#687076' }}
+            >{`(postgres)`}</div>
+          )}
         </div>
-        {showDeleteButton && (
-          <div className="col-auto">
-            { }
-            <button
-              title={'Delete'}
-              disabled={disableDelButton}
-              className="ds-delete-btn"
-              onClick={() => onDelete(dataSource)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDelete(dataSource);
-                }
-              }}
-              tabIndex={0}
-              aria-label={`Delete ${dataSource.name} data source`}
-              data-cy={`${String(dataSource.name).toLowerCase().replace(/\s+/g, '-')}-delete-button`}
-            >
-              <div>
-                <SolidIcon
-                  width="14"
-                  height="14"
-                  name="delete"
-                  fill={disableDelButton ? '#E6E8EB' : '#E54D2E'}
-                  className={disableDelButton ? 'disabled-button' : ''}
-                />
-              </div>
-            </button>
-          </div>
-        )}
       </div>
-    </ToolTip>
+      {renderDeleteButton()}
+    </div>
   );
 };

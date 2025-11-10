@@ -51,7 +51,6 @@ export const List = ({ updateSelectedDatasource }) => {
     setActiveDatasourceList('');
     setSelectedDataSource(selectedSource);
     setCurrentEnvironment(environments[0]);
-    toggleDataSourceManagerModal(true);
     updateSelectedDatasource(selectedSource?.name);
     getQueriesLinkedToDatasource(selectedSource);
   };
@@ -102,7 +101,7 @@ export const List = ({ updateSelectedDatasource }) => {
     setFilteredData(filtered);
   };
 
-  function handleClose () {
+  function handleClose() {
     setShowInput(false);
     setFilteredData(dataSources);
   }
