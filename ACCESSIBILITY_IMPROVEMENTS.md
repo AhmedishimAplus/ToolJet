@@ -32,8 +32,328 @@ All color contrast improvements target **dark mode** (`.dark-theme` and `.theme-
 - Light Pink (`#FFC2F5`): 7.5:1 contrast - Version text, accent elements
 
 ---
+## Latest Update - November 10, 2025
+**Data Sources Delete Functionality Fix - Modal & Keyboard Interaction Issues**
 
-## Latest Update - November 9, 2025
+This update resolved critical bugs in the Global Data Sources page where the delete confirmation modal was not working properly and keyboard navigation on delete icons was failing.
+
+### Problems Identified
+
+1. **Delete Icon Not Responding to Keyboard** - Pressing Enter/Space on focused delete icon did nothing
+2. **Modal Closes Immediately** - Delete confirmation modal appeared briefly then closed automatically
+3. **White Screen After Clicking Yes/Cancel** - React error boundary triggered with `NotFoundError: Failed to execute 'removeChild'`
+4. **Console Error** - `Uncaught TypeError: _onBlur is not a function` when interacting with delete icons
+5. **Data Source Edit Modal Opens Instead** - Clicking delete opened the edit modal instead of delete confirmation
+
+### Root Causes
+
+1. **ToolTip Component DOM Manipulation Issue** - React Bootstrap's `OverlayTrigger` was injecting event handlers (`onBlur`, `onFocus`) into incompatible elements, causing the `_onBlur is not a function` error
+2. **Event Bubbling** - Delete button clicks were propagating to parent elements, triggering unintended modal opens
+3. **Race Condition in Modal State** - Multiple simultaneous state updates caused React to attempt removing DOM nodes that were already removed
+4. **Wrong Modal Being Opened** - `toggleDataSourceManagerModal(true)` in `deleteDataSource()` was opening the edit modal instead of just showing delete confirmation
+
+### Solutions Implemented
+
+#### 1. Removed ToolTip Wrapper from Delete Button Area
+
+**File:** `frontend/src/modules/dataSources/components/LIstItem/index.jsx`
+
+**Before:**
+```jsx
+<ToolTip
+  placement="right"
+  show={toolTipText ? true : false}
+  message={'Sample data source\ncannot be deleted'}
+  tooltipClassName="tooltip-sampl-db"
+>
+  <div className="mx-3 rounded-3 datasources-list">
+    {/* data source row content */}
+    {showDeleteButton && <button onClick={() => onDelete(dataSource)}>...</button>}
+  </div>
+</ToolTip>
+```
+
+**After:**
+```jsx
+<div
+  className="mx-3 rounded-3 datasources-list"
+  title={isSampleDb ? 'Sample data source\ncannot be deleted' : ''}
+>
+  {/* data source row content */}
+  {renderDeleteButton()}
+</div>
+```
+
+**Impact:** Eliminated `_onBlur is not a function` error by removing OverlayTrigger's DOM interference
+
+#### 2. Added Event Propagation Prevention
+
+**File:** `frontend/src/modules/dataSources/components/LIstItem/index.jsx`
+
+```jsx
+const renderDeleteButton = () => {
+  if (!showDeleteButton) return null;
+
+  const deleteButton = (
+    <button
+      className="ds-delete-btn"
+      onClick={(e) => {
+        e.stopPropagation();  // ← Prevents bubbling to parent row
+        onDelete(dataSource);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();  // ← Prevents bubbling to parent row
+          onDelete(dataSource);
+        }
+      }}
+      tabIndex={0}
+      aria-label={`Delete ${dataSource.name} data source`}
+    >
+      <SolidIcon name="delete" />
+    </button>
+  );
+
+  return <div className="col-auto">{deleteButton}</div>;
+};
+```
+
+**Impact:** Delete button now works independently without triggering parent click handlers
+
+#### 3. Removed Unwanted Modal Toggle from Delete Flow
+
+**File:** `frontend/src/modules/dataSources/components/List/index.jsx`
+
+**Before:**
+```jsx
+const deleteDataSource = (selectedSource) => {
+  setActiveDatasourceList('');
+  setSelectedDataSource(selectedSource);
+  setCurrentEnvironment(environments[0]);
+  toggleDataSourceManagerModal(true);  // ← Opens edit modal (WRONG!)
+  updateSelectedDatasource(selectedSource?.name);
+  getQueriesLinkedToDatasource(selectedSource);
+};
+```
+
+**After:**
+```jsx
+const deleteDataSource = (selectedSource) => {
+  setActiveDatasourceList('');
+  setSelectedDataSource(selectedSource);
+  setCurrentEnvironment(environments[0]);
+  // toggleDataSourceManagerModal(true);  ← REMOVED
+  updateSelectedDatasource(selectedSource?.name);
+  getQueriesLinkedToDatasource(selectedSource);
+};
+```
+
+**Impact:** Delete confirmation modal now shows correctly without edit modal interference
+
+#### 4. Fixed Modal Cleanup Race Condition
+
+**File:** `frontend/src/modules/dataSources/components/List/index.jsx`
+
+**Before:**
+```jsx
+const executeDataSourceDeletion = () => {
+  setDeletingDatasource(true);
+  setLoading(true);
+  globalDatasourceService
+    .deleteDataSource(selectedDataSource.id)
+    .then(() => {
+      setDeleteModalVisibility(false);
+      toast.success('Data Source Deleted');
+      setDeletingDatasource(false);
+      setSelectedDataSource(null);
+      fetchDataSources(true);
+    })
+    .catch(/* ... */);
+};
+
+const cancelDeleteDataSource = () => {
+  setDeleteModalVisibility(false);
+  // Missing: setSelectedDataSource(null)
+};
+```
+
+**After:**
+```jsx
+const executeDataSourceDeletion = () => {
+  const dataSourceId = selectedDataSource.id;
+  setDeletingDatasource(true);
+  
+  globalDatasourceService
+    .deleteDataSource(dataSourceId)
+    .then(() => {
+      setDeleteModalVisibility(false);
+      
+      // Allow React to finish unmounting modal before updating state
+      setTimeout(() => {
+        setDeletingDatasource(false);
+        setSelectedDataSource(null);
+        toast.success('Data Source Deleted');
+        setLoading(true);
+        fetchDataSources(true);
+      }, 100);
+    })
+    .catch(({ error }) => {
+      setDeleteModalVisibility(false);
+      setTimeout(() => {
+        setDeletingDatasource(false);
+        setSelectedDataSource(null);
+        setLoading(false);
+        toast.error(error);
+      }, 100);
+    });
+};
+
+const cancelDeleteDataSource = () => {
+  setDeleteModalVisibility(false);
+  // Allow React to finish unmounting modal before clearing state
+  setTimeout(() => {
+    setSelectedDataSource(null);
+  }, 100);
+};
+```
+
+**Impact:** 
+- Prevents `NotFoundError: Failed to execute 'removeChild'` by allowing React time to clean up DOM
+- Eliminates white screen error by preventing race condition between modal unmount and state updates
+- 100ms delay ensures React completes modal cleanup before triggering re-renders
+
+#### 5. Reverted Card.jsx Changes
+
+**File:** `frontend/src/_ui/Card/Card.jsx`
+
+**Previous Problematic Fix:**
+```jsx
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    e.stopPropagation(); // ← Was blocking keyboard events globally
+    handleClick && handleClick();
+  }
+};
+
+const handleClickEvent = (e) => {
+  if (e.detail === 0) {  // ← Was ignoring keyboard-triggered clicks
+    return;
+  }
+  e.preventDefault();
+  handleClick && handleClick();
+};
+```
+
+**Current (Reverted to Simple):**
+```jsx
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    handleClick && handleClick();
+  }
+};
+
+const handleClickEvent = (e) => {
+  e.preventDefault();
+  handleClick && handleClick();
+};
+```
+
+**Impact:** Restored proper keyboard event handling across all components using Card component
+
+### Testing Results
+
+#### Before Fixes:
+❌ Delete icon doesn't respond to Enter/Space keys  
+❌ Delete modal flashes and closes immediately  
+❌ Clicking Yes/Cancel causes white screen  
+❌ Console shows `_onBlur is not a function` error  
+❌ Edit modal opens when trying to delete  
+❌ Have to refresh page to see deletion result  
+
+#### After Fixes:
+✅ Delete icon responds to keyboard (Enter/Space)  
+✅ Delete confirmation modal stays open  
+✅ Clicking "Yes" deletes datasource without errors  
+✅ Clicking "Cancel" closes modal without errors  
+✅ No console errors  
+✅ No white screen errors  
+✅ Proper modal shown (delete confirmation, not edit)  
+✅ Smooth user experience without page refresh needed  
+
+### Files Modified
+
+1. `frontend/src/modules/dataSources/components/LIstItem/index.jsx`
+   - Removed ToolTip wrapper causing event handler issues
+   - Added `e.stopPropagation()` to delete button handlers
+   - Extracted delete button into `renderDeleteButton()` function
+   - Used native `title` attribute for sample DB tooltip
+
+2. `frontend/src/modules/dataSources/components/List/index.jsx`
+   - Removed `toggleDataSourceManagerModal(true)` from delete flow
+   - Added 100ms timeout in `executeDataSourceDeletion()` for cleanup
+   - Added 100ms timeout in `cancelDeleteDataSource()` for cleanup
+   - Added proper null checks and error handling
+
+3. `frontend/src/_ui/Card/Card.jsx`
+   - Reverted to simple event handling
+   - Removed `e.stopPropagation()` from keyboard handler
+   - Removed `e.detail === 0` check from click handler
+
+### Technical Insights
+
+#### React Bootstrap OverlayTrigger Behavior
+The `OverlayTrigger` component from React Bootstrap clones its child and injects additional props including event handlers (`onBlur`, `onFocus`, `onMouseOver`, etc.). When wrapping elements that don't properly support these handlers, it causes runtime errors.
+
+**Best Practice:** Only wrap simple, single React elements (like `<button>`, `<span>`) with OverlayTrigger, not complex divs with nested interactive elements.
+
+#### Modal State Management Race Conditions
+When closing modals in React, multiple state updates happening simultaneously can cause React to attempt DOM cleanup operations on already-removed nodes. This manifests as:
+- `NotFoundError: Failed to execute 'removeChild' on 'Node'`
+- White screen (error boundary catching the error)
+
+**Solution:** Use `setTimeout` to sequence state updates, allowing React to complete current render cycle before triggering next update.
+
+#### Event Bubbling in Nested Interactive Elements
+When a clickable element (delete button) is inside another clickable element (data source row), without `stopPropagation()` both handlers fire, causing unintended behavior.
+
+**Pattern:**
+```jsx
+<div onClick={selectRow}>  {/* Parent handler */}
+  <button onClick={(e) => {
+    e.stopPropagation();  // ← Prevents parent handler from firing
+    deleteItem();
+  }}>Delete</button>
+</div>
+```
+
+### Lessons Learned
+
+1. **ToolTip Wrappers:** Be cautious wrapping complex interactive elements with OverlayTrigger - prefer wrapping individual elements or using native `title` attribute
+
+2. **Modal State Timing:** When dealing with modals, sequence state updates to prevent race conditions - close modal first, wait for unmount, then update related state
+
+3. **Event Propagation:** Always use `e.stopPropagation()` on nested interactive elements to prevent unintended parent handler execution
+
+4. **Debugging DOM Errors:** `NotFoundError: removeChild` indicates React is trying to clean up already-removed DOM - look for race conditions in state updates
+
+5. **Global Component Changes:** Changes to widely-used components like Card.jsx can have ripple effects - test thoroughly across different usage contexts
+
+### Related Issues Fixed
+
+- Delete icon keyboard accessibility
+- Modal state management 
+- Event handler conflicts
+- React DOM cleanup errors
+- User experience during delete operation
+
+---
+
+*Data Sources Delete Functionality Fix completed on: November 10, 2025*
+*ToolJet Accessibility & Bug Fix Initiative*
+## Previous Update - November 9, 2025
 **Color Contrast & Link Distinguishability Improvements (Score 93 → 95+):**
 
 This update resolved all remaining color contrast issues and link distinguishability violations to achieve WCAG AA/AAA compliance in dark mode.
@@ -1605,3 +1925,6 @@ const handleCategoryKeyDown = (e, dataSource) => {
 
 *Data Sources Keyboard Navigation Implementation completed on: October 24, 2025*
 *ToolJet Accessibility Improvement Initiative*
+
+---
+
