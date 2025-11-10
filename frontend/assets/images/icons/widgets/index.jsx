@@ -61,6 +61,9 @@ import HorizontalDivider from './horizontalDivider.jsx';
 import PhoneInput from './phoneinput.jsx';
 import EmailInput from './emailinput.jsx';
 import Chat from './chat.jsx';
+import AccessibleButton from './accessiblebutton.jsx';
+import AccessibleInput from './accessibleinput.jsx';
+import AccessibleSwitch from './accessibleswitch.jsx';
 
 const WidgetIcon = (props) => {
   // TO_DO -> Use widget type instead of widget name
@@ -210,6 +213,12 @@ const WidgetIcon = (props) => {
       return <Verticaldivider {...props} />;
     case 'chat':
       return <Chat {...props} />;
+    case 'accessiblebutton':
+      return <AccessibleButton {...props} />;
+    case 'accessibleinput':
+      return <AccessibleInput {...props} />;
+    case 'accessibleswitch':
+      return <AccessibleSwitch {...props} />;
     default:
       return <BoundedBox {...props} />;
   }

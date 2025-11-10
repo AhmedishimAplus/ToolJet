@@ -32,7 +32,527 @@ All color contrast improvements target **dark mode** (`.dark-theme` and `.theme-
 - Light Pink (`#FFC2F5`): 7.5:1 contrast - Version text, accent elements
 
 ---
-## Latest Update - November 10, 2025
+## Latest Update - November 10, 2025 (Part 2)
+**Chakra UI Accessible Components Integration**
+
+This update adds a new "Accessible Components" category to ToolJet with three Chakra UI-based accessible widgets that can be dragged and dropped onto the canvas.
+
+### Overview
+
+Added three new accessible components built with Chakra UI v2 to enhance ToolJet's accessibility offerings:
+- **AccessibleButton** - Button with built-in ARIA labels, loading states, and keyboard support
+- **AccessibleInput** - Text input with proper focus management and ARIA attributes
+- **AccessibleSwitch** - Toggle switch with accessible labels and keyboard interaction
+
+All components include:
+- ✅ Proper ARIA labels (customizable)
+- ✅ Built-in keyboard navigation
+- ✅ Focus management
+- ✅ Screen reader support
+- ✅ Accessible color schemes
+- ✅ Touch-friendly sizing
+
+### Implementation Details
+
+#### 1. Installed Chakra UI v2 (Stable)
+
+**Packages Added:**
+```bash
+npm install @chakra-ui/react@2.8.2 @chakra-ui/icons@2.1.1 @emotion/react@^11.10.0 @emotion/styled@^11.10.0 framer-motion@11.0.0
+```
+
+**Note:** Initially encountered build errors with `@emotion/react@11.11.4` and `@emotion/styled@11.11.5` trying to load `.browser.development.esm.js` files. Fixed by installing compatible versions `@emotion/react@^11.10.0` and `@emotion/styled@^11.10.0`.
+
+#### 2. Created Widget Configuration Files
+
+**File:** `frontend/src/AppBuilder/WidgetManager/widgets/accessibleButton.js`
+```javascript
+export const accessibleButtonConfig = {
+  name: 'AccessibleButton',
+  displayName: 'Accessible Button',
+  description: 'Chakra UI button with built-in accessibility features',
+  component: 'AccessibleButton',
+  defaultSize: {
+    width: 5,
+    height: 40,
+  },
+  properties: {
+    text: {
+      type: 'code',
+      displayName: 'Label',
+      validation: { schema: { type: 'string' } },
+    },
+    ariaLabel: {
+      type: 'code',
+      displayName: 'ARIA Label',
+      validation: { schema: { type: 'string' } },
+      section: 'additionalActions',
+    },
+    loadingState: {
+      type: 'toggle',
+      displayName: 'Loading state',
+      validation: { schema: { type: 'boolean' } },
+      section: 'additionalActions',
+    },
+    // ... other properties
+  },
+  styles: {
+    variant: {
+      type: 'switch',
+      displayName: 'Variant',
+      options: [
+        { displayName: 'Solid', value: 'solid' },
+        { displayName: 'Outline', value: 'outline' },
+        { displayName: 'Ghost', value: 'ghost' },
+      ],
+    },
+    colorScheme: {
+      type: 'switch',
+      displayName: 'Color Scheme',
+      options: [
+        { displayName: 'Blue', value: 'blue' },
+        { displayName: 'Green', value: 'green' },
+        { displayName: 'Red', value: 'red' },
+        { displayName: 'Gray', value: 'gray' },
+      ],
+    },
+    // ... other styles
+  },
+};
+```
+
+**Similar configurations created for:**
+- `accessibleInput.js` - Text input with placeholder, ARIA labels, and event handlers (onChange, onFocus, onBlur)
+- `accessibleSwitch.js` - Toggle switch with label, checked state, and color schemes
+
+#### 3. Created React Wrapper Components
+
+**File:** `frontend/src/Editor/Components/AccessibleButton.jsx`
+```javascript
+import React from 'react';
+import { ChakraProvider, Button } from '@chakra-ui/react';
+
+export const AccessibleButton = ({
+  height,
+  properties,
+  styles,
+  fireEvent,
+  setExposedVariable,
+  darkMode,
+  dataCy,
+}) => {
+  const { text, ariaLabel, loadingState, visibility, disabledState } = properties;
+  const { variant = 'solid', colorScheme = 'blue', size = 'md' } = styles;
+
+  const handleClick = () => {
+    fireEvent('onClick');
+  };
+
+  if (!visibility) return null;
+
+  return (
+    <ChakraProvider>
+      <Button
+        onClick={handleClick}
+        variant={variant}
+        colorScheme={colorScheme}
+        size={size}
+        isLoading={loadingState}
+        isDisabled={disabledState}
+        aria-label={ariaLabel || text}
+        data-cy={dataCy}
+        width="100%"
+        height={`${height}px`}
+      >
+        {text}
+      </Button>
+    </ChakraProvider>
+  );
+};
+```
+
+**File:** `frontend/src/Editor/Components/AccessibleInput.jsx`
+```javascript
+import React, { useState, useEffect } from 'react';
+import { ChakraProvider, Input } from '@chakra-ui/react';
+
+export const AccessibleInput = ({
+  height,
+  properties,
+  styles,
+  fireEvent,
+  setExposedVariable,
+  dataCy,
+}) => {
+  const { value, placeholder, ariaLabel, visibility, disabledState, readOnly } = properties;
+  const { variant = 'outline', size = 'md' } = styles;
+
+  const [inputValue, setInputValue] = useState(value || '');
+
+  useEffect(() => {
+    setInputValue(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    setExposedVariable('value', inputValue);
+  }, [inputValue, setExposedVariable]);
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    setExposedVariable('value', newValue);
+    fireEvent('onChange');
+  };
+
+  if (!visibility) return null;
+
+  return (
+    <ChakraProvider>
+      <Input
+        value={inputValue}
+        onChange={handleChange}
+        onFocus={() => fireEvent('onFocus')}
+        onBlur={() => fireEvent('onBlur')}
+        placeholder={placeholder}
+        variant={variant}
+        size={size}
+        isDisabled={disabledState}
+        isReadOnly={readOnly}
+        aria-label={ariaLabel || placeholder}
+        data-cy={dataCy}
+        width="100%"
+        height={`${height}px`}
+      />
+    </ChakraProvider>
+  );
+};
+```
+
+**File:** `frontend/src/Editor/Components/AccessibleSwitch.jsx`
+```javascript
+import React, { useState, useEffect } from 'react';
+import { ChakraProvider, Switch, FormControl, FormLabel } from '@chakra-ui/react';
+
+export const AccessibleSwitch = ({
+  height,
+  properties,
+  styles,
+  fireEvent,
+  setExposedVariable,
+  dataCy,
+}) => {
+  const { label, checked, ariaLabel, visibility, disabledState } = properties;
+  const { colorScheme = 'blue', size = 'md' } = styles;
+
+  const [isChecked, setIsChecked] = useState(checked || false);
+
+  useEffect(() => {
+    setIsChecked(checked || false);
+  }, [checked]);
+
+  useEffect(() => {
+    setExposedVariable('value', isChecked);
+  }, [isChecked, setExposedVariable]);
+
+  const handleChange = (e) => {
+    const newValue = e.target.checked;
+    setIsChecked(newValue);
+    setExposedVariable('value', newValue);
+    fireEvent('onChange');
+  };
+
+  if (!visibility) return null;
+
+  return (
+    <ChakraProvider>
+      <FormControl display="flex" alignItems="center" height={`${height}px`}>
+        <Switch
+          id={`switch-${dataCy}`}
+          isChecked={isChecked}
+          onChange={handleChange}
+          colorScheme={colorScheme}
+          size={size}
+          isDisabled={disabledState}
+          aria-label={ariaLabel || label}
+          data-cy={dataCy}
+        />
+        {label && (
+          <FormLabel htmlFor={`switch-${dataCy}`} mb="0" ml="2">
+            {label}
+          </FormLabel>
+        )}
+      </FormControl>
+    </ChakraProvider>
+  );
+};
+```
+
+#### 4. Registered Components in Widget System
+
+**File:** `frontend/src/AppBuilder/WidgetManager/configs/widgetConfig.js`
+```javascript
+import {
+  // ... existing imports
+  chatConfig,
+  accessibleButtonConfig,
+  accessibleInputConfig,
+  accessibleSwitchConfig,
+} from '../widgets';
+
+export const widgets = [
+  // ... existing widgets
+
+  //Accessible Components
+  accessibleButtonConfig,
+  accessibleInputConfig,
+  accessibleSwitchConfig,
+
+  //Legacy
+  modalConfig,
+  // ... rest of widgets
+];
+```
+
+**File:** `frontend/src/AppBuilder/WidgetManager/widgets/index.js`
+```javascript
+// Added imports
+import { accessibleButtonConfig } from './accessibleButton';
+import { accessibleInputConfig } from './accessibleInput';
+import { accessibleSwitchConfig } from './accessibleSwitch';
+
+// Added exports
+export {
+  // ... existing exports
+  accessibleButtonConfig,
+  accessibleInputConfig,
+  accessibleSwitchConfig,
+};
+```
+
+**File:** `frontend/src/AppBuilder/_helpers/editorHelpers.js`
+```javascript
+// Added imports
+import { AccessibleButton } from '@/Editor/Components/AccessibleButton';
+import { AccessibleInput } from '@/Editor/Components/AccessibleInput';
+import { AccessibleSwitch } from '@/Editor/Components/AccessibleSwitch';
+
+// Added to AllComponents object
+export const AllComponents = {
+  // ... existing components
+  AccessibleButton,
+  AccessibleInput,
+  AccessibleSwitch,
+};
+```
+
+#### 5. Created Widget Icons with Accessibility Badge
+
+**File:** `frontend/assets/images/icons/widgets/accessiblebutton.jsx`
+```jsx
+import React from 'react';
+
+const AccessibleButton = ({ fill = '#D7DBDF', width = 24, className = '', viewBox = '0 0 49 48' }) => (
+  <svg
+    width={width}
+    height={width}
+    viewBox={viewBox}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      fill={fill}
+      d="M2.889 16.714A4.714 4.714 0 017.603 12h34.571a4.714 4.714 0 014.715 4.714v14.572A4.714 4.714 0 0142.174 36H7.603a4.714 4.714 0 01-4.714-4.714V16.714z"
+    ></path>
+    <path
+      fill="#3E63DD"
+      fillRule="evenodd"
+      d="M18.603 24a3.143 3.143 0 11-6.286 0 3.143 3.143 0 016.286 0zm9.429 0a3.143 3.143 0 11-6.286 0 3.143 3.143 0 016.286 0zm6.285 3.143a3.143 3.143 0 100-6.286 3.143 3.143 0 000 6.286z"
+      clipRule="evenodd"
+    ></path>
+    {/* Green accessibility badge */}
+    <circle cx="40" cy="10" r="5" fill="#10B981" />
+  </svg>
+);
+
+export default AccessibleButton;
+```
+
+**Similar icons created for AccessibleInput and AccessibleSwitch, each with a green accessibility badge (circle) in the top-right corner.**
+
+**File:** `frontend/assets/images/icons/widgets/index.jsx`
+```jsx
+// Added imports
+import AccessibleButton from './accessiblebutton.jsx';
+import AccessibleInput from './accessibleinput.jsx';
+import AccessibleSwitch from './accessibleswitch.jsx';
+
+// Added switch cases
+const WidgetIcon = (props) => {
+  switch (props.name) {
+    // ... existing cases
+    case 'accessiblebutton':
+      return <AccessibleButton {...props} />;
+    case 'accessibleinput':
+      return <AccessibleInput {...props} />;
+    case 'accessibleswitch':
+      return <AccessibleSwitch {...props} />;
+    default:
+      return <BoundedBox {...props} />;
+  }
+};
+```
+
+#### 6. Created "Accessible Components" Category in Sidebar
+
+**File:** `frontend/src/Editor/WidgetManager.jsx`
+```javascript
+function segregateSections() {
+  // ... existing sections
+  const accessibleSection = { title: 'Accessible Components', items: [] };
+  const otherSection = { title: t('widgetManager.others', 'others'), items: [] };
+  const legacySection = { title: 'Legacy', items: [] };
+
+  const allWidgets = [];
+
+  const commonItems = ['Table', 'Button', 'Text', 'TextInput', 'Datepicker', 'Form'];
+  // ... other item arrays
+  const accessibleItems = ['AccessibleButton', 'AccessibleInput', 'AccessibleSwitch'];
+  
+  filteredComponents.forEach((f) => {
+    if (searchQuery) allWidgets.push(f);
+    if (commonItems.includes(f.name)) commonSection.items.push(f);
+    if (formItems.includes(f.name)) formSection.items.push(f);
+    else if (integrationItems.includes(f.name)) integrationSection.items.push(f);
+    else if (accessibleItems.includes(f.name)) accessibleSection.items.push(f);
+    else if (LEGACY_ITEMS.includes(f.name)) legacySection.items.push(f);
+    else if (layoutItems.includes(f.name)) layoutsSection.items.push(f);
+    else otherSection.items.push(f);
+  });
+
+  // ... render sections
+  return (
+    <>
+      {renderList(commonSection.title, commonSection.items)}
+      {renderList(layoutsSection.title, layoutsSection.items)}
+      {renderList(formSection.title, formSection.items)}
+      {renderList(accessibleSection.title, accessibleSection.items)}
+      {renderList(otherSection.title, otherSection.items)}
+      {renderList(integrationSection.title, integrationSection.items)}
+      {renderList(legacySection.title, legacySection.items)}
+    </>
+  );
+}
+```
+
+### Files Modified Summary
+
+**Widget Configurations (3 files created):**
+- `frontend/src/AppBuilder/WidgetManager/widgets/accessibleButton.js`
+- `frontend/src/AppBuilder/WidgetManager/widgets/accessibleInput.js`
+- `frontend/src/AppBuilder/WidgetManager/widgets/accessibleSwitch.js`
+
+**React Components (3 files created):**
+- `frontend/src/Editor/Components/AccessibleButton.jsx`
+- `frontend/src/Editor/Components/AccessibleInput.jsx`
+- `frontend/src/Editor/Components/AccessibleSwitch.jsx`
+
+**Widget Icons (3 files created):**
+- `frontend/assets/images/icons/widgets/accessiblebutton.jsx`
+- `frontend/assets/images/icons/widgets/accessibleinput.jsx`
+- `frontend/assets/images/icons/widgets/accessibleswitch.jsx`
+
+**Registry Files Modified (5 files):**
+- `frontend/src/AppBuilder/WidgetManager/configs/widgetConfig.js` - Added to "Accessible Components" section
+- `frontend/src/AppBuilder/WidgetManager/widgets/index.js` - Added imports/exports
+- `frontend/src/AppBuilder/_helpers/editorHelpers.js` - Added to AllComponents mapping
+- `frontend/assets/images/icons/widgets/index.jsx` - Added icon imports and switch cases
+- `frontend/src/Editor/WidgetManager.jsx` - Created "Accessible Components" category
+
+### Component Features
+
+#### AccessibleButton
+- **Variants:** Solid, Outline, Ghost
+- **Color Schemes:** Blue, Green, Red, Gray
+- **Sizes:** Small, Medium, Large
+- **States:** Loading, Disabled, Visible/Hidden
+- **Events:** onClick
+- **Accessibility:** Customizable ARIA labels, built-in keyboard support
+
+#### AccessibleInput
+- **Variants:** Outline, Filled, Flushed
+- **Sizes:** Small, Medium, Large
+- **States:** Disabled, Read-only, Visible/Hidden
+- **Events:** onChange, onFocus, onBlur
+- **Features:** Placeholder text, customizable ARIA labels, exposed value variable
+
+#### AccessibleSwitch
+- **Color Schemes:** Blue, Green, Red, Gray
+- **Sizes:** Small, Medium, Large
+- **States:** Checked/Unchecked, Disabled, Visible/Hidden
+- **Events:** onChange
+- **Features:** Label text, customizable ARIA labels, exposed value variable
+
+### Usage Instructions
+
+1. **Restart the frontend dev server** to load new dependencies:
+   ```powershell
+   cd frontend
+   npm start
+   ```
+
+2. **Open ToolJet Editor** and navigate to the components sidebar
+
+3. **Find "Accessible Components" category** (appears after Forms section)
+
+4. **Drag and drop** any of the three components:
+   - Accessible Button (green badge icon)
+   - Accessible Input (green badge icon)
+   - Accessible Switch (green badge icon)
+
+5. **Configure properties** in the Inspector panel:
+   - Set labels, colors, sizes, and states
+   - Add custom ARIA labels for enhanced accessibility
+   - Connect events to queries and actions
+
+### Accessibility Benefits
+
+**Built-in Accessibility Features:**
+- ✅ **Proper ARIA labels** - All components support custom aria-label attributes
+- ✅ **Keyboard navigation** - Full keyboard support built into Chakra UI
+- ✅ **Focus management** - Automatic focus indicators and states
+- ✅ **Screen reader support** - Semantic HTML and ARIA attributes
+- ✅ **Color contrast** - Chakra's accessible color palettes (WCAG compliant)
+- ✅ **Touch-friendly sizing** - Responsive size options (sm, md, lg)
+
+**Visual Identification:**
+- All three components have a **green accessibility badge** (●) in the top-right corner of their icons in the component menu
+
+### Technical Notes
+
+**Chakra UI Integration:**
+- Each component wrapped in `<ChakraProvider>` for theme and style isolation
+- Uses Chakra's built-in accessibility features (focus-visible, ARIA, keyboard support)
+- Compatible with ToolJet's property system (properties, styles, events)
+- Exposes values to ToolJet's state management via `setExposedVariable`
+
+**Event Handling:**
+- Components fire ToolJet events (`fireEvent`) for integration with queries and actions
+- State management syncs with ToolJet's component state system
+- Full support for ToolJet's visibility, disabled, and loading states
+
+**Styling:**
+- Chakra components maintain consistent look across light/dark themes
+- Size and variant options provide flexibility for different use cases
+- Components scale to canvas height while maintaining aspect ratio
+
+---
+
+*Chakra UI Accessible Components Integration completed on: November 10, 2025*
+*ToolJet Accessibility Enhancement Initiative*
+
+---
+## Latest Update - November 10, 2025 (Part 1)
 **Data Sources Delete Functionality Fix - Modal & Keyboard Interaction Issues**
 
 This update resolved critical bugs in the Global Data Sources page where the delete confirmation modal was not working properly and keyboard navigation on delete icons was failing.

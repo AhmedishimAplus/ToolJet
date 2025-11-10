@@ -65,6 +65,9 @@ import {
   phoneinputConfig,
   currencyinputConfig,
   chatConfig,
+  accessibleButtonConfig,
+  accessibleInputConfig,
+  accessibleSwitchConfig,
 } from '../widgets';
 
 export const widgets = [
@@ -148,6 +151,11 @@ export const widgets = [
   boundedBoxConfig,
   qrscannerConfig,
   chatConfig,
+
+  //Accessible Components
+  accessibleButtonConfig,
+  accessibleInputConfig,
+  accessibleSwitchConfig,
 
   //Legacy
   modalConfig,

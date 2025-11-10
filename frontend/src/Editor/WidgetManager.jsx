@@ -95,6 +95,7 @@ export const WidgetManager = function WidgetManager({ componentTypes, zoomLevel,
     const layoutsSection = { title: t('widgetManager.layouts', 'layouts'), items: [] };
     const formSection = { title: t('widgetManager.forms', 'forms'), items: [] };
     const integrationSection = { title: t('widgetManager.integrations', 'integrations'), items: [] };
+    const accessibleSection = { title: 'Accessible Components', items: [] };
     const otherSection = { title: t('widgetManager.others', 'others'), items: [] };
     const legacySection = { title: 'Legacy', items: [] };
 
@@ -120,11 +121,13 @@ export const WidgetManager = function WidgetManager({ componentTypes, zoomLevel,
     ];
     const integrationItems = ['Map'];
     const layoutItems = ['Container', 'Listview', 'Tabs', 'Modal'];
+    const accessibleItems = ['AccessibleButton', 'AccessibleInput', 'AccessibleSwitch'];
     filteredComponents.forEach((f) => {
       if (searchQuery) allWidgets.push(f);
       if (commonItems.includes(f.name)) commonSection.items.push(f);
       if (formItems.includes(f.name)) formSection.items.push(f);
       else if (integrationItems.includes(f.name)) integrationSection.items.push(f);
+      else if (accessibleItems.includes(f.name)) accessibleSection.items.push(f);
       else if (LEGACY_ITEMS.includes(f.name)) legacySection.items.push(f);
       else if (layoutItems.includes(f.name)) layoutsSection.items.push(f);
       else otherSection.items.push(f);
@@ -138,6 +141,7 @@ export const WidgetManager = function WidgetManager({ componentTypes, zoomLevel,
           {renderList(commonSection.title, commonSection.items)}
           {renderList(layoutsSection.title, layoutsSection.items)}
           {renderList(formSection.title, formSection.items)}
+          {renderList(accessibleSection.title, accessibleSection.items)}
           {renderList(otherSection.title, otherSection.items)}
           {renderList(integrationSection.title, integrationSection.items)}
           {renderList(legacySection.title, legacySection.items)}

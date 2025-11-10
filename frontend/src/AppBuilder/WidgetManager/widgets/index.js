@@ -65,6 +65,9 @@ import { emailinputConfig } from './emailinput';
 import { phoneinputConfig } from './phoneinput';
 import { currencyinputConfig } from './currencyinput';
 import { chatConfig } from './chat';
+import { accessibleButtonConfig } from './accessibleButton';
+import { accessibleInputConfig } from './accessibleInput';
+import { accessibleSwitchConfig } from './accessibleSwitch';
 
 export {
   buttonConfig,
@@ -134,4 +137,7 @@ export {
   moduleContainerConfig,
   moduleViewerConfig,
   rangeSliderV2Config,
+  accessibleButtonConfig,
+  accessibleInputConfig,
+  accessibleSwitchConfig,
 };

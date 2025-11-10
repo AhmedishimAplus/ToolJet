@@ -74,6 +74,9 @@ import { ModalV2 } from '@/AppBuilder/Widgets/ModalV2/ModalV2';
 import { Calendar } from '@/AppBuilder/Widgets/Calendar/Calendar';
 import { ModuleContainer, ModuleViewer } from '@/modules/Modules/components';
 import { Chat } from '@/AppBuilder/Widgets/Chat';
+import { AccessibleButton } from '@/Editor/Components/AccessibleButton';
+import { AccessibleInput } from '@/Editor/Components/AccessibleInput';
+import { AccessibleSwitch } from '@/Editor/Components/AccessibleSwitch';
 
 // import './requestIdleCallbackPolyfill';
 
@@ -160,6 +163,9 @@ export const AllComponents = {
   Chat,
   ModuleContainer,
   ModuleViewer,
+  AccessibleButton,
+  AccessibleInput,
+  AccessibleSwitch,
 };
 if (isPDFSupported()) {
   AllComponents.PDF = await import('@/Editor/Components/PDF').then((module) => module.PDF);
