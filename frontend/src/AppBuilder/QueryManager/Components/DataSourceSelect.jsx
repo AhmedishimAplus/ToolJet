@@ -178,14 +178,19 @@ function DataSourceSelect({ isDisabled, selectRef, closePopup, workflowDataSourc
 
   return (
     <div>
+      <label htmlFor="data-source-search-input" className="visually-hidden">
+        Search and select data source
+      </label>
       <Select
         onChange={({ source } = {}) =>
           source?.id !== 'if' && workflowDataSources
             ? onNewNode(source.kind, source.id, source.plugin_id, source)
             : source && source?.id === 'if'
-            ? onNewNode('if')
-            : handleChangeDataSource(source)
+              ? onNewNode('if')
+              : handleChangeDataSource(source)
         }
+        inputId="data-source-search-input"
+        aria-label="Search and select data source"
         classNames={{
           menu: () => 'tj-scrollbar',
         }}
@@ -254,8 +259,8 @@ function DataSourceSelect({ isDisabled, selectRef, closePopup, workflowDataSourc
             },
             ...(isFocused &&
               isNested && {
-                '.option-nested-datasource-selector': { backgroundColor: 'var(--slate4)' },
-              }),
+              '.option-nested-datasource-selector': { backgroundColor: 'var(--slate4)' },
+            }),
           }),
           container: (styles) => ({
             ...styles,
