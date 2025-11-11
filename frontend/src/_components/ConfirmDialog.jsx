@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import { useTranslation } from 'react-i18next';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
@@ -34,28 +34,45 @@ export function ConfirmDialog({
   currentReferencedColumnName = '',
 }) {
   darkMode = darkMode ?? (localStorage.getItem('darkMode') === 'true' || false);
-  const [showModal, setShow] = useState(show);
   const { t } = useTranslation();
+  const pendingActionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(show);
 
   const buttonText = confirmButtonText ?? t('globals.yes', 'Yes');
 
-  useEffect(() => {
-    setShow(show);
+  // Update visibility when show prop changes
+  React.useEffect(() => {
+    if (show) {
+      setIsVisible(true);
+    }
   }, [show]);
 
-  const handleClose = () => {
-    onCancel();
-    setShow(false);
-  };
+  const handleClose = useCallback(() => {
+    pendingActionRef.current = 'cancel';
+    setIsVisible(false);
+  }, []);
 
-  const handleConfirm = () => {
-    onConfirm();
-  };
+  const handleConfirm = useCallback(() => {
+    pendingActionRef.current = 'confirm';
+    setIsVisible(false);
+  }, []);
+
+  const handleExited = useCallback(() => {
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+
+    if (action === 'confirm') {
+      onConfirm();
+    } else if (action === 'cancel') {
+      onCancel();
+    }
+  }, [onConfirm, onCancel]);
 
   return (
     <Modal
-      show={showModal}
+      show={isVisible}
       onHide={onCloseIconClick ?? handleClose}
+      onExited={handleExited}
       size="sm"
       animation={false}
       centered={true}

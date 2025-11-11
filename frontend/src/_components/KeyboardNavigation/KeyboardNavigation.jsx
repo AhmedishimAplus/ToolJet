@@ -13,8 +13,8 @@ const KeyboardNavigation = () => {
     // Helper function to check if we're in a problematic modal that blocks navigation
     const isInBlockingModal = useCallback(() => {
         const blockingModals = document.querySelectorAll('.modal.show, .select-datasource-list-modal, .datasource-edit-modal, .modal-backdrop');
-        // Force remove any modal backdrops that might be blocking interaction
-        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        // Don't forcefully remove backdrops - let React manage them
+        // Removing backdrops while modals are closing causes "removeChild" errors
         return blockingModals.length > 0;
     }, []);
 
@@ -1343,15 +1343,23 @@ const KeyboardNavigation = () => {
     // Force clear any blocking modal elements that interfere with navigation
     useEffect(() => {
         const forceUnblockNavigation = () => {
-            // Remove any modal backdrops
-            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+            // Only remove orphaned modal backdrops (backdrops without corresponding modals)
+            const activeModals = document.querySelectorAll('.modal.show');
+            const backdrops = document.querySelectorAll('.modal-backdrop');
 
-            // Force enable body scrolling if disabled by modal
-            document.body.style.overflow = '';
-            document.body.classList.remove('modal-open');
+            // If there are backdrops but no active modals, they're orphaned and safe to remove
+            if (backdrops.length > 0 && activeModals.length === 0) {
+                backdrops.forEach(backdrop => backdrop.remove());
+            }
 
-            // Clear any modal-open classes from html
-            document.documentElement.classList.remove('modal-open');
+            // Force enable body scrolling if disabled by modal (only if no active modals)
+            if (activeModals.length === 0) {
+                document.body.style.overflow = '';
+                document.body.classList.remove('modal-open');
+
+                // Clear any modal-open classes from html
+                document.documentElement.classList.remove('modal-open');
+            }
         };
 
         // Run immediately and on path changes
