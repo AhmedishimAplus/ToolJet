@@ -32,6 +32,253 @@ All color contrast improvements target **dark mode** (`.dark-theme` and `.theme-
 - Light Pink (`#FFC2F5`): 7.5:1 contrast - Version text, accent elements
 
 ---
+## Latest Update - November 11, 2025
+**Critical Modal Dialog DOM Cleanup Fix**
+
+This update resolves a critical bug where confirmation dialogs (such as delete app confirmation) would cause DOM manipulation errors and display a white screen after user interaction, requiring a page refresh. The issue was traced to a race condition between React Bootstrap's Modal cleanup and the KeyboardNavigation system's aggressive backdrop removal.
+
+### Problem Description
+
+**Symptoms:**
+- Clicking "Yes" or "Cancel" in confirmation dialogs caused a white screen
+- Console error: `Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node`
+- The intended action (e.g., deleting an app) would execute correctly, but the UI became unusable
+- Required a full page refresh to restore functionality
+
+**Root Cause:**
+Two interacting issues caused the DOM manipulation error:
+
+1. **KeyboardNavigation Component Aggressively Removing Modal Backdrops**
+   - The global `KeyboardNavigation.jsx` component was forcefully removing ALL modal backdrops from the DOM to prevent stuck backdrops
+   - This removal happened immediately and indiscriminately, even for modals in the process of closing
+   - Located in two places: `isInBlockingModal()` function and `forceUnblockNavigation()` effect
+
+2. **ConfirmDialog State Management Race Condition**
+   - The `ConfirmDialog` component had dual state management (local state + parent state)
+   - When buttons were clicked, both the component and parent tried to update state simultaneously
+   - React Bootstrap's Modal component tried to clean up DOM nodes that KeyboardNavigation had already removed
+   - This caused the `removeChild` error as React tried to remove non-existent nodes
+
+### Solution Implemented
+
+#### Part 1: Smart Backdrop Cleanup in KeyboardNavigation
+
+**File:** `frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx`
+
+Changed the backdrop removal logic to only remove orphaned backdrops (backdrops without active modals):
+
+**Before:**
+```javascript
+// Helper function to check if we're in a problematic modal that blocks navigation
+const isInBlockingModal = useCallback(() => {
+    const blockingModals = document.querySelectorAll('.modal.show, .select-datasource-list-modal, .datasource-edit-modal, .modal-backdrop');
+    // Force remove any modal backdrops that might be blocking interaction
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    return blockingModals.length > 0;
+}, []);
+```
+
+**After:**
+```javascript
+// Helper function to check if we're in a problematic modal that blocks navigation
+const isInBlockingModal = useCallback(() => {
+    const blockingModals = document.querySelectorAll('.modal.show, .select-datasource-list-modal, .datasource-edit-modal, .modal-backdrop');
+    // Don't forcefully remove backdrops - let React manage them
+    // Removing backdrops while modals are closing causes "removeChild" errors
+    return blockingModals.length > 0;
+}, []);
+```
+
+**Before (in useEffect):**
+```javascript
+const forceUnblockNavigation = () => {
+    // Remove any modal backdrops
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+    // Force enable body scrolling if disabled by modal
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
+
+    // Clear any modal-open classes from html
+    document.documentElement.classList.remove('modal-open');
+};
+```
+
+**After (in useEffect):**
+```javascript
+const forceUnblockNavigation = () => {
+    // Only remove orphaned modal backdrops (backdrops without corresponding modals)
+    const activeModals = document.querySelectorAll('.modal.show');
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    
+    // If there are backdrops but no active modals, they're orphaned and safe to remove
+    if (backdrops.length > 0 && activeModals.length === 0) {
+        backdrops.forEach(backdrop => backdrop.remove());
+    }
+
+    // Force enable body scrolling if disabled by modal (only if no active modals)
+    if (activeModals.length === 0) {
+        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+
+        // Clear any modal-open classes from html
+        document.documentElement.classList.remove('modal-open');
+    }
+};
+```
+
+**Key Changes:**
+- Check for active modals before removing backdrops
+- Only remove backdrops if no active modals exist (orphaned backdrops)
+- Only reset body styles if no modals are active
+- Prevents interference with modals during their closing lifecycle
+
+#### Part 2: Proper Modal Lifecycle Management in ConfirmDialog
+
+**File:** `frontend/src/_components/ConfirmDialog.jsx`
+
+Refactored the component to use React Bootstrap Modal's lifecycle callbacks properly:
+
+**Before:**
+```javascript
+import React, { useState, useEffect } from 'react';
+
+export function ConfirmDialog({ show, onConfirm, onCancel, ...props }) {
+  const [showModal, setShow] = useState(show);
+
+  useEffect(() => {
+    setShow(show);
+  }, [show]);
+
+  const handleClose = () => {
+    onCancel();
+    setShow(false);  // Dual state update - causes race condition
+  };
+
+  const handleConfirm = () => {
+    onConfirm();  // Parent immediately updates, modal tries to cleanup
+  };
+
+  return (
+    <Modal show={showModal} onHide={handleClose}>
+      {/* Modal content */}
+    </Modal>
+  );
+}
+```
+
+**After:**
+```javascript
+import React, { useRef, useState, useCallback } from 'react';
+
+export function ConfirmDialog({ show, onConfirm, onCancel, ...props }) {
+  const pendingActionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(show);
+
+  // Update visibility when show prop changes
+  React.useEffect(() => {
+    if (show) {
+      setIsVisible(true);
+    }
+  }, [show]);
+
+  const handleClose = useCallback(() => {
+    pendingActionRef.current = 'cancel';
+    setIsVisible(false);  // Start closing animation
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    pendingActionRef.current = 'confirm';
+    setIsVisible(false);  // Start closing animation
+  }, []);
+
+  const handleExited = useCallback(() => {
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+    
+    // Only execute callback AFTER modal has fully exited
+    if (action === 'confirm') {
+      onConfirm();
+    } else if (action === 'cancel') {
+      onCancel();
+    }
+  }, [onConfirm, onCancel]);
+
+  return (
+    <Modal 
+      show={isVisible} 
+      onHide={handleClose}
+      onExited={handleExited}  // Execute callbacks after cleanup
+    >
+      {/* Modal content */}
+    </Modal>
+  );
+}
+```
+
+**Key Changes:**
+- Removed dual state management that caused race conditions
+- Store pending action in a ref instead of executing immediately
+- Use Modal's `onExited` callback to execute actions **after** DOM cleanup completes
+- Separate internal visibility (`isVisible`) from external control (`show` prop)
+- Use `useCallback` to memoize handlers and prevent unnecessary re-renders
+
+**Modal Lifecycle Flow:**
+1. User clicks "Yes" or "Cancel"
+2. Store action type in `pendingActionRef` ('confirm' or 'cancel')
+3. Set `isVisible={false}` to begin modal closing
+4. React Bootstrap Modal:
+   - Hides modal from screen
+   - Removes backdrop from DOM
+   - Fires `onExited` callback
+5. In `onExited` callback:
+   - Retrieve pending action from ref
+   - Execute `onConfirm()` or `onCancel()`
+   - Parent component updates its state
+6. No DOM conflicts because cleanup is already complete
+
+### Technical Benefits
+
+✅ **Eliminates Race Conditions:** Callbacks execute only after modal cleanup completes  
+✅ **Proper Separation of Concerns:** Internal visibility vs external control clearly separated  
+✅ **React-Idiomatic:** Uses official React Bootstrap Modal lifecycle events  
+✅ **Prevents Double Execution:** Action stored in ref, executed once  
+✅ **No Arbitrary Delays:** Uses proper lifecycle events instead of setTimeout hacks  
+✅ **Works With or Without Animation:** `onExited` fires regardless of animation setting  
+✅ **Maintains Keyboard Navigation:** Orphaned backdrop cleanup still works for stuck modals  
+✅ **Screen Reader Compatible:** Proper ARIA attributes and focus management preserved
+
+### Testing Results
+
+**Before Fix:**
+- ❌ White screen after clicking dialog buttons
+- ❌ Console errors: `removeChild` NotFoundError
+- ❌ Required page refresh to restore functionality
+- ❌ Poor user experience
+
+**After Fix:**
+- ✅ Dialog closes smoothly without errors
+- ✅ No console errors
+- ✅ Actions execute correctly (app deletes, operations cancel)
+- ✅ No page refresh needed
+- ✅ Keyboard navigation still functional
+- ✅ Modal backdrops clean up properly
+
+### Files Modified
+
+1. `frontend/src/_components/ConfirmDialog.jsx` - Modal lifecycle management
+2. `frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx` - Smart backdrop cleanup
+
+### Related Components
+
+This fix affects all confirmation dialogs throughout the application:
+- Delete app confirmation
+- Delete folder confirmation
+- Remove app from folder confirmation
+- Delete version confirmation
+- Any component using `ConfirmDialog`
+
+---
 ## Latest Update - November 10, 2025 (Part 2)
 **Chakra UI Accessible Components Integration**
 
