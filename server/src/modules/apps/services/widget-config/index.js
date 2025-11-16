@@ -65,6 +65,9 @@ import { phoneinputConfig } from './phoneinput';
 import { currencyinputConfig } from './currencyinput';
 import { rangeSliderV2Config } from './rangesliderV2';
 import { chatConfig } from './chat';
+import { accessibleButtonConfig } from './accessibleButton';
+import { accessibleInputConfig } from './accessibleInput';
+import { accessibleSwitchConfig } from './accessibleSwitch';
 
 const widgets = {
   buttonConfig,
@@ -133,7 +136,10 @@ const widgets = {
   boundedBoxConfig,
   chatConfig,
   moduleContainerConfig,
-  moduleViewerConfig
+  moduleViewerConfig,
+  accessibleButtonConfig,
+  accessibleInputConfig,
+  accessibleSwitchConfig,
 };
 
 const universalProps = {
