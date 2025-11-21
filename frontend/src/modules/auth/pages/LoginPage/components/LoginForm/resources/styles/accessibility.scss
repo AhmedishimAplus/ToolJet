@@ -171,11 +171,19 @@
 }
 
 /* Ensure buttons have minimum touch target size for mobile accessibility */
-.password-input__toggle,
-.submit-button,
-.sso-button {
-    min-height: 44px;
-    min-width: 44px;
+.login-form {
+
+    .submit-button,
+    .sso-button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Password toggle has appropriate size to fit inside input */
+    .password-input__toggle {
+        min-height: 32px;
+        min-width: 32px;
+    }
 }
 
 /* Skip links for keyboard users (if added in future) */
