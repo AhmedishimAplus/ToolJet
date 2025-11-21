@@ -9,36 +9,12 @@ select:not(.input-mode-active):hover {
     cursor: default !important;
 }
 
-/* Universal hover outlines for all interactive elements */
-button:hover:not([disabled]),
-input:hover:not([disabled]),
-select:hover:not([disabled]),
-textarea:hover:not([disabled]),
-a:hover:not([disabled]),
-[role="button"]:hover:not([disabled]),
-[tabindex]:hover:not([tabindex="-1"]):not([disabled]),
-.cursor-pointer:hover:not([disabled]),
-.btn:hover:not([disabled]),
-.app-card:hover,
-.notification-center-nav-item:hover,
-.settings-nav-item:hover,
-.homepage-app-card:hover,
-.card--clickable:hover,
-.dropdown-item:hover,
-.list-group-item:hover,
-.nav-link:hover,
-.btn-outline:hover,
-.btn-primary:hover,
-.btn-secondary:hover,
-.btn-tertiary:hover,
-.tj-primary-btn:hover,
-.tj-tertiary-btn:hover,
-.launch-button:hover,
-.edit-button:hover {
+/* Sidebar SVG icons should have outline on hover */
+.left-sidebar-item:hover .sidebar-svg-icon,
+.tj-leftsidebar-icon-items:hover .sidebar-svg-icon {
     outline: 2px solid #3E63DD !important;
     outline-offset: 2px !important;
-    border-radius: 4px !important;
-    transition: all 0.2s ease-in-out !important;
+    border-radius: 6px !important;
 }
 
 /* Sidebar items should NOT have outline on hover, only on focus */
@@ -80,15 +56,6 @@ a:focus:not([disabled]),
     transition: all 0.2s ease-in-out !important;
 }
 
-/* Special hover styles for app cards */
-.app-card:hover,
-.homepage-app-card:hover {
-    outline: 2px solid #3E63DD !important;
-    outline-offset: 2px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.1) !important;
-}
-
 /* Special FOCUS styles for app cards */
 .app-card:focus,
 .homepage-app-card:focus {
@@ -96,15 +63,6 @@ a:focus:not([disabled]),
     outline-offset: 2px !important;
     border-radius: 8px !important;
     box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.1) !important;
-}
-
-/* Hover styles for form inputs */
-input:hover:not([disabled]),
-textarea:hover:not([disabled]),
-select:hover:not([disabled]) {
-    outline: 2px solid #3E63DD !important;
-    outline-offset: 1px !important;
-    border-radius: 4px !important;
 }
 
 /* FOCUS styles for form inputs (keyboard navigation) */
@@ -136,13 +94,6 @@ select.input-mode-active {
     box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1) !important;
 }
 
-/* Hover styles for links */
-a:hover:not([disabled]) {
-    outline: 2px solid #3E63DD !important;
-    outline-offset: 1px !important;
-    border-radius: 2px !important;
-}
-
 /* Add focus styles to sidebar navigation items */
 .tj-leftsidebar-icon-items:focus {
     outline: 2px solid #3E63DD;
@@ -167,21 +118,6 @@ ul li.keyboard-focused,
     border-radius: 4px !important;
     background-color: rgba(62, 99, 221, 0.05) !important;
     box-shadow: 0 0 0 3px rgba(62, 99, 221, 0.1) !important;
-    transition: all 0.2s ease-in-out !important;
-}
-
-/* Hover states for keyboard-navigable elements */
-.keyboard-navigable:hover,
-.modal ul li:hover,
-.folder-list-group-item:hover,
-.list-group-item:hover,
-.all-apps-link:hover,
-.application-card:hover,
-.folder-card:hover {
-    outline: 2px solid #3E63DD !important;
-    outline-offset: 2px !important;
-    border-radius: 4px !important;
-    background-color: rgba(62, 99, 221, 0.03) !important;
     transition: all 0.2s ease-in-out !important;
 }
 
@@ -276,48 +212,10 @@ ul li.keyboard-focused,
     z-index: 1050 !important;
 }
 
-/* Handle specific ToolJet components that might override styles */
-.homepage-app-card-list-item:hover .homepage-app-card,
-.homepage-app-card-list-item:hover .app-card {
-    outline: 2px solid #3E63DD !important;
-    outline-offset: 2px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.1) !important;
-}
+/* Handle specific ToolJet components that might override styles - FOCUS ONLY */
 
-/* Dark mode specific overrides */
-.dark-theme .homepage-app-card-list-item:hover .homepage-app-card,
-.dark-theme .homepage-app-card-list-item:hover .app-card {
-    outline-color: #5B9BFF !important;
-    box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.1) !important;
-}
+/* Dark mode specific overrides - FOCUS ONLY */
 
-/* Dark mode hover and focus styles */
-.dark-theme button:hover:not([disabled]),
-.dark-theme input:hover:not([disabled]),
-.dark-theme select:hover:not([disabled]),
-.dark-theme textarea:hover:not([disabled]),
-.dark-theme a:hover:not([disabled]),
-.dark-theme [role="button"]:hover:not([disabled]),
-.dark-theme [tabindex]:hover:not([tabindex="-1"]):not([disabled]),
-.dark-theme .cursor-pointer:hover:not([disabled]),
-.dark-theme .btn:hover:not([disabled]),
-.dark-theme .app-card:hover,
-.dark-theme .notification-center-nav-item:hover,
-.dark-theme .settings-nav-item:hover,
-.dark-theme .homepage-app-card:hover,
-.dark-theme .card--clickable:hover,
-.dark-theme .dropdown-item:hover,
-.dark-theme .list-group-item:hover,
-.dark-theme .nav-link:hover,
-.dark-theme .btn-outline:hover,
-.dark-theme .btn-primary:hover,
-.dark-theme .btn-secondary:hover,
-.dark-theme .btn-tertiary:hover,
-.dark-theme .tj-primary-btn:hover,
-.dark-theme .tj-tertiary-btn:hover,
-.dark-theme .launch-button:hover,
-.dark-theme .edit-button:hover,
 /* Dark mode FOCUS styles for keyboard navigation */
 .dark-theme button:focus:not([disabled]),
 .dark-theme input:focus:not([disabled]):not(.input-mode-active),
@@ -354,8 +252,14 @@ ul li.keyboard-focused,
     outline: none !important;
 }
 
-.dark-theme .app-card:hover,
-.dark-theme .homepage-app-card:hover,
+/* Dark mode: Sidebar SVG icons should have outline on hover */
+.dark-theme .left-sidebar-item:hover .sidebar-svg-icon,
+.dark-theme .tj-leftsidebar-icon-items:hover .sidebar-svg-icon {
+    outline: 2px solid #5B9BFF !important;
+    outline-offset: 2px !important;
+    border-radius: 6px !important;
+}
+
 .dark-theme .app-card:focus,
 .dark-theme .homepage-app-card:focus {
     outline-color: #5B9BFF !important;
