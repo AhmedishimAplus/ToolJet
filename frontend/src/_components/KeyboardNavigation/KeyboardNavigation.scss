@@ -19,7 +19,6 @@ a:hover:not([disabled]),
 [tabindex]:hover:not([tabindex="-1"]):not([disabled]),
 .cursor-pointer:hover:not([disabled]),
 .btn:hover:not([disabled]),
-.tj-leftsidebar-icon-items:hover,
 .app-card:hover,
 .notification-center-nav-item:hover,
 .settings-nav-item:hover,
@@ -40,6 +39,12 @@ a:hover:not([disabled]),
     outline-offset: 2px !important;
     border-radius: 4px !important;
     transition: all 0.2s ease-in-out !important;
+}
+
+/* Sidebar items should NOT have outline on hover, only on focus */
+.tj-leftsidebar-icon-items:hover,
+.left-sidebar-item:hover {
+    outline: none !important;
 }
 
 /* Universal FOCUS outlines for all interactive elements (keyboard navigation) */
@@ -250,13 +255,13 @@ ul li.keyboard-focused,
     opacity: 1;
 }
 
-/* Override any conflicting hover styles */
-*:hover:not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer) {
+/* Override any conflicting hover styles - but not for sidebar elements */
+*:hover:not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer):not(.left-sidebar):not(.left-sidebar *) {
     position: relative;
 }
 
-/* Ensure outlines are visible above other elements */
-*:hover:not([disabled]):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer) {
+/* Ensure outlines are visible above other elements - but not for sidebar elements */
+*:hover:not([disabled]):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer):not(.left-sidebar):not(.left-sidebar *) {
     z-index: 1;
 }
 
@@ -297,7 +302,6 @@ ul li.keyboard-focused,
 .dark-theme [tabindex]:hover:not([tabindex="-1"]):not([disabled]),
 .dark-theme .cursor-pointer:hover:not([disabled]),
 .dark-theme .btn:hover:not([disabled]),
-.dark-theme .tj-leftsidebar-icon-items:hover,
 .dark-theme .app-card:hover,
 .dark-theme .notification-center-nav-item:hover,
 .dark-theme .settings-nav-item:hover,
@@ -342,6 +346,12 @@ ul li.keyboard-focused,
 .dark-theme .launch-button:focus,
 .dark-theme .edit-button:focus {
     outline-color: #5B9BFF !important;
+}
+
+/* Dark mode: Sidebar items should NOT have outline on hover, only on focus */
+.dark-theme .tj-leftsidebar-icon-items:hover,
+.dark-theme .left-sidebar-item:hover {
+    outline: none !important;
 }
 
 .dark-theme .app-card:hover,
