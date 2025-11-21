@@ -359,7 +359,7 @@ const SignupForm = ({
                     to={`/login${paramOrganizationSlug ? `/${paramOrganizationSlug}` : ''}${redirectTo ? `?redirectTo=${redirectTo}` : ''
                       }`}
                     className="signin-link"
-                    tabIndex="-1"
+                    tabIndex="0"
                     data-cy="signin-link"
                     onFocus={() => handleElementFocus('signin-link')}
                   >
