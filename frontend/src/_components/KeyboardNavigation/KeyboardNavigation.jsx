@@ -615,7 +615,8 @@ const KeyboardNavigation = () => {
             element.classList.contains('menu-icon--trigger') ||
             element.getAttribute('data-cy') === 'app-card-menu-icon' ||
             element.classList.contains('settings-nav-item') || // Settings menu button
-            element.getAttribute('data-cy') === 'settings-icon'
+            element.getAttribute('data-cy') === 'settings-icon' ||
+            element.getAttribute('data-cy') === 'import-dropdown-menu' // Create app dropdown menu button
         );
     }, []);
 
@@ -623,10 +624,11 @@ const KeyboardNavigation = () => {
     const isMenuItem = useCallback((element) => {
         if (!element) return false;
 
-        // Check if it's a dropdown-item (settings menu)
+        // Check if it's a dropdown-item (settings menu or create app menu)
         if (element.classList.contains('dropdown-item')) {
             const settingsCard = element.closest('.settings-card');
-            return !!settingsCard;
+            const newAppDropdown = element.closest('.new-app-dropdown');
+            return !!(settingsCard || newAppDropdown);
         }
 
         // Check if it's a span with role="button" inside a field div
@@ -917,6 +919,7 @@ const KeyboardNavigation = () => {
             '.popover-app-menu',
             '.app-menu-popover',
             '.settings-card', // Add settings menu
+            '.new-app-dropdown', // Add create app dropdown menu
             '.popover.bs-popover-bottom',
             '.popover',
             '[data-popper-placement]'
@@ -961,7 +964,7 @@ const KeyboardNavigation = () => {
             'div[class*="cursor-pointer"]',
             'span[class*="cursor-pointer"]',
             '[role="menuitem"]',
-            '.dropdown-item', // Settings menu items
+            '.dropdown-item', // Settings menu items and create app menu items
             '.menu-item',
             '.app-menu-item',
             'div[role="button"]',

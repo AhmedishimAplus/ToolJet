@@ -27,9 +27,11 @@ const BaseImportAppMenu = ({
         </Dropdown.Item>
       )}
       <label
-        className="homepage-dropdown-style tj-text tj-text-xsm"
+        className="homepage-dropdown-style tj-text tj-text-xsm dropdown-item"
         data-cy="import-option-label"
         onChange={readAndImport}
+        tabIndex="0"
+        style={{ cursor: 'pointer' }}
       >
         {t('homePage.header.import', 'Import from device')}
         <input type="file" accept=".json" ref={fileInput} style={{ display: 'none' }} data-cy="import-option-input" />
