@@ -1275,6 +1275,30 @@ const KeyboardNavigation = () => {
                 return; // Let the input handle the event normally
             }
 
+            // Handle Tab/Shift+Tab when menu is open
+            if (e.key === 'Tab' && isMenuOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+
+                const menuItems = getMenuItems();
+                if (menuItems.length === 0) return;
+
+                const currentIndex = menuItems.indexOf(activeElement);
+                let nextIndex;
+
+                if (e.shiftKey) {
+                    // Shift+Tab: go to previous item
+                    nextIndex = currentIndex <= 0 ? menuItems.length - 1 : currentIndex - 1;
+                } else {
+                    // Tab: go to next item
+                    nextIndex = currentIndex >= menuItems.length - 1 ? 0 : currentIndex + 1;
+                }
+
+                menuItems[nextIndex]?.focus();
+                return;
+            }
+
             // Handle Enter and Space keys on:
             // 1. App cards themselves
             // 2. Menu buttons (3-dots)
@@ -1304,7 +1328,7 @@ const KeyboardNavigation = () => {
         return () => {
             document.removeEventListener('keydown', handleGlobalKeyDown, true);
         };
-    }, [handleEnter, isAppCard, isMenuButton, isMenuItem, expandedCard]);
+    }, [handleEnter, isAppCard, isMenuButton, isMenuItem, expandedCard, isMenuOpen, getMenuItems]);
 
     // Allow normal input behavior - no hover prevention
     useEffect(() => {
@@ -1317,7 +1341,7 @@ const KeyboardNavigation = () => {
         if (!isMenuOpen) return;
 
         const checkMenuVisibility = () => {
-            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card');
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card, .new-app-dropdown');
             if (!menuPopover || !isElementVisible(menuPopover)) {
 
                 setIsMenuOpen(false);
@@ -1329,7 +1353,7 @@ const KeyboardNavigation = () => {
 
         // Also listen for clicks outside to close menu
         const handleClickOutside = (e) => {
-            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card');
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card, .new-app-dropdown');
             if (menuPopover && e.target && !menuPopover.contains(e.target)) {
                 setIsMenuOpen(false);
             }
