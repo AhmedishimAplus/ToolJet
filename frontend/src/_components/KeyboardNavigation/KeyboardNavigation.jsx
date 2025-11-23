@@ -610,14 +610,22 @@ const KeyboardNavigation = () => {
 
     // Check if element is a menu button (3-dots)
     const isMenuButton = useCallback((element) => {
-        return element && (
-            element.classList.contains('menu-ico') ||
-            element.classList.contains('menu-icon--trigger') ||
-            element.getAttribute('data-cy') === 'app-card-menu-icon' ||
-            element.classList.contains('settings-nav-item') || // Settings menu button
-            element.getAttribute('data-cy') === 'settings-icon' ||
-            element.getAttribute('data-cy') === 'import-dropdown-menu' // Create app dropdown menu button
-        );
+        if (!element) return false;
+
+        // Check the element itself and its parent
+        const checkElement = (el) => {
+            return el && (
+                el.classList.contains('menu-ico') ||
+                el.classList.contains('menu-icon--trigger') ||
+                el.getAttribute('data-cy') === 'app-card-menu-icon' ||
+                el.classList.contains('settings-nav-item') || // Settings menu button
+                el.getAttribute('data-cy') === 'settings-icon' ||
+                el.getAttribute('data-cy') === 'import-dropdown-menu' || // Create app dropdown menu button
+                el.getAttribute('data-cy') === 'add-new-data-button' // Database add new data button
+            );
+        };
+
+        return checkElement(element) || checkElement(element.parentElement) || checkElement(element.closest('button'));
     }, []);
 
     // Check if element is a menu item (within a popover menu)
@@ -629,6 +637,12 @@ const KeyboardNavigation = () => {
             const settingsCard = element.closest('.settings-card');
             const newAppDropdown = element.closest('.new-app-dropdown');
             return !!(settingsCard || newAppDropdown);
+        }
+
+        // Check if it's a div with role="menuitem" (add new data popover items)
+        if (element.getAttribute('role') === 'menuitem') {
+            const addNewDataPopover = element.closest('.add-new-data-popover');
+            return !!addNewDataPopover;
         }
 
         // Check if it's a span with role="button" inside a field div
@@ -915,12 +929,14 @@ const KeyboardNavigation = () => {
     const getMenuItems = useCallback(() => {
         // Look for the menu popover with multiple possible selectors
         const menuSelectors = [
+            '.add-new-data-popover', // Database add new data menu (try this first)
+            '.settings-card', // Add settings menu
+            '.new-app-dropdown', // Add create app dropdown menu
             '#popover-app-menu',
             '.popover-app-menu',
             '.app-menu-popover',
-            '.settings-card', // Add settings menu
-            '.new-app-dropdown', // Add create app dropdown menu
             '.popover.bs-popover-bottom',
+            '.popover.show', // Bootstrap popover when shown
             '.popover',
             '[data-popper-placement]'
         ];
@@ -939,6 +955,11 @@ const KeyboardNavigation = () => {
 
         // Get all possible menu items with expanded selectors, prioritizing specific selectors
         const prioritizedSelectors = [
+            // Add new data menu items (highest priority for this menu)
+            '[data-cy="add-new-row-option"]',
+            '[data-cy="bulk-upload-data-option"]',
+            '.add-new-data-menu-item',
+
             // Most specific - the actual clickable spans inside field divs
             '.field.mb-3 span[role="button"]',
             '.field span[role="button"]',
@@ -1061,13 +1082,12 @@ const KeyboardNavigation = () => {
         const menuItems = getMenuItems();
 
         menuItems.forEach((item, index) => {
-            if (!item.hasAttribute('tabindex')) {
-                item.setAttribute('tabindex', '0');
+            // Set tabindex to 0 (or update from -1 to 0)
+            item.setAttribute('tabindex', '0');
 
-                // Add role if it's a div or span
-                if (['DIV', 'SPAN'].includes(item.tagName) && !item.hasAttribute('role')) {
-                    item.setAttribute('role', 'menuitem');
-                }
+            // Add role if it's a div or span and doesn't have one
+            if (['DIV', 'SPAN'].includes(item.tagName) && !item.hasAttribute('role')) {
+                item.setAttribute('role', 'menuitem');
             }
         });
 
@@ -1203,11 +1223,8 @@ const KeyboardNavigation = () => {
                 const menuItems = makeMenuItemsFocusable();
                 if (menuItems.length > 0) {
                     menuItems[0].focus();
-
-                } else {
-
                 }
-            }, 300); // Longer delay to ensure menu renders
+            }, 350); // Increased delay to ensure Bootstrap popover renders
         } else if (isMenuItem(activeElement)) {
             e.preventDefault();
             e.stopPropagation();
@@ -1341,7 +1358,7 @@ const KeyboardNavigation = () => {
         if (!isMenuOpen) return;
 
         const checkMenuVisibility = () => {
-            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card, .new-app-dropdown');
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card, .new-app-dropdown, .add-new-data-popover');
             if (!menuPopover || !isElementVisible(menuPopover)) {
 
                 setIsMenuOpen(false);
@@ -1353,7 +1370,7 @@ const KeyboardNavigation = () => {
 
         // Also listen for clicks outside to close menu
         const handleClickOutside = (e) => {
-            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card, .new-app-dropdown');
+            const menuPopover = document.querySelector('#popover-app-menu, .popover-app-menu, .app-menu-popover, .settings-card, .new-app-dropdown, .add-new-data-popover');
             if (menuPopover && e.target && !menuPopover.contains(e.target)) {
                 setIsMenuOpen(false);
             }

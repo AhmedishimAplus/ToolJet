@@ -170,6 +170,7 @@ const Header = ({
                             onClick={() => toggleAddNewDataMenu(true)}
                             size="sm"
                             className="px-1 pe-3 ps-2 gap-1"
+                            data-cy="add-new-data-button"
                           >
                             <Plus fill="#697177" style={{ height: '16px' }} />
                             Add new data
