@@ -15,6 +15,35 @@ const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => 
 
   const isMounted = useMounted();
 
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (show) {
+      // Focus first input when dialog opens
+      setTimeout(() => {
+        const firstInput = document.querySelector('#storage-sort-popover select, #storage-sort-popover input');
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }, 100);
+
+      // Handle Escape key
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          setShow(false);
+          setTimeout(() => {
+            const sortButton = document.querySelector('[data-cy="sort-button"]');
+            sortButton?.focus();
+          }, 50);
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [show]);
+
   const reset = () => {
     setFilters({});
     setShow(false);
@@ -79,6 +108,7 @@ const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => 
   return (
     <OverlayTrigger
       rootClose
+      rootCloseEvent="click"
       onToggle={(show) => {
         if (show && isEmpty(filters)) setFilters({ 0: {} });
         setShow(show);

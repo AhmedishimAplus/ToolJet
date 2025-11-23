@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import cx from 'classnames';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
@@ -32,6 +32,36 @@ const Filter = ({
   const filterCount = Object.keys(filters).length;
   const validFilterCountRef = React.useRef(0);
   const isMounted = useMounted();
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (show) {
+      // Focus first input when dialog opens
+      setTimeout(() => {
+        const firstInput = document.querySelector('#storage-filter-popover select, #storage-filter-popover input');
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }, 100);
+
+      // Handle Escape key
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          setTempFilters(deepClone(filters));
+          setShow(false);
+          setTimeout(() => {
+            const filterButton = document.querySelector('[data-cy="filter-button"]');
+            filterButton?.focus();
+          }, 50);
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [show, filters]);
 
   const reset = () => {
     setFilters({});
@@ -218,6 +248,7 @@ const Filter = ({
     <>
       <OverlayTrigger
         rootClose
+        rootCloseEvent="click"
         trigger="click"
         show={show}
         onToggle={(show) => {
@@ -244,10 +275,10 @@ const Filter = ({
                 areFiltersApplied
                   ? '#3E63DD'
                   : show && filterCount === 0
-                  ? '#ACB2B9'
-                  : show && filterCount > 0
-                  ? '#4368E3'
-                  : '#889096'
+                    ? '#ACB2B9'
+                    : show && filterCount > 0
+                      ? '#4368E3'
+                      : '#889096'
               }
             />
             <div className="tw-flex items-center tw-ml-[3px]">

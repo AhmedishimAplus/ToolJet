@@ -1282,9 +1282,14 @@ const KeyboardNavigation = () => {
         const handleGlobalKeyDown = (e) => {
             const activeElement = document.activeElement;
 
+            // Don't intercept if inside a popover or modal dialog
+            if (activeElement && activeElement.closest('.popover, .modal, .filter-popup, [role="dialog"], [id*="popover"]')) {
+                return; // Let the modal/popover handle its own keyboard navigation
+            }
+
             // Don't intercept if user is typing in an input field
             if (activeElement &&
-                (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
+                (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT') &&
                 activeElement.type !== 'button' &&
                 activeElement.type !== 'submit' &&
                 activeElement.type !== 'checkbox' &&
