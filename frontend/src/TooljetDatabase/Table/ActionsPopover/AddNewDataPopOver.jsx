@@ -46,7 +46,14 @@ export const AddNewDataPopOver = ({
       items[prevIndex]?.focus();
     } else if (e.key === 'Escape') {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       toggleAddNewDataMenu(false);
+      // Return focus to the button
+      setTimeout(() => {
+        const button = document.querySelector('[data-cy="add-new-data-button"]');
+        button?.focus();
+      }, 50);
     }
   };
 
@@ -118,6 +125,7 @@ export const AddNewDataPopOver = ({
       trigger="click"
       placement="bottom"
       rootClose
+      rootCloseEvent="click"
       onToggle={() => {
         toggleAddNewDataMenu(!show);
       }}
