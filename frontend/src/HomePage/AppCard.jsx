@@ -67,7 +67,7 @@ export default function AppCard({
   const handleCardFocus = useCallback(() => {
     const appTypeName = appType === 'workflow' ? 'workflow' : appType === 'module' ? 'module' : 'app';
     const statusText = canUpdate ? 'editable' : 'view only';
-    speak(`${app?.name} ${appTypeName} card, ${statusText}`);
+    speak(`${app?.name} ${appTypeName}, ${statusText}`);
   }, [app?.name, appType, canUpdate, speak]);
 
   const isValidSlug = (slug) => {

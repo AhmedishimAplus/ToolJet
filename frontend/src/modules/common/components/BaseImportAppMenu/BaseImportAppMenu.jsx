@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dropdown } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const BaseImportAppMenu = ({
   showTemplateLibraryModal = () => null,
@@ -15,12 +16,14 @@ const BaseImportAppMenu = ({
 }) => {
   const fileInput = React.createRef();
   const { t } = useTranslation();
+  const { speak } = useScreenReader();
   return (
     <Dropdown.Menu className="import-lg-position new-app-dropdown">
       {appType !== 'workflow' && appType !== 'module' && (
         <Dropdown.Item
           className="homepage-dropdown-style tj-text tj-text-xsm"
           onClick={showTemplateLibraryModal}
+          onFocus={() => speak('Choose from template')}
           data-cy="choose-from-template-button"
         >
           {t('homePage.header.chooseFromTemplate', 'Choose from template')}
@@ -30,6 +33,7 @@ const BaseImportAppMenu = ({
         className="homepage-dropdown-style tj-text tj-text-xsm dropdown-item"
         data-cy="import-option-label"
         onChange={readAndImport}
+        onFocus={() => speak('Import from device')}
         tabIndex="0"
         style={{ cursor: 'pointer' }}
       >

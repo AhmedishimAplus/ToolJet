@@ -17,7 +17,7 @@ export default function HomeHeader({ onSearchSubmit, darkMode, appType }) {
 
   const handleSearchFocus = () => {
     const itemType = appType === 'workflow' ? 'workflows' : appType === 'module' ? 'modules' : 'apps';
-    speak(`Search ${itemType} input field focused`);
+    speak(`Search ${itemType} input field`);
   };
 
   return (

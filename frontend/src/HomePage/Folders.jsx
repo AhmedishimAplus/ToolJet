@@ -271,7 +271,7 @@ export const Folders = function Folders({
                       setNewFolderName('');
                       setShowForm(true);
                     }}
-                    onFocus={() => speak('Create new folder button focused')}
+                    onFocus={() => speak('Create new folder button')}
                     data-cy="create-new-folder-button"
                   >
                     <SolidIcon name="plus" width="14" fill={darkMode ? '#CFD3D8E6' : '#6A727C'} />
@@ -284,7 +284,7 @@ export const Folders = function Folders({
                     onClick={() => {
                       setShowInput(true);
                     }}
-                    onFocus={() => speak('Search folders button focused')}
+                    onFocus={() => speak('Search folders button')}
                     data-cy="folder-search-icon"
                   >
                     <SolidIcon
@@ -325,7 +325,7 @@ export const Folders = function Folders({
               onClick={() => handleFolderChange({})}
               onFocus={() => {
                 const itemType = appType === 'workflow' ? 'workflows' : appType === 'module' ? 'modules' : 'apps';
-                speak(`All ${itemType} link focused`);
+                speak(`All ${itemType}`);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -367,7 +367,7 @@ export const Folders = function Folders({
                 }}
                 onFocus={() => {
                   const count = folder.count > 0 ? `, ${folder.count} items` : '';
-                  speak(`${folder.name} folder${count}, focused`);
+                  speak(`${folder.name} folder${count}`);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {

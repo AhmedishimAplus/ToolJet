@@ -135,6 +135,17 @@ class HomePageComponent extends React.Component {
     };
   }
 
+  speak = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+    window.speechSynthesis.speak(utterance);
+  };
+
   setQueryParameter = () => {
     const showImportTemplateModal = getQueryParams('fromtemplate');
     this.setState({
@@ -1693,6 +1704,10 @@ class HomePageComponent extends React.Component {
                               showCreateAppModal: true,
                             })
                           }
+                          onFocus={() => {
+                            const appTypeName = this.props.appType === 'workflow' ? 'workflow' : this.props.appType === 'module' ? 'module' : 'app';
+                            this.speak(`Create new ${appTypeName} button`);
+                          }}
                           data-cy="create-new-app-button"
                         >
                           <>
@@ -1715,6 +1730,7 @@ class HomePageComponent extends React.Component {
                           data-cy="import-dropdown-menu"
                           aria-haspopup="menu"
                           aria-label="Import application options"
+                          onFocus={() => this.speak('Import options menu')}
                         />
                         <ImportAppMenu
                           darkMode={this.props.darkMode}
