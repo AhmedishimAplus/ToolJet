@@ -10,7 +10,7 @@ const Toast = ({ toastOptions }) => {
             <>
               {icon}
               {message}
-              <button className="btn-close" onClick={() => toast.dismiss(t.id)} data-cy="toast-close-button" />
+              <button className="btn-close" onClick={() => toast.dismiss(t.id)} data-cy="toast-close-button" aria-label="Close notification" />
             </>
           )}
         </ToastBar>

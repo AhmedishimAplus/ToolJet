@@ -110,6 +110,7 @@ function Header({
                       iconWidth="14"
                       size="md"
                       onClick={toggleCollapsibleSidebar}
+                      aria-label="Collapse sidebar"
                     />
                   </div>
                 </ToolTip>
@@ -141,6 +142,7 @@ function Header({
                     iconWidth="14"
                     size="md"
                     onClick={toggleCollapsibleSidebar}
+                    aria-label="Open sidebar"
                   />
                 </div>
               </ToolTip>

@@ -4798,7 +4798,7 @@ input[type="text"] {
     align-items: center;
     letter-spacing: -0.02em;
     text-transform: uppercase;
-    color: var(--slate9);
+    color: #000;
   }
 
   &.theme-dark .folder-info {
@@ -7782,6 +7782,14 @@ tbody {
   margin-bottom: 12px;
 }
 
+.tooljet-database {
+
+  .table-name,
+  .subheader {
+    color: #000;
+  }
+}
+
 .theme-dark {
   .layout-sidebar-icon {
     &:hover {
@@ -7793,7 +7801,7 @@ tbody {
 
     .table-name,
     .subheader {
-      color: var(--slate9);
+      color: white;
     }
 
     .list-group-item.active {

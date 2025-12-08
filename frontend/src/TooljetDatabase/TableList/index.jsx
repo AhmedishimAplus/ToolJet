@@ -88,7 +88,7 @@ const List = () => {
               size="medium"
               variant="ghost"
               iconOnly
-              ariaLabel="Search for folders"
+              aria-label="Search for folders"
               onClick={() => {
                 setShowInput(true);
               }}
