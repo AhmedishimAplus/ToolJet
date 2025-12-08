@@ -145,7 +145,7 @@ export const List = ({ updateSelectedDatasource }) => {
                       size="medium"
                       variant="ghost"
                       iconOnly
-                      ariaLabel="Search for folders"
+                      aria-label="Search for data sources"
                       onClick={() => {
                         setShowInput(true);
                       }}
