@@ -2,9 +2,13 @@
 .tj-text {
     font-family: 'IBM Plex Sans';
     font-style: normal;
-    color: var(--slate12) !important;
+    color: #000 !important;
     margin: 0;
     padding: 0;
+}
+
+.theme-dark .tj-text {
+    color: white !important;
 }
 
 .tj-header-lg {
@@ -25,7 +29,7 @@
     padding: 0;
 }
 
-.tj-text-xx-large{
+.tj-text-xx-large {
     font-weight: 500;
     font-size: 20px;
     line-height: 32px;
@@ -80,13 +84,15 @@
     margin: 0;
     padding: 0;
 }
-.tj-header-h7{
+
+.tj-header-h7 {
     font-weight: 500;
     font-size: 18px;
     line-height: 28px;
 
 }
-.tj-header-h8{
+
+.tj-header-h8 {
     font-weight: 500;
     font-size: 12px;
     line-height: 20px;

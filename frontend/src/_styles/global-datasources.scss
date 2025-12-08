@@ -241,7 +241,19 @@
     align-items: center;
     letter-spacing: -0.02em;
     text-transform: uppercase;
-    color: var(--slate9);
+    color: #000;
+}
+
+.theme-dark .datasources-info {
+    color: white !important;
+}
+
+.sample-db-label {
+    color: #000 !important;
+}
+
+.theme-dark .sample-db-label {
+    color: white !important;
 }
 
 .datasource-list-header {

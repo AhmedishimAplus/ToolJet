@@ -122,8 +122,8 @@ export const ListItem = ({
           {decodeEntities(dataSource.name)}
           {isSampleDb && (
             <div
-              className="font-400 tj-text-xxsm text-truncate"
-              style={{ paddingTop: '3px', paddingLeft: '2px', color: '#687076' }}
+              className="font-400 tj-text-xxsm text-truncate sample-db-label"
+              style={{ paddingTop: '3px', paddingLeft: '2px' }}
             >{`(postgres)`}</div>
           )}
         </div>
