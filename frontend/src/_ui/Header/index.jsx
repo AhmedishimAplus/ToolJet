@@ -10,7 +10,7 @@ function Header({
   featureAccess,
   enableCollapsibleSidebar = false,
   collapseSidebar = false,
-  toggleCollapsibleSidebar = () => {},
+  toggleCollapsibleSidebar = () => { },
 }) {
   const currentVersion = localStorage.getItem('currentVersion');
   const darkMode = localStorage.getItem('darkMode') === 'true';
@@ -150,7 +150,7 @@ function Header({
             </div>
             <div
               className={cx('tw-ml-auto tj-version tj-text-xsm tw-flex tw-items-center tw-gap-3', {
-                'color-muted-darkmode': darkMode,
+                'color-white': darkMode,
                 'color-disabled': !darkMode,
               })}
               data-cy="version-label"

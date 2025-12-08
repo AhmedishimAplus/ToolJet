@@ -4801,6 +4801,10 @@ input[type="text"] {
     color: var(--slate9);
   }
 
+  &.theme-dark .folder-info {
+    color: white !important;
+  }
+
   .folder-create-btn {
     width: 28px;
     height: 28px;
@@ -9484,6 +9488,10 @@ tbody {
   a {
     text-decoration: none;
   }
+}
+
+.theme-dark .tj-dashboard-header-title-wrap {
+  color: white;
 }
 
 .theme-dark {
