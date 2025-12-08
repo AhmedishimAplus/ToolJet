@@ -121,25 +121,25 @@ const BaseManageOrgConstants = ({
     const globalCount =
       allConstants.length > 0
         ? allConstants.filter((constant) => {
-            if (constant.type === Constants.Global) {
-              const foundConstant = constant.values.find((env) => env.environmentName === envName);
-              if (!foundConstant || foundConstant.value === '') return false;
-              return true;
-            }
-            return false;
-          }).length
+          if (constant.type === Constants.Global) {
+            const foundConstant = constant.values.find((env) => env.environmentName === envName);
+            if (!foundConstant || foundConstant.value === '') return false;
+            return true;
+          }
+          return false;
+        }).length
         : 0;
 
     const secretCount =
       allConstants.length > 0
         ? allConstants.filter((constant) => {
-            if (constant.type === Constants.Secret) {
-              const foundConstant = constant.values.find((env) => env.environmentName === envName);
-              if (!foundConstant || foundConstant.value === '') return false;
-              return true;
-            }
-            return false;
-          }).length
+          if (constant.type === Constants.Secret) {
+            const foundConstant = constant.values.find((env) => env.environmentName === envName);
+            if (!foundConstant || foundConstant.value === '') return false;
+            return true;
+          }
+          return false;
+        }).length
         : 0;
 
     setGlobalCount(globalCount);
@@ -560,14 +560,14 @@ const BaseManageOrgConstants = ({
                         {activeTab === Constants.Global ? (
                           <>
                             To resolve a global workspace constant use{' '}
-                            <strong style={{ fontWeight: 500, color: '#3E63DD' }}>
+                            <strong className="workspace-constant-code">
                               {'{{constants.access_token}}'}
                             </strong>
                           </>
                         ) : (
                           <>
                             To resolve a secret workspace constant use{' '}
-                            <strong style={{ fontWeight: 500, color: '#3E63DD' }}>{'{{secrets.access_token}}'}</strong>
+                            <strong className="workspace-constant-code">{'{{secrets.access_token}}'}</strong>
                           </>
                         )}
                       </div>
@@ -598,7 +598,7 @@ const BaseManageOrgConstants = ({
                 <div className="manage-sso-container h-100">
                   <div className="d-flex manage-constant-wrapper-card">
                     {(activeTab === Constants.Global && globalCount > 0) ||
-                    (activeTab === Constants.Secret && secretCount > 0) ? (
+                      (activeTab === Constants.Secret && secretCount > 0) ? (
                       <div className="w-100 workspace-constant-card-body">
                         <ConstantTable
                           constants={currentTableData}

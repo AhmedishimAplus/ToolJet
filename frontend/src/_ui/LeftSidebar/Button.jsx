@@ -48,6 +48,7 @@ const Content = ({ title = null, iconSrc = null, direction = 'left', dataCy }) =
       src={iconSrc}
       width="12"
       height="12"
+      alt={title ? `${title} icon` : 'Icon'}
       data-cy={`${String(dataCy ?? title)
         .toLowerCase()
         .replace(/\s+/g, '-')}-option-icon`}

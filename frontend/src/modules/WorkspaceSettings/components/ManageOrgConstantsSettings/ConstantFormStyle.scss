@@ -311,3 +311,12 @@
     color: #858C94;
   }
 }
+
+.workspace-constant-code {
+  font-weight: 500;
+  color: #1E40AF; // Dark blue for light mode - passes WCAG AA
+}
+
+.theme-dark .workspace-constant-code {
+  color: #60A5FA; // Light blue for dark mode - passes WCAG AA
+}
