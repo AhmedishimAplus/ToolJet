@@ -7,6 +7,7 @@ import { validateEmail, validatePassword } from '@/_helpers/utils';
 import { OnboardingUIWrapper, OnboardingFormInsideWrapper } from '@/modules/onboarding/components';
 import { FormTextInput, PasswordInput, SubmitButton, FormHeader, SSOAuthModule } from '@/modules/common/components';
 import { redirectToDashboard } from '@/_helpers/routes';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import './resources/styles/login-form.styles.scss';
 import './resources/styles/accessibility.scss';
 import SepratorComponent from '@/modules/common/components/SepratorComponent';
@@ -29,6 +30,9 @@ const LoginForm = ({
   const [isFormValid, setIsFormValid] = useState(false);
   const [isDefaultFormEmail, setisDefaultFormEmail] = useState(true);
   const [isDefaultFormPassword, setisDefaultFormPassword] = useState(true);
+
+  // Web Speech API for screen reader
+  const { speak, announceFocus, announceError, announceSuccess, announceNavigationMode } = useScreenReader();
 
   // Refs for keyboard navigation and focus management
   const emailInputRef = useRef(null);
@@ -88,6 +92,7 @@ const LoginForm = ({
         if (focusableElements.length > 0 && focusableElements[0]?.ref?.current) {
           focusableElements[0].ref.current.focus();
           announceToScreenReader('Arrow key navigation active. Use arrow keys to navigate, Enter to activate.');
+          speak('Arrow key navigation active. Use arrow keys to navigate, Enter to activate.');
         }
       }, 100);
     }
@@ -168,6 +173,7 @@ const LoginForm = ({
         e.preventDefault();
         setIsNavigationMode(true);
         announceToScreenReader('Navigation mode activated. Use arrow keys to move between elements, Enter to activate.');
+        announceNavigationMode(true);
         return;
       default:
         return;
@@ -179,6 +185,7 @@ const LoginForm = ({
     if (targetElement?.ref?.current) {
       targetElement.ref.current.focus();
       announceToScreenReader(`Focused on ${targetElement.name} ${targetElement.type}`);
+      announceFocus(targetElement.name, targetElement.type);
     }
   };
 
@@ -192,6 +199,7 @@ const LoginForm = ({
       case 'input':
         setIsNavigationMode(false);
         announceToScreenReader(`Editing ${name} field. Press Escape to return to navigation mode.`);
+        speak(`Editing ${name} field. Press Escape to return to navigation mode.`);
         break;
       case 'button':
         if (name === 'sign in') {
@@ -202,10 +210,12 @@ const LoginForm = ({
           element.ref.current.click();
         }
         announceToScreenReader(`${name} activated`);
+        speak(`${name} button activated`);
         break;
       case 'link':
         element.ref.current.click();
         announceToScreenReader(`${name} link activated`);
+        speak(`Navigating to ${name}`);
         break;
     }
   };
@@ -242,6 +252,7 @@ const LoginForm = ({
           setCurrentFocusIndex(0);
           focusableElements[0].ref.current?.focus();
           announceToScreenReader('Arrow key navigation activated. Use arrow keys to navigate, Enter to activate.');
+          speak('Arrow key navigation activated. Use arrow keys to navigate, Enter to activate.');
         }
       }
     };
@@ -316,10 +327,12 @@ const LoginForm = ({
 
     // Announce form submission to screen readers
     announceToScreenReader('Signing in, please wait...');
+    speak('Signing in, please wait...');
 
     if (!validateEmail(email)) {
       setErrors((prev) => ({ ...prev, email: 'Invalid Email' }));
       announceToScreenReader('Error: Invalid email address');
+      announceError('Invalid email address');
       setIsLoading(false);
       emailInputRef.current?.focus();
       return;
@@ -327,6 +340,7 @@ const LoginForm = ({
     if (!password || !password.trim()) {
       setErrors((prev) => ({ ...prev, password: 'Password is required' }));
       announceToScreenReader('Error: Password is required');
+      announceError('Password is required');
       setIsLoading(false);
       passwordInputRef.current?.focus();
       return;
@@ -334,6 +348,7 @@ const LoginForm = ({
     if (password.length > 100) {
       setErrors((prev) => ({ ...prev, password: 'Password can be at max 100 characters long' }));
       announceToScreenReader('Error: Password is too long');
+      announceError('Password is too long');
       setIsLoading(false);
       passwordInputRef.current?.focus();
       return;
@@ -341,6 +356,7 @@ const LoginForm = ({
     onSubmit(email, password, () => {
       setIsLoading(false);
       announceToScreenReader('Sign in failed, please check your credentials and try again');
+      announceError('Sign in failed, please check your credentials and try again');
     });
   };
 

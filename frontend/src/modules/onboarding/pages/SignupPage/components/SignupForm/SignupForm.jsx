@@ -12,6 +12,7 @@ import {
   TermsAndPrivacyInfo,
 } from '@/modules/common/components';
 import SignupStatusCard from './components/SignupStatusCard';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import './resources/styles/sign-up-form.styles.scss';
 import SepratorComponent from '@/modules/common/components/SepratorComponent';
 import { checkWhiteLabelsDefaultState } from '@white-label/whiteLabelling';
@@ -29,6 +30,9 @@ const SignupForm = ({
 }) => {
   const defaultState = checkWhiteLabelsDefaultState();
   const { t } = useTranslation();
+
+  // Web Speech API for screen reader
+  const { speak, announceFocus, announceError, announceNavigationMode } = useScreenReader();
 
   // Navigation state for arrow key navigation
   const [currentFocusIndex, setCurrentFocusIndex] = useState(0);
@@ -134,6 +138,7 @@ const SignupForm = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
+    speak('Signing up, please wait...');
     if (validateForm()) {
       onSubmit(
         formData,
@@ -142,10 +147,12 @@ const SignupForm = ({
         },
         () => {
           setIsLoading(false);
+          announceError('Sign up failed, please check your information and try again');
         }
       );
     } else {
       setIsLoading(false);
+      announceError('Please fill in all required fields correctly');
     }
   };
 
@@ -164,6 +171,13 @@ const SignupForm = ({
       newErrors.password = 'Password can be at max 100 characters long';
     }
     setErrors(newErrors);
+
+    // Announce validation errors
+    if (Object.keys(newErrors).length > 0) {
+      const errorMessages = Object.values(newErrors).join(', ');
+      announceError(errorMessages);
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -213,7 +227,31 @@ const SignupForm = ({
     if (targetElement) {
       targetElement.focus();
       setIsNavigationMode(true);
+
+      // Announce the focused element
+      const elementName = getElementName(targetElement);
+      const elementType = getElementType(targetElement);
+      announceFocus(elementName, elementType);
     }
+  };
+
+  // Helper function to get element name
+  const getElementName = (element) => {
+    if (element === nameInputRef.current) return 'name';
+    if (element === emailInputRef.current) return 'email';
+    if (element === passwordInputRef.current) return 'password';
+    if (element === passwordToggleRef.current) return 'toggle password visibility';
+    if (element === submitButtonRef.current) return 'sign up';
+    if (element === signinLinkRef.current) return 'sign in';
+    return 'element';
+  };
+
+  // Helper function to get element type
+  const getElementType = (element) => {
+    if (element.tagName === 'INPUT') return 'input';
+    if (element.tagName === 'BUTTON') return 'button';
+    if (element.tagName === 'A') return 'link';
+    return 'element';
   };
 
   const handleEnterActivation = () => {
@@ -223,11 +261,15 @@ const SignupForm = ({
     if (currentElement) {
       if (currentElement.tagName === 'BUTTON') {
         currentElement.click();
+        speak(`${getElementName(currentElement)} button activated`);
       } else if (currentElement.tagName === 'A') {
         currentElement.click();
+        speak(`Navigating to ${getElementName(currentElement)}`);
       } else if (currentElement.tagName === 'INPUT') {
         // For input fields, just ensure they're focused for typing
         currentElement.focus();
+        setIsNavigationMode(false);
+        speak(`Editing ${getElementName(currentElement)} field. Press Escape to return to navigation mode.`);
       }
     }
   };
@@ -264,6 +306,7 @@ const SignupForm = ({
         const focusableElements = getFocusableElements();
         if (focusableElements.length > 0) {
           focusableElements[0].focus();
+          speak('Arrow key navigation activated. Use arrow keys to navigate, Enter to activate.');
         }
         return;
       }
@@ -291,6 +334,7 @@ const SignupForm = ({
       // Escape to exit navigation mode
       if (e.key === 'Escape') {
         setIsNavigationMode(false);
+        announceNavigationMode(false);
         return;
       }
     };

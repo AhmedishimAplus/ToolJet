@@ -5,6 +5,7 @@ import { validateEmail } from '@/_helpers/utils';
 import { OnboardingUIWrapper, OnboardingFormInsideWrapper } from '@/modules/onboarding/components';
 import { FormTextInput, SubmitButton, FormHeader } from '@/modules/common/components';
 import { retrieveWhiteLabelText } from '@white-label/whiteLabelling';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import './resources/styles/forgot-password-form.styles.scss';
 import '../../../LoginPage/components/LoginForm/resources/styles/accessibility.scss';
 import { Alert } from '@/_ui/Alert';
@@ -17,6 +18,9 @@ const ForgotPasswordForm = ({ onSubmit }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [isDefaultFormEmail, setisDefaultFormEmail] = useState(true);
+
+  // Web Speech API for screen reader
+  const { speak, announceFocus, announceError, announceNavigationMode } = useScreenReader();
 
   // Arrow key navigation state
   const [currentFocusIndex, setCurrentFocusIndex] = useState(0);
@@ -41,6 +45,7 @@ const ForgotPasswordForm = ({ onSubmit }) => {
       if (focusableElements.length > 0 && focusableElements[0]?.ref?.current) {
         focusableElements[0].ref.current.focus();
         announceToScreenReader('Arrow key navigation active. Use arrow keys to navigate, Enter to activate.');
+        speak('Arrow key navigation active. Use arrow keys to navigate, Enter to activate.');
       }
     }, 100);
   }, []);
@@ -110,6 +115,7 @@ const ForgotPasswordForm = ({ onSubmit }) => {
         e.preventDefault();
         setIsNavigationMode(true);
         announceToScreenReader('Navigation mode activated. Use arrow keys to move between elements, Enter to activate.');
+        announceNavigationMode(true);
         return;
       default:
         return;
@@ -121,6 +127,7 @@ const ForgotPasswordForm = ({ onSubmit }) => {
     if (targetElement?.ref?.current) {
       targetElement.ref.current.focus();
       announceToScreenReader(`Focused on ${targetElement.name} ${targetElement.type}`);
+      announceFocus(targetElement.name, targetElement.type);
     }
   };  // Handle Enter key activation
   const handleEnterActivation = (element) => {
@@ -132,6 +139,7 @@ const ForgotPasswordForm = ({ onSubmit }) => {
       case 'input':
         setIsNavigationMode(false);
         announceToScreenReader(`Editing ${name} field. Press Escape to return to navigation mode.`);
+        speak(`Editing ${name} field. Press Escape to return to navigation mode.`);
         break;
       case 'button':
         if (name === 'send reset link') {
@@ -139,17 +147,21 @@ const ForgotPasswordForm = ({ onSubmit }) => {
           if (!element.ref.current.disabled) {
             element.ref.current.click();
             announceToScreenReader(`${name} activated`);
+            speak(`${name} button activated`);
           } else {
             announceToScreenReader('Button is disabled and cannot be activated');
+            speak('Button is disabled and cannot be activated');
           }
         } else {
           element.ref.current.click();
           announceToScreenReader(`${name} activated`);
+          speak(`${name} button activated`);
         }
         break;
       case 'link':
         element.ref.current.click();
         announceToScreenReader(`${name} link activated`);
+        speak(`Navigating to ${name}`);
         break;
     }
   };
@@ -200,6 +212,7 @@ const ForgotPasswordForm = ({ onSubmit }) => {
           setCurrentFocusIndex(0);
           focusableElements[0].ref.current?.focus();
           announceToScreenReader('Arrow key navigation activated. Use arrow keys to navigate, Enter to activate.');
+          speak('Arrow key navigation activated. Use arrow keys to navigate, Enter to activate.');
         }
       }
     };
@@ -260,9 +273,11 @@ const ForgotPasswordForm = ({ onSubmit }) => {
     e.preventDefault();
     if (!validateEmail(email)) {
       setEmailError(t('forgotPasswordPage.invalidEmail', 'Invalid Email'));
+      announceError('Invalid Email');
       return;
     }
     setIsLoading(true);
+    speak('Sending reset link, please wait...');
     await onSubmit(email);
     setIsLoading(false);
   };
