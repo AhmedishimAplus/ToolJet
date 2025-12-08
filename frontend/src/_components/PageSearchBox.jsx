@@ -23,6 +23,7 @@ export const SearchBox = forwardRef(
       showClearButton,
       initialValue = '',
       clearTextOnBlur = true,
+      onFocus,
     },
     ref
   ) => {
@@ -83,7 +84,10 @@ export const SearchBox = forwardRef(
               [className]: !!className,
             })}
             placeholder={placeholder}
-            onFocus={() => setFocussed(true)}
+            onFocus={(e) => {
+              setFocussed(true);
+              onFocus?.(e);
+            }}
             onBlur={() => setFocussed(false)}
             data-cy={`${dataCy}-search-bar`}
             autoFocus={autoFocus}

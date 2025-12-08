@@ -17,6 +17,7 @@ import FolderSkeleton from '@/_ui/FolderSkeleton/FolderSkeleton';
 import { Button } from '@/components/ui/Button/Button';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
 import { authenticationService } from '@/_services';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const Folders = function Folders({
   folders,
@@ -50,6 +51,7 @@ export const Folders = function Folders({
 
   const { t } = useTranslation();
   const { updateSidebarNAV } = useContext(BreadCrumbContext);
+  const { speak } = useScreenReader();
   useEffect(() => {
     setLoadingStatus(foldersLoading);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -269,6 +271,7 @@ export const Folders = function Folders({
                       setNewFolderName('');
                       setShowForm(true);
                     }}
+                    onFocus={() => speak('Create new folder button focused')}
                     data-cy="create-new-folder-button"
                   >
                     <SolidIcon name="plus" width="14" fill={darkMode ? '#CFD3D8E6' : '#6A727C'} />
@@ -281,6 +284,7 @@ export const Folders = function Folders({
                     onClick={() => {
                       setShowInput(true);
                     }}
+                    onFocus={() => speak('Search folders button focused')}
                     data-cy="folder-search-icon"
                   >
                     <SolidIcon
@@ -319,6 +323,20 @@ export const Folders = function Folders({
               )}
               style={{ height: '32px' }}
               onClick={() => handleFolderChange({})}
+              onFocus={() => {
+                const itemType = appType === 'workflow' ? 'workflows' : appType === 'module' ? 'modules' : 'apps';
+                speak(`All ${itemType} link focused`);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const itemType = appType === 'workflow' ? 'workflows' : appType === 'module' ? 'modules' : 'apps';
+                  speak(`All ${itemType} selected`);
+                  setTimeout(() => {
+                    handleFolderChange({});
+                  }, 400);
+                }
+              }}
               data-cy="all-applications-link"
               tabIndex="0"
             >
@@ -346,6 +364,19 @@ export const Folders = function Folders({
                 )}
                 onClick={() => {
                   handleFolderChange(folder);
+                }}
+                onFocus={() => {
+                  const count = folder.count > 0 ? `, ${folder.count} items` : '';
+                  speak(`${folder.name} folder${count}, focused`);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    speak(`${folder.name} folder selected`);
+                    setTimeout(() => {
+                      handleFolderChange(folder);
+                    }, 400);
+                  }
                 }}
                 data-cy={`${folder.name.toLowerCase().replace(/\s+/g, '-')}-list-card`}
                 tabIndex="0"

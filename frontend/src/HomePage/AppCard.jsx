@@ -14,6 +14,7 @@ import { getPrivateRoute, getSubpath } from '@/_helpers/routes';
 import { validateName, decodeEntities } from '@/_helpers/utils';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
 import { authenticationService } from '@/_services';
+import { useScreenReader } from '@/modules/common/hooks';
 const { defaultIcon } = configs;
 
 export default function AppCard({
@@ -38,6 +39,7 @@ export default function AppCard({
   const [popoverVisible, setPopoverVisible] = useState(true);
   const [isNameOverflowing, setIsNameOverflowing] = useState(false);
   const tooltipRef = useRef(null);
+  const { speak } = useScreenReader();
 
   const onMenuToggle = useCallback(
     (status) => {
@@ -61,6 +63,12 @@ export default function AppCard({
     },
     [app, appActionModal, currentFolder]
   );
+
+  const handleCardFocus = useCallback(() => {
+    const appTypeName = appType === 'workflow' ? 'workflow' : appType === 'module' ? 'module' : 'app';
+    const statusText = canUpdate ? 'editable' : 'view only';
+    speak(`${app?.name} ${appTypeName} card, ${statusText}`);
+  }, [app?.name, appType, canUpdate, speak]);
 
   const isValidSlug = (slug) => {
     const validate = validateName(slug, 'slug', true, false, false, false);
@@ -218,13 +226,18 @@ export default function AppCard({
         tabIndex="0"
         role="button"
         aria-label={`App: ${app?.name}`}
+        onFocus={handleCardFocus}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            const appTypeName = appType === 'workflow' ? 'workflow' : appType === 'module' ? 'module' : 'app';
+            speak(`Opening ${app?.name} ${appTypeName} in editor`);
             if (canUpdate || appType === 'module') {
-              navigate(getPrivateRoute('editor', {
-                slug: isValidSlug(app.slug) ? app.slug : app.id,
-              }));
+              setTimeout(() => {
+                navigate(getPrivateRoute('editor', {
+                  slug: isValidSlug(app.slug) ? app.slug : app.id,
+                }));
+              }, 800);
             }
           }
         }}

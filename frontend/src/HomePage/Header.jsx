@@ -1,9 +1,11 @@
 import React from 'react';
 import { SearchBox } from '@/_components/PageSearchBox';
 import { useTranslation } from 'react-i18next';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export default function HomeHeader({ onSearchSubmit, darkMode, appType }) {
   const { t } = useTranslation();
+  const { speak } = useScreenReader();
   const page = appType === 'workflow' ? 'workflows' : 'apps';
 
   const placeholderText =
@@ -12,6 +14,11 @@ export default function HomeHeader({ onSearchSubmit, darkMode, appType }) {
         ? 'Search modules in this workspace'
         : t('globals.searchItem', 'Search apps in this workspace')
       : t('globals.workflowsSearchItem', 'Search workflows in this workspace');
+
+  const handleSearchFocus = () => {
+    const itemType = appType === 'workflow' ? 'workflows' : appType === 'module' ? 'modules' : 'apps';
+    speak(`Search ${itemType} input field focused`);
+  };
 
   return (
     <div className="home-search-holder">
@@ -22,6 +29,7 @@ export default function HomeHeader({ onSearchSubmit, darkMode, appType }) {
         darkMode={darkMode}
         placeholder={placeholderText}
         width={'100%'}
+        onFocus={handleSearchFocus}
       />
     </div>
   );
