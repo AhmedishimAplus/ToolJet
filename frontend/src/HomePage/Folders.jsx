@@ -259,7 +259,7 @@ export const Folders = function Folders({
                     size="medium"
                     variant="ghost"
                     iconOnly
-                    ariaLabel="Create new folder"
+                    aria-label="Create new folder"
                     onClick={() => {
                       posthogHelper.captureEvent('create_new_folder', {
                         workspace_id:
@@ -277,7 +277,7 @@ export const Folders = function Folders({
                     size="medium"
                     variant="ghost"
                     iconOnly
-                    ariaLabel="Search for folders"
+                    aria-label="Search for folders"
                     onClick={() => {
                       setShowInput(true);
                     }}

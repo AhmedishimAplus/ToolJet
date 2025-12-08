@@ -1683,7 +1683,7 @@ class HomePageComponent extends React.Component {
                     isAvailable={true}
                     noTooltipIfValid={true}
                   >
-                    <div className="create-new-app-wrapper">
+                    <div className="create-new-app-wrapper" role="group" aria-label="Create or import application">
                       <Dropdown as={ButtonGroup} className="d-inline-flex create-new-app-dropdown">
                         <Button
                           disabled={getDisabledState()}
@@ -1714,6 +1714,7 @@ class HomePageComponent extends React.Component {
                           className="d-inline"
                           data-cy="import-dropdown-menu"
                           aria-haspopup="menu"
+                          aria-label="Import application options"
                         />
                         <ImportAppMenu
                           darkMode={this.props.darkMode}
