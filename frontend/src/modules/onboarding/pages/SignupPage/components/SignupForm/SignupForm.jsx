@@ -260,11 +260,22 @@ const SignupForm = ({
 
     if (currentElement) {
       if (currentElement.tagName === 'BUTTON') {
-        currentElement.click();
-        speak(`${getElementName(currentElement)} button activated`);
+        // Announce THEN wait before clicking
+        const elementName = getElementName(currentElement);
+        speak(`${elementName} button activated`);
+
+        // Use longer delay for sign up button
+        const delay = elementName === 'sign up' ? 2000 : 1200;
+
+        setTimeout(() => {
+          currentElement.click();
+        }, delay);
       } else if (currentElement.tagName === 'A') {
-        currentElement.click();
+        // Announce THEN wait before navigating
         speak(`Navigating to ${getElementName(currentElement)}`);
+        setTimeout(() => {
+          currentElement.click();
+        }, 1200);
       } else if (currentElement.tagName === 'INPUT') {
         // For input fields, just ensure they're focused for typing
         currentElement.focus();
@@ -292,6 +303,11 @@ const SignupForm = ({
         setCurrentFocusIndex(newIndex);
         setIsNavigationMode(true);
       }
+
+      // Announce what element is focused
+      const elementName = getElementName(targetElement);
+      const elementTypeDesc = getElementType(targetElement);
+      speak(`${elementName} ${elementTypeDesc}`);
     }
   };
 

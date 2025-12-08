@@ -145,23 +145,32 @@ const ForgotPasswordForm = ({ onSubmit }) => {
         if (name === 'send reset link') {
           // Check if button is disabled before clicking
           if (!element.ref.current.disabled) {
-            element.ref.current.click();
+            // Announce THEN wait before clicking
             announceToScreenReader(`${name} activated`);
             speak(`${name} button activated`);
+            setTimeout(() => {
+              element.ref.current.click();
+            }, 1200);
           } else {
             announceToScreenReader('Button is disabled and cannot be activated');
             speak('Button is disabled and cannot be activated');
           }
         } else {
-          element.ref.current.click();
+          // Announce THEN wait before clicking
           announceToScreenReader(`${name} activated`);
           speak(`${name} button activated`);
+          setTimeout(() => {
+            element.ref.current.click();
+          }, 1200);
         }
         break;
       case 'link':
-        element.ref.current.click();
+        // Announce THEN wait before navigating
         announceToScreenReader(`${name} link activated`);
         speak(`Navigating to ${name}`);
+        setTimeout(() => {
+          element.ref.current.click();
+        }, 1200);
         break;
     }
   };
@@ -247,6 +256,12 @@ const ForgotPasswordForm = ({ onSubmit }) => {
     const index = focusableElements.findIndex(el => el.name === fieldName);
     if (index !== -1) {
       setCurrentFocusIndex(index);
+    }
+
+    // Announce what element is focused
+    const element = focusableElements.find(el => el.name === fieldName);
+    if (element) {
+      speak(`${fieldName} ${element.type}`);
     }
   };
 
