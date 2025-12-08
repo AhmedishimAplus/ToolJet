@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useScreenReader } from '@/modules/common/hooks';
 import './KeyboardNavigation.scss';
 
 const KeyboardNavigation = () => {
@@ -9,6 +10,7 @@ const KeyboardNavigation = () => {
     const [expandedCard, setExpandedCard] = useState(null); // Track which card is expanded for button navigation
     const [isMenuOpen, setIsMenuOpen] = useState(false); // Track if 3-dots menu is open for navigation
     const [lastModalState, setLastModalState] = useState(false); // Track modal open/close state
+    const { speak } = useScreenReader();
 
     // Helper function to check if we're in a problematic modal that blocks navigation
     const isInBlockingModal = useCallback(() => {
@@ -925,6 +927,48 @@ const KeyboardNavigation = () => {
         return buttons;
     }, [isElementVisible]);
 
+    // Helper function to get button name for announcements
+    const getButtonName = useCallback((button) => {
+        if (!button) return 'button';
+
+        // Check aria-label first
+        const ariaLabel = button.getAttribute('aria-label');
+        if (ariaLabel) return ariaLabel.toLowerCase();
+
+        // Check button text content
+        const textContent = button.textContent?.trim();
+        if (textContent) return textContent.toLowerCase();
+
+        // Check for specific classes
+        if (button.classList.contains('edit-button')) return 'edit';
+        if (button.classList.contains('launch-button')) return 'launch';
+        if (button.classList.contains('menu-ico') || button.classList.contains('menu-icon--trigger')) return 'menu options';
+
+        return 'button';
+    }, []);
+
+    // Helper function to get menu item name for announcements
+    const getMenuItemName = useCallback((menuItem) => {
+        if (!menuItem) return 'menu item';
+
+        // Check data-cy attribute first
+        const dataCy = menuItem.getAttribute('data-cy');
+        if (dataCy) {
+            // Convert kebab-case to readable text: "rename-app-option" -> "rename app"
+            return dataCy.replace(/-option$/, '').replace(/-/g, ' ');
+        }
+
+        // Check aria-label
+        const ariaLabel = menuItem.getAttribute('aria-label');
+        if (ariaLabel) return ariaLabel.toLowerCase();
+
+        // Get text content
+        const textContent = menuItem.textContent?.trim();
+        if (textContent) return textContent.toLowerCase();
+
+        return 'menu item';
+    }, []);
+
     // Get menu items for menu navigation
     const getMenuItems = useCallback(() => {
         // Look for the menu popover with multiple possible selectors
@@ -1121,8 +1165,19 @@ const KeyboardNavigation = () => {
                 block: 'nearest',
                 inline: 'nearest'
             });
+
+            // If we're navigating within an expanded card, announce button name
+            if (expandedCard && expandedCard.contains(elements[nextIndex])) {
+                const buttonName = getButtonName(elements[nextIndex]);
+                speak(`${buttonName} button`);
+            }
+            // If we're navigating within a menu, announce menu item name
+            else if (isMenuOpen) {
+                const itemName = getMenuItemName(elements[nextIndex]);
+                speak(`${itemName}`);
+            }
         }
-    }, [getFocusableElements]);
+    }, [getFocusableElements, expandedCard, getButtonName, speak, isMenuOpen, getMenuItemName]);
 
     // Navigate to previous focusable element
     const navigateToPrevious = useCallback(() => {
@@ -1141,8 +1196,19 @@ const KeyboardNavigation = () => {
                 block: 'nearest',
                 inline: 'nearest'
             });
+
+            // If we're navigating within an expanded card, announce button name
+            if (expandedCard && expandedCard.contains(elements[prevIndex])) {
+                const buttonName = getButtonName(elements[prevIndex]);
+                speak(`${buttonName} button`);
+            }
+            // If we're navigating within a menu, announce menu item name
+            else if (isMenuOpen) {
+                const itemName = getMenuItemName(elements[prevIndex]);
+                speak(`${itemName}`);
+            }
         }
-    }, [getFocusableElements]);
+    }, [getFocusableElements, expandedCard, getButtonName, speak, isMenuOpen, getMenuItemName]);
 
     // Handle Enter key - either activate element or expand cards
     const handleEnter = useCallback((e) => {
@@ -1193,6 +1259,9 @@ const KeyboardNavigation = () => {
                 if (cardButtons.length > 0) {
                     setTimeout(() => {
                         cardButtons[0].focus();
+                        // Announce the button name
+                        const buttonName = getButtonName(cardButtons[0]);
+                        speak(`${buttonName} button`);
                     }, 200); // Slightly longer delay to ensure CSS transition and tabindex setup
                 }
             }
@@ -1223,36 +1292,40 @@ const KeyboardNavigation = () => {
                 const menuItems = makeMenuItemsFocusable();
                 if (menuItems.length > 0) {
                     menuItems[0].focus();
+                    // Announce the first menu item
+                    const itemName = getMenuItemName(menuItems[0]);
+                    speak(`${itemName}`);
                 }
             }, 350); // Increased delay to ensure Bootstrap popover renders
         } else if (isMenuItem(activeElement)) {
             e.preventDefault();
             e.stopPropagation();
 
+            // Store the menu item to click
+            const itemToClick = activeElement;
+            const clickableSpan = activeElement.classList.contains('field')
+                ? activeElement.querySelector('span[role="button"]')
+                : null;
 
+            // Close menu and reset states first
+            setIsMenuOpen(false);
+            resetMenuItemsFocusability();
 
-            // For span[role="button"] elements, click them directly
-            if (activeElement.tagName === 'SPAN' && activeElement.getAttribute('role') === 'button') {
-                activeElement.click();
-
-            }
-            // For field div elements, find and click the span[role="button"] child
-            else if (activeElement.classList.contains('field')) {
-                const clickableSpan = activeElement.querySelector('span[role="button"]');
-                if (clickableSpan) {
-                    clickableSpan.click();
-
-                } else {
-                    // Fallback - click the field itself
-                    activeElement.click();
-
+            // Delay the click slightly to ensure menu close state is set
+            setTimeout(() => {
+                // For span[role="button"] elements, click them directly
+                if (itemToClick.tagName === 'SPAN' && itemToClick.getAttribute('role') === 'button') {
+                    itemToClick.click();
                 }
-            }
-            // Fallback for other menu item types
-            else {
-                activeElement.click();
-
-            }
+                // For field div elements, click the span[role="button"] child
+                else if (clickableSpan) {
+                    clickableSpan.click();
+                }
+                // Fallback for other menu item types
+                else {
+                    itemToClick.click();
+                }
+            }, 100);
         } else if (activeElement) {
             // In modals, allow natural behavior for most elements, but still support clicking
             if (isInModal()) {
@@ -1275,7 +1348,7 @@ const KeyboardNavigation = () => {
                 activeElement.click();
             }
         }
-    }, [isInputElement, isInputMode, isAppCard, isDataSourceCard, isDataSourceSectionButton, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, isMenuItem, makeMenuItemsFocusable]);
+    }, [isInputElement, isInputMode, isAppCard, isDataSourceCard, isDataSourceSectionButton, expandedCard, getCardButtons, makeCardButtonsFocusable, resetCardButtonsFocusability, isMenuButton, isMenuItem, makeMenuItemsFocusable, speak, getButtonName]);
 
     // Global keydown handler to intercept card keyboard events before they reach the card's handler
     useEffect(() => {
@@ -1331,7 +1404,7 @@ const KeyboardNavigation = () => {
                     isAppCard(activeElement) ||
                     isMenuButton(activeElement) ||
                     isMenuItem(activeElement) ||
-                    (expandedCard && expandedCard.contains(activeElement));
+                    (expandedCard && expandedCard.contains(activeElement) && !isMenuItem(activeElement));
 
                 if (shouldIntercept) {
                     e.preventDefault();
@@ -1350,7 +1423,7 @@ const KeyboardNavigation = () => {
         return () => {
             document.removeEventListener('keydown', handleGlobalKeyDown, true);
         };
-    }, [handleEnter, isAppCard, isMenuButton, isMenuItem, expandedCard, isMenuOpen, getMenuItems]);
+    }, [handleEnter, isAppCard, isMenuButton, isMenuItem, expandedCard, isMenuOpen, getMenuItems, speak, getMenuItemName]);
 
     // Allow normal input behavior - no hover prevention
     useEffect(() => {
@@ -1729,27 +1802,43 @@ const KeyboardNavigation = () => {
 
         // Priority 2: If menu is open, close menu and return to card navigation
         if (isMenuOpen) {
-            resetMenuItemsFocusability();
-            setIsMenuOpen(false);
+            // Announce exiting menu
+            speak('Exiting app menu options');
 
-            // Focus back on the menu button (3-dots) in the expanded card
-            if (expandedCard) {
-                const menuButton = expandedCard.querySelector('.menu-ico, .menu-icon--trigger');
-                if (menuButton) {
-                    setTimeout(() => {
+            // Delay the actual menu close to allow announcement to complete
+            setTimeout(() => {
+                resetMenuItemsFocusability();
+                setIsMenuOpen(false);
+
+                // Focus back on the menu button (3-dots) in the expanded card
+                if (expandedCard) {
+                    const menuButton = expandedCard.querySelector('.menu-ico, .menu-icon--trigger');
+                    if (menuButton) {
                         menuButton.focus();
-                    }, 100);
+                    }
                 }
-            }
+            }, 1500);
         }
         // Priority 3: If card is expanded (and no menu), collapse card
         else if (expandedCard) {
             const cardToFocus = expandedCard; // Store reference before clearing
-            resetCardButtonsFocusability(cardToFocus);
-            cardToFocus.classList.remove('keyboard-expanded');
-            setExpandedCard(null);
-            // Focus back on the card
-            cardToFocus.focus();
+
+            // Get app name from card for announcement
+            const appNameElement = cardToFocus.querySelector('.app-card-name, h3');
+            const appName = appNameElement ? appNameElement.textContent.trim() : 'app';
+
+            // Announce exiting first
+            speak(`Exiting ${appName}`);
+
+            // Delay the actual exit to allow announcement to complete
+            setTimeout(() => {
+                resetCardButtonsFocusability(cardToFocus);
+                cardToFocus.classList.remove('keyboard-expanded');
+                setExpandedCard(null);
+
+                // Focus back on the card
+                cardToFocus.focus();
+            }, 800);
         }
     }, { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] });
 

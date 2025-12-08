@@ -228,7 +228,16 @@ export default function AppCard({
         aria-label={`App: ${app?.name}`}
         onFocus={handleCardFocus}
         onKeyDown={(e) => {
+          // Don't handle Enter/Space if card has keyboard-expanded class or if menu is open
           if (e.key === 'Enter' || e.key === ' ') {
+            const isExpanded = cardRef.current?.classList.contains('keyboard-expanded');
+            const hasOpenMenu = document.querySelector('.popover.show, .popover-body');
+
+            if (isExpanded || hasOpenMenu) {
+              // Let KeyboardNavigation.jsx handle it
+              return;
+            }
+
             e.preventDefault();
             const appTypeName = appType === 'workflow' ? 'workflow' : appType === 'module' ? 'module' : 'app';
             speak(`Opening ${app?.name} ${appTypeName} in editor`);
