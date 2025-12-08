@@ -41,13 +41,13 @@ export const Breadcrumbs = ({ darkMode, dataCy }) => {
           return (
             breadcrumb &&
             sidebarNav?.length > 0 && (
-              <div key={breadcrumb.key} className="tj-dashboard-header-title-wrap" data-cy={dataCy ?? ''}>
+              <li key={breadcrumb.key} className="tj-dashboard-header-title-wrap" data-cy={dataCy ?? ''}>
                 <p className="tj-text-xsm">{breadcrumb}</p>
                 <SolidIcon name="cheveronright" fill={darkMode ? '#FDFDFE' : '#131620'} />
-                <li className="breadcrumb-item font-weight-500" data-cy="breadcrumb-page-title">
+                <span className="breadcrumb-item font-weight-500" data-cy="breadcrumb-page-title">
                   {sidebarNav && decodeEntities(sidebarNav)}
-                </li>
-              </div>
+                </span>
+              </li>
             )
           );
         }

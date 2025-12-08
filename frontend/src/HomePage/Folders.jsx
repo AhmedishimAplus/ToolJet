@@ -307,74 +307,77 @@ export const Folders = function Folders({
         )}
       </div>
 
-      {!isLoading && (
-        <div data-testid="applicationFoldersList" className={cx(`mb-1 all-apps-link-cotainer`)}>
-          <a
-            className={cx(
-              `list-group-item border-0 list-group-item-action d-flex align-items-center all-apps-link tj-text-xsm`,
-              {
-                'tw-bg-interactive-default': _.isEmpty(activeFolder),
-              }
-            )}
-            style={{ height: '32px' }}
-            onClick={() => handleFolderChange({})}
-            data-cy="all-applications-link"
-            tabIndex="0"
-          >
-            {appType === 'module'
-              ? 'All modules'
-              : t(
-                `${appType === 'workflow' ? 'workflowsDashboard' : 'homePage'}.foldersSection.allApplications`,
-                'All apps'
+      <ul className="list-unstyled">
+        {!isLoading && (
+          <li data-testid="applicationFoldersList" className={cx(`mb-1 all-apps-link-cotainer`)}>
+            <a
+              className={cx(
+                `list-group-item border-0 list-group-item-action d-flex align-items-center all-apps-link tj-text-xsm`,
+                {
+                  'tw-bg-interactive-default': _.isEmpty(activeFolder),
+                }
               )}
-          </a>
-        </div>
-      )}
-      {isLoading && <FolderSkeleton />}
-      {!isLoading &&
-        filteredData &&
-        filteredData.length > 0 &&
-        filteredData.map((folder, index) => (
-          <a
-            key={index}
-            className={cx(
-              `folder-list-group-item rounded-2 list-group-item h-4 mb-1 list-group-item-action no-border d-flex align-items-center`,
-              {
-                'tw-bg-interactive-default': activeFolder.id === folder.id,
-              }
-            )}
-            onClick={() => {
-              handleFolderChange(folder);
-            }}
-            data-cy={`${folder.name.toLowerCase().replace(/\s+/g, '-')}-list-card`}
-            tabIndex="0"
-          >
-            <ToolTip message={folder.name}>
-              <div
-                className="flex-grow-1 tj-folder-list tj-text-xsm"
-                data-cy={`${folder.name.toLowerCase().replace(/\s+/g, '-')}-name`}
-              >
-                {`${folder.name}${folder.count > 0 ? ` (${folder.count})` : ''}`}
-              </div>
-            </ToolTip>
-            {(canDeleteFolder || canUpdateFolder) && (
-              <div
-                onClick={(e) => {
-                  e.stopPropagation(); // Stop the click event from bubbling up to the <a> tag
+              style={{ height: '32px' }}
+              onClick={() => handleFolderChange({})}
+              data-cy="all-applications-link"
+              tabIndex="0"
+            >
+              {appType === 'module'
+                ? 'All modules'
+                : t(
+                  `${appType === 'workflow' ? 'workflowsDashboard' : 'homePage'}.foldersSection.allApplications`,
+                  'All apps'
+                )}
+            </a>
+          </li>
+        )}
+        {isLoading && <FolderSkeleton />}
+        {!isLoading &&
+          filteredData &&
+          filteredData.length > 0 &&
+          filteredData.map((folder, index) => (
+            <li key={index}>
+              <a
+                className={cx(
+                  `folder-list-group-item rounded-2 list-group-item h-4 mb-1 list-group-item-action no-border d-flex align-items-center`,
+                  {
+                    'tw-bg-interactive-default': activeFolder.id === folder.id,
+                  }
+                )}
+                onClick={() => {
+                  handleFolderChange(folder);
                 }}
+                data-cy={`${folder.name.toLowerCase().replace(/\s+/g, '-')}-list-card`}
+                tabIndex="0"
               >
-                <FolderMenu
-                  canDeleteFolder={canDeleteFolder}
-                  canUpdateFolder={canUpdateFolder}
-                  deleteFolder={() => deleteFolder(folder)}
-                  editFolder={() => updateFolder(folder)}
-                  darkMode={darkMode}
-                  dataCy={folder.name}
-                />
-              </div>
-            )}
-          </a>
-        ))}
+                <ToolTip message={folder.name}>
+                  <div
+                    className="flex-grow-1 tj-folder-list tj-text-xsm"
+                    data-cy={`${folder.name.toLowerCase().replace(/\s+/g, '-')}-name`}
+                  >
+                    {`${folder.name}${folder.count > 0 ? ` (${folder.count})` : ''}`}
+                  </div>
+                </ToolTip>
+                {(canDeleteFolder || canUpdateFolder) && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation(); // Stop the click event from bubbling up to the <a> tag
+                    }}
+                  >
+                    <FolderMenu
+                      canDeleteFolder={canDeleteFolder}
+                      canUpdateFolder={canUpdateFolder}
+                      deleteFolder={() => deleteFolder(folder)}
+                      editFolder={() => updateFolder(folder)}
+                      darkMode={darkMode}
+                      dataCy={folder.name}
+                    />
+                  </div>
+                )}
+              </a>
+            </li>
+          ))}
+      </ul>
 
       <Modal
         show={showForm || showUpdateForm}
