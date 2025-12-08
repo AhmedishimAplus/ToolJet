@@ -5,9 +5,11 @@ import { appsService } from '@/_services';
 import { toast } from 'react-hot-toast';
 import { ButtonSolid } from '@/_components/AppButton';
 import useStore from '@/AppBuilder/_stores/store';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export default function ExportAppModal({ title, show, closeModal, customClassName, app, darkMode }) {
   const { user } = useStore((state) => state.user);
+  const { speak } = useScreenReader();
 
   const [versions, setVersions] = useState(undefined);
   const [tables, setTables] = useState(undefined);
@@ -289,6 +291,7 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
                   className="current-version-wrap"
                   tabIndex={getTabIndex('selected-version')}
                   inputTabIndex={getTabIndex('selected-version-input')}
+                  speak={speak}
                 />
               </div>
               {versions.length >= 2 ? (
@@ -316,6 +319,7 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
                           className="other-version-wrap"
                           tabIndex={getTabIndex('other-version', filteredIndex)}
                           inputTabIndex={getTabIndex('other-version-input', filteredIndex)}
+                          speak={speak}
                         />
                       );
                     })}
@@ -359,8 +363,7 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
               onChange={() => setExportTjDb(!exportTjDb)}
               aria-label="Export ToolJet table schema"
               tabIndex={getTabIndex('checkbox-input')}
-              onFocus={() => console.log(`🎯 FOCUS: Checkbox input (tabIndex=${getTabIndex('checkbox-input')})`)}
-              onBlur={() => console.log('👋 BLUR: Checkbox input')}
+              onFocus={() => speak('Export ToolJet table schema checkbox')}
             />
             <p>Export ToolJet table schema</p>
           </div>
@@ -369,20 +372,24 @@ export default function ExportAppModal({ title, show, closeModal, customClassNam
               className="import-export-footer-btns"
               variant="tertiary"
               data-cy="export-all-button"
-              onClick={() => exportApp(app, null, exportTjDb, allTables)}
+              onClick={() => {
+                speak('Exporting all versions');
+                setTimeout(() => exportApp(app, null, exportTjDb, allTables), 1000);
+              }}
+              onFocus={() => speak('Export All button')}
               tabIndex={getTabIndex('export-all-button')}
-              onFocus={() => console.log(`🎯 FOCUS: Export All button (tabIndex=${getTabIndex('export-all-button')})`)}
-              onBlur={() => console.log('👋 BLUR: Export All button')}
             >
               Export All
             </ButtonSolid>
             <ButtonSolid
               className={`import-export-footer-btns ${versionSelectLoading ? 'btn-loading' : ''}`}
               data-cy="export-selected-version-button"
-              onClick={() => exportApp(app, versionId, exportTjDb, tables)}
+              onClick={() => {
+                speak('Exporting selected version');
+                setTimeout(() => exportApp(app, versionId, exportTjDb, tables), 1000);
+              }}
+              onFocus={() => speak('Export selected version button')}
               tabIndex={getTabIndex('export-selected-button')}
-              onFocus={() => console.log(`🎯 FOCUS: Export Selected button (tabIndex=${getTabIndex('export-selected-button')})`)}
-              onBlur={() => console.log('👋 BLUR: Export Selected button')}
             >
               Export selected version
             </ButtonSolid>
@@ -404,6 +411,7 @@ function InputRadioField({
   className,
   tabIndex = "0",
   inputTabIndex = "0",
+  speak,
 }) {
   return (
     <span
@@ -425,11 +433,10 @@ function InputRadioField({
         transition: 'all 0.2s ease'
       }}
       onFocus={(e) => {
-        console.log(`🎯 FOCUS: Version "${versionName}" (tabIndex=${tabIndex})`);
+        speak(`Version ${versionName} radio button`);
         e.target.style.boxShadow = '0 0 0 2px rgba(48, 132, 245, 0.5)';
       }}
       onBlur={(e) => {
-        console.log(`👋 BLUR: Version "${versionName}"`);
         e.target.style.boxShadow = 'none';
       }}
     >

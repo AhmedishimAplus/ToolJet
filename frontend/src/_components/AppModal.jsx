@@ -6,6 +6,7 @@ import _, { noop } from 'lodash';
 import { validateName } from '@/_helpers/utils';
 import { FormWrapper } from './FormWrapper';
 import { PluginsListForAppModal } from './PluginsListForAppModal';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const APP_TYPE = {
   WORKFLOW: 'workflow',
@@ -52,6 +53,7 @@ export function AppModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isNameChanged, setIsNameChanged] = useState(false);
   const inputRef = useRef(null);
+  const { speak } = useScreenReader();
 
   const appTypeName = APP_TYPE.WORKFLOW == appType ? 'Workflow' : APP_TYPE.MODULE == appType ? 'Module' : 'App';
 
@@ -68,6 +70,15 @@ export function AppModal({
   }, [selectedAppName]);
 
   const handleAction = async (e) => {
+    e?.preventDefault();
+
+    // Announce the action
+    const action = actionButton.toLowerCase();
+    speak(`${action.charAt(0).toUpperCase() + action.slice(1)}ing ${appTypeName.toLowerCase()}`);
+
+    // Wait for announcement to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     const trimmedAppName = newAppName.trim();
     setNewAppName(trimmedAppName);
     if (!errorText) {
@@ -134,20 +145,26 @@ export function AppModal({
       show={show}
       closeModal={closeModal}
       title={title}
+      speak={speak}
       footerContent={
         <>
           <ButtonSolid
             variant="tertiary"
-            onClick={closeModal}
+            onClick={() => {
+              speak(`Exiting ${title} menu`);
+              setTimeout(() => closeModal(), 1500);
+            }}
             data-cy="cancel-button"
             className="modal-footer-divider"
             disabled={isLoading}
+            onFocus={() => speak('Cancel button')}
           >
             Cancel
           </ButtonSolid>
           <ButtonSolid
             form="createAppForm"
             type="submit"
+            onFocus={() => speak(`${actionButton} button`)}
             data-cy={actionButton.toLowerCase().replace(/\s+/g, '-')}
             disabled={createBtnDisableState}
           >
@@ -181,6 +198,7 @@ export function AppModal({
                   borderColor: errorText ? '#DB4324 !important' : 'initial',
                 }}
                 disabled={isLoading}
+                onFocus={() => speak(`${appTypeName} name input field`)}
               />
               {errorText ? (
                 <small
@@ -225,6 +243,7 @@ export function AppModal({
                       type="checkbox"
                       onChange={handleCommitEnableChange}
                       data-cy="git-commit-input"
+                      onFocus={() => speak('Commit changes checkbox')}
                     />
                   </div>
                   <div>

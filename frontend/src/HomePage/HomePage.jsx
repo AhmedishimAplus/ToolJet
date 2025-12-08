@@ -951,7 +951,11 @@ class HomePageComponent extends React.Component {
       <li
         className={`p-3 ms-1 me-2 mt-1 mb-2${selectedIcon === icon ? ' selected' : ''}`}
         onClick={() => this.setState({ appOperations: { ...appOperations, selectedIcon: icon } })}
+        onFocus={() => this.speak(`${icon} icon`)}
+        tabIndex="0"
+        role="button"
         key={index}
+        data-cy={`${icon}-icon-option`}
       >
         <BulkIcon name={icon} data-cy={`${icon}-icon`} />
       </li>
@@ -1589,6 +1593,7 @@ class HomePageComponent extends React.Component {
             show={showAddToFolderModal && !!appOperations.selectedApp}
             closeModal={() => this.setState({ showAddToFolderModal: false, appOperations: {} })}
             title={this.props.t('homePage.appCard.addToFolder', 'Add to folder')}
+            speak={this.speak}
           >
             <div className="row">
               <div className="col modal-main">
@@ -1609,6 +1614,7 @@ class HomePageComponent extends React.Component {
                     onChange={(newVal) => {
                       this.setState({ appOperations: { ...appOperations, selectedFolder: newVal } });
                     }}
+                    onFocus={() => this.speak('Select folder dropdown')}
                     width={'100%'}
                     value={appOperations?.selectedFolder}
                     placeholder={this.props.t('homePage.appCard.selectFolder', 'Select folder')}
@@ -1621,13 +1627,21 @@ class HomePageComponent extends React.Component {
               <div className="col d-flex modal-footer-btn justify-content-end">
                 <ButtonSolid
                   variant="tertiary"
-                  onClick={() => this.setState({ showAddToFolderModal: false, appOperations: {} })}
+                  onClick={() => {
+                    this.speak('Exiting Add to folder menu');
+                    setTimeout(() => this.setState({ showAddToFolderModal: false, appOperations: {} }), 1500);
+                  }}
+                  onFocus={() => this.speak('Cancel button')}
                   data-cy="cancel-button"
                 >
                   {this.props.t('globals.cancel', 'Cancel')}
                 </ButtonSolid>
                 <ButtonSolid
-                  onClick={this.addAppToFolder}
+                  onClick={() => {
+                    this.speak('Adding app to folder');
+                    setTimeout(() => this.addAppToFolder(), 1000);
+                  }}
+                  onFocus={() => this.speak('Add to folder button')}
                   data-cy="add-to-folder-button"
                   isLoading={appOperations?.isAdding}
                 >
@@ -1641,6 +1655,7 @@ class HomePageComponent extends React.Component {
             show={showChangeIconModal && !!appOperations.selectedApp}
             closeModal={() => this.setState({ showChangeIconModal: false, appOperations: {} })}
             title={this.props.t('homePage.appCard.changeIcon', 'Change Icon')}
+            speak={this.speak}
           >
             <div className="row">
               <div className="col modal-main icon-change-modal">
@@ -1650,7 +1665,11 @@ class HomePageComponent extends React.Component {
             <div className="row">
               <div className="col d-flex modal-footer-btn justify-content-end">
                 <ButtonSolid
-                  onClick={() => this.setState({ showChangeIconModal: false, appOperations: {} })}
+                  onClick={() => {
+                    this.speak('Exiting Change Icon menu');
+                    setTimeout(() => this.setState({ showChangeIconModal: false, appOperations: {} }), 1500);
+                  }}
+                  onFocus={() => this.speak('Cancel button')}
                   data-cy="cancel-button"
                   variant="tertiary"
                 >
@@ -1658,7 +1677,11 @@ class HomePageComponent extends React.Component {
                 </ButtonSolid>
                 <ButtonSolid
                   className={`btn btn-primary ${appOperations?.isAdding ? 'btn-loading' : ''}`}
-                  onClick={this.changeIcon}
+                  onClick={() => {
+                    this.speak('Changing icon');
+                    setTimeout(() => this.changeIcon(), 1000);
+                  }}
+                  onFocus={() => this.speak('Change button')}
                   data-cy="change-button"
                 >
                   {this.props.t('homePage.change', 'Change')}
