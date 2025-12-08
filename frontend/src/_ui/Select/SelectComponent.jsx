@@ -32,11 +32,11 @@ export const SelectComponent = ({ options = [], value, onChange, closeMenuOnSele
     Array.isArray(options) && options.length === 0
       ? options
       : options?.map((option) => {
-          if (!option.hasOwnProperty('label')) {
-            return _.mapKeys(option, (value, key) => (key === 'value' ? key : 'label'));
-          }
-          return option;
-        });
+        if (!option.hasOwnProperty('label')) {
+          return _.mapKeys(option, (value, key) => (key === 'value' ? key : 'label'));
+        }
+        return option;
+      });
 
   const currentValue = value ? selectOptions.find((option) => option.value === value) || value : defaultValue;
 
@@ -76,6 +76,7 @@ export const SelectComponent = ({ options = [], value, onChange, closeMenuOnSele
       menuPortalTarget={useMenuPortal ? document.body : menuPortalTarget}
       closeMenuOnSelect={closeMenuOnSelect ?? true}
       classNamePrefix={`${customClassPrefix} ${isDarkMode && 'dark-theme'} ${'react-select'}`}
+      aria-label={restProps['aria-label'] || restProps.ariaLabel || placeholder}
     />
   );
 };

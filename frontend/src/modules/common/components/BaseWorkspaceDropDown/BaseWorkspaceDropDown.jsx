@@ -64,6 +64,7 @@ function BaseWorkspaceDropDown({ ...props }) {
         setShowCreateOrg={setShowCreateOrg}
         workspacesLimit={workspacesLimit}
         styles={{ border: 0, cursor: 'pointer' }}
+        aria-label="Select workspace"
         {...props}
       />
     </>
