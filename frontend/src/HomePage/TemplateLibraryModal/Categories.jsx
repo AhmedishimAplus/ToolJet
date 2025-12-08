@@ -16,7 +16,7 @@ const categoryTitles = {
 };
 
 export default function Categories(props) {
-  const { categories, selectedCategory, selectCategory } = props;
+  const { categories, selectedCategory, selectCategory, speak } = props;
   return (
     <div className="mt-2 template-categories">
       {categories.map((category) => (
@@ -31,6 +31,7 @@ export default function Categories(props) {
             });
             selectCategory(category);
           }}
+          onFocus={() => speak && speak(`${categoryTitles[category.id]} category`)}
           key={category.id}
           dataCy={`${String(categoryTitles[category.id]).toLowerCase().replace(/\s+/g, '-')}`}
         >

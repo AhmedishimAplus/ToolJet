@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next';
 import FolderList from '@/_ui/FolderList/FolderList';
 
 export default function AppList(props) {
-  const { apps, selectedApp, selectApp } = props;
+  const { apps, selectedApp, selectApp, speak } = props;
   const [searchText, searchFor] = useState('');
   const filteredApps = apps.filter((app) => app.name.toLowerCase().includes(searchText.toLowerCase()));
 
   return (
     <div className="template-list">
       <div className="mt-2">
-        <SearchBoxContainer onChange={searchFor} queryString={searchText} />
+        <SearchBoxContainer onChange={searchFor} queryString={searchText} speak={speak} />
       </div>
       <ListGroup className="mt-2 template-app-list">
         {filteredApps.length === 0 ? (
@@ -27,6 +27,7 @@ export default function AppList(props) {
             action
             selectedItem={app.id === selectedApp?.id}
             onClick={() => selectApp(app)}
+            onFocus={() => speak && speak(`${app.name} template`)}
             dataCy={`${String(app.id).toLowerCase().replace(/\s+/g, '-')}`}
           >
             {app.name}
@@ -37,7 +38,7 @@ export default function AppList(props) {
   );
 }
 
-const SearchBoxContainer = ({ onChange, queryString }) => {
+const SearchBoxContainer = ({ onChange, queryString, speak }) => {
   const [searchText, setSearchText] = React.useState(queryString ?? '');
   const { t } = useTranslation();
 
@@ -121,6 +122,7 @@ const SearchBoxContainer = ({ onChange, queryString }) => {
           className="form-control"
           data-cy="search-input-field"
           placeholder={t('globals.search', 'Search')}
+          onFocus={() => speak && speak('Search templates input field')}
         />
       </div>
     </div>

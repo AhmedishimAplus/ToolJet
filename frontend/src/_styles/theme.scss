@@ -1210,7 +1210,11 @@ button {
   .modal-header {
     background-color: var(--surfaces-surface-01) !important;
     border-bottom: 1px solid var(--slate5);
+    color: white !important;
 
+    .modal-title {
+      color: white !important;
+    }
   }
 
   .modal-dialog {
@@ -1246,25 +1250,32 @@ button {
   }
 
   .template-categories {
-    .list-group-item {
+
+    .list-group-item,
+    .tj-list-item,
+    .tj-list-item p {
       border: 0;
+      color: white !important;
     }
 
     .list-group-item.active {
       background-color: #edf1ff;
-      color: $primary-light;
+      color: $primary-light !important;
       font-weight: 600;
     }
   }
 
   .template-app-list {
-    .list-group-item {
+
+    .list-group-item,
+    .tj-list-item {
       border: 0;
+      color: white !important;
     }
 
     .list-group-item.active {
       background-color: #edf1ff;
-      color: black;
+      color: black !important;
     }
   }
 
@@ -1273,10 +1284,12 @@ button {
     flex-direction: row;
     align-items: center;
     height: 100%;
+    color: white !important;
 
     h3.title {
       font-weight: 600;
       line-height: 17px;
+      color: white !important;
     }
 
     p.description {
@@ -1284,7 +1297,7 @@ button {
       font-size: 13px;
       line-height: 15px;
       letter-spacing: -0.1px;
-      color: #8092ab;
+      color: #b8c2cc !important;
     }
 
     img.template-image {
@@ -1317,10 +1330,17 @@ button {
     .template-search-box {
       input {
         border-radius: 5px !important;
+        color: white !important;
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      input::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
       }
 
       .input-icon {
         display: flex;
+        color: white !important;
       }
     }
 

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
 import { authenticationService } from '@/_services';
+import { useScreenReader } from '@/modules/common/hooks';
 const identifyUniqueCategories = (templates) =>
   ['all', ...new Set(_.map(templates, 'category'))].map((categoryId) => ({
     id: categoryId,
@@ -19,6 +20,7 @@ const identifyUniqueCategories = (templates) =>
 
 export default function TemplateLibraryModal(props) {
   const navigate = useNavigate();
+  const { speak } = useScreenReader();
   const [libraryApps, setLibraryApps] = useState([]);
   const [selectedCategory, selectCategory] = useState({ id: 'all', count: 0 });
   const filteredApps = libraryApps.filter(
@@ -84,13 +86,14 @@ export default function TemplateLibraryModal(props) {
                 categories={identifyUniqueCategories(libraryApps)}
                 selectedCategory={selectedCategory}
                 selectCategory={selectCategory}
+                speak={speak}
               />
             </Col>
             <Col xs={9} style={{ height: '100%' }}>
               <Container fluid>
                 <Row style={{ height: '90%' }}>
                   <Col className="template-list-column" xs={3} style={{ height: '100%', overflowY: 'auto' }}>
-                    <AppList apps={filteredApps} selectApp={selectApplication} selectedApp={selectedApp} />
+                    <AppList apps={filteredApps} selectApp={selectApplication} selectedApp={selectedApp} speak={speak} />
                   </Col>
                   <Col xs={9} style={{}}>
                     <TemplateDisplay app={selectedApp} darkMode={props.darkMode} />
@@ -103,24 +106,36 @@ export default function TemplateLibraryModal(props) {
                     style={{ borderTop: '1px solid #D2DDEC', zIndex: 1 }}
                   >
                     <div className="d-flex flex-row align-items-center" style={{ height: '100%' }}>
-                      <ButtonSolid variant="tertiary" onClick={props.onCloseButtonClick} data-cy="cancel-button">
+                      <ButtonSolid
+                        variant="tertiary"
+                        onClick={() => {
+                          speak('Exiting Select template menu');
+                          setTimeout(() => props.onCloseButtonClick(), 1500);
+                        }}
+                        onFocus={() => speak('Cancel button')}
+                        data-cy="cancel-button"
+                      >
                         {t('globals.cancel', 'Cancel')}
                       </ButtonSolid>
                       <ButtonSolid
                         onClick={() => {
-                          props.openCreateAppFromTemplateModal(selectedApp);
-                          setShowCreateAppFromTemplateModal(false);
-                          props.onCloseButtonClick();
-                          posthogHelper.captureEvent('create_application_from_template', {
-                            workspace_id:
-                              authenticationService?.currentUserValue?.organization_id ||
-                              authenticationService?.currentSessionValue?.current_organization_id,
-                            template_category_id: selectedCategory?.id,
-                            template_name: selectedApp?.name,
-                            button_name: 'create_application_from_template',
-                            previous_action_button_name: props.fromButton,
-                          });
+                          speak('Creating application from template');
+                          setTimeout(() => {
+                            props.openCreateAppFromTemplateModal(selectedApp);
+                            setShowCreateAppFromTemplateModal(false);
+                            props.onCloseButtonClick();
+                            posthogHelper.captureEvent('create_application_from_template', {
+                              workspace_id:
+                                authenticationService?.currentUserValue?.organization_id ||
+                                authenticationService?.currentSessionValue?.current_organization_id,
+                              template_category_id: selectedCategory?.id,
+                              template_name: selectedApp?.name,
+                              button_name: 'create_application_from_template',
+                              previous_action_button_name: props.fromButton,
+                            });
+                          }, 1000);
                         }}
+                        onFocus={() => speak('Create application from template button')}
                         isLoading={deploying}
                         className="ms-2"
                         disabled={props.appCreationDisabled}
