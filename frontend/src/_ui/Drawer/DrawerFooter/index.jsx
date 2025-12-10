@@ -3,6 +3,7 @@ import { ButtonSolid } from '../../AppButton/AppButton';
 import Student from '../../../TooljetDatabase/Icons/Student.svg';
 import DeleteIcon from '@/TooljetDatabase/Icons/DeleteIcon.svg';
 import './styles.scss';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import { ToolTip } from '@/_components/ToolTip';
 import { triggerKeyboardShortcut } from '@/_helpers/utils';
 import { useKeyboardShortcutStore } from '@/_stores/keyboardShortcutStore';
@@ -30,6 +31,8 @@ function DrawerFooter({
   foreignKeyDetails = [],
   initiator,
 }) {
+  const { speak } = useScreenReader();
+
   useEffect(() => {
     const keyboardShortcutStore = useKeyboardShortcutStore.getState();
     keyboardShortcutStore.actions.pushComponent(initiator);
@@ -131,14 +134,20 @@ function DrawerFooter({
         )}
         <div className="d-flex action-btns">
           {(isForeignKeyDraweOpen && (isEditMode || (isEditColumn && !createForeignKeyInEdit))) ||
-          (isForeignKeyDraweOpen && editForeignKeyInCreateTable) ||
-          (isCreateColumn && foreignKeyDetails?.length > 0) ? (
+            (isForeignKeyDraweOpen && editForeignKeyInCreateTable) ||
+            (isCreateColumn && foreignKeyDetails?.length > 0) ? (
             <ButtonSolid variant="dangerTertiary" onClick={onDeletePopup}>
               <DeleteIcon />
               &nbsp; Delete
             </ButtonSolid>
           ) : (
-            <ButtonSolid variant="tertiary" size="md" data-cy={`cancel-button`} onClick={onClose}>
+            <ButtonSolid
+              variant="tertiary"
+              size="md"
+              data-cy={`cancel-button`}
+              onClick={onClose}
+              onFocus={() => speak('Cancel button')}
+            >
               Cancel
             </ButtonSolid>
           )}
@@ -239,6 +248,7 @@ function DrawerFooter({
                   onClick={() => {
                     onCreate();
                   }}
+                  onFocus={() => speak('Create button')}
                   size="md"
                 >
                   Create <SolidIcon name="enterbutton" width={16} fill="#FDFDFE" />

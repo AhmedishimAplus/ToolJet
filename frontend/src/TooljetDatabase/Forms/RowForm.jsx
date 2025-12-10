@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import DrawerFooter from '@/_ui/Drawer/DrawerFooter';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
+
 import { TooljetDatabaseContext } from '../index';
 import { tooljetDatabaseService } from '@/_services';
 import { postgresErrorCode, renderDatatypeIcon } from '../constants';
@@ -51,6 +53,7 @@ const RowForm = ({
   initiator,
   shouldResetRowForm,
 }) => {
+  const { speak } = useScreenReader();
   const darkMode = localStorage.getItem('darkMode') === 'true';
   const { organizationId, selectedTable, columns, foreignKeys, getConfigurationProperty } =
     useContext(TooljetDatabaseContext);
@@ -321,6 +324,20 @@ const RowForm = ({
     });
   }, [data]);
 
+  const handleCancelClick = () => {
+    speak('Cancelling');
+    setTimeout(() => {
+      onClose();
+    }, 400);
+  };
+
+  const handleCreateClick = (shouldKeepDrawerOpen) => {
+    speak('Creating row');
+    setTimeout(() => {
+      handleSubmit(shouldKeepDrawerOpen);
+    }, 400);
+  };
+
   const handleSubmit = async (shouldKeepDrawerOpen) => {
     setFetching(true);
     let flag = 0;
@@ -447,7 +464,10 @@ const RowForm = ({
                       ? ''
                       : inputValues[index]?.value
                 }
-                onFocus={handleInputFocus}
+                onFocus={() => {
+                  speak(`Editing ${columnName} field`);
+                  handleInputFocus();
+                }}
                 onChange={(e) => handleInputChange(index, e.target.value, columnName)}
                 onKeyDown={(e) => {
                   // Allow all keyboard input, stop propagation to prevent interference
@@ -771,13 +791,17 @@ const RowForm = ({
                   >
                     {isNullable && !isPrimaryKey && (
                       <div
-                        onClick={() => handleTabClick(index, 'Null', column_default, isNullable, accessor, dataType)}
+                        onClick={() => {
+                          speak(`Null option selected for ${headerText}`);
+                          handleTabClick(index, 'Null', column_default, isNullable, accessor, dataType);
+                        }}
                         tabIndex="0"
                         role="button"
                         onFocus={() => speak(`Null tab for ${headerText}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
+                            speak(`Null option selected for ${headerText}`);
                             handleTabClick(index, 'Null', column_default, isNullable, accessor, dataType);
                           } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                             e.preventDefault();
@@ -815,13 +839,17 @@ const RowForm = ({
                     )}
                     {column_default !== null && !isSerialDataTypeColumn && (
                       <div
-                        onClick={() => handleTabClick(index, 'Default', column_default, isNullable, accessor, dataType)}
+                        onClick={() => {
+                          speak(`Default value option selected for ${headerText}`);
+                          handleTabClick(index, 'Default', column_default, isNullable, accessor, dataType);
+                        }}
                         tabIndex="0"
                         role="button"
                         onFocus={() => speak(`Default value tab for ${headerText}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
+                            speak(`Default value option selected for ${headerText}`);
                             handleTabClick(index, 'Default', column_default, isNullable, accessor, dataType);
                           } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                             e.preventDefault();
@@ -859,13 +887,17 @@ const RowForm = ({
                     )}
                     {!isSerialDataTypeColumn && (
                       <div
-                        onClick={() => handleTabClick(index, 'Custom', column_default, isNullable, accessor, dataType)}
+                        onClick={() => {
+                          speak(`Custom option selected for ${headerText}`);
+                          handleTabClick(index, 'Custom', column_default, isNullable, accessor, dataType);
+                        }}
                         tabIndex="0"
                         role="button"
                         onFocus={() => speak(`Custom tab for ${headerText}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
+                            speak(`Custom option selected for ${headerText}`);
                             handleTabClick(index, 'Custom', column_default, isNullable, accessor, dataType);
                           } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                             e.preventDefault();
@@ -917,8 +949,8 @@ const RowForm = ({
       </div>
       <DrawerFooter
         fetching={fetching}
-        onClose={onClose}
-        onCreate={handleSubmit}
+        onClose={handleCancelClick}
+        onCreate={handleCreateClick}
         shouldDisableCreateBtn={Object.values(matchingObject).includes('') || disabledSaveButton}
         initiator={initiator}
       />
