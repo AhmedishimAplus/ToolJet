@@ -5,6 +5,7 @@ import useDebounce from '@/_hooks/useDebounce';
 import { useMounted } from '@/_hooks/use-mount';
 import { TooljetDatabaseContext } from '../index';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import { useScreenReader } from '@/modules/common/hooks';
 const Search = ({
   width = '248px',
   onSubmit,
@@ -22,6 +23,7 @@ const Search = ({
   const debouncedSearchTerm = useDebounce(searchText, debounceDelay);
   const [isFocused, setFocussed] = useState(false);
   const { setSearchParam } = useContext(TooljetDatabaseContext);
+  const { speak } = useScreenReader();
 
   const handleChange = (e) => {
     setSearchText(e.target.value.trim().toLowerCase());
@@ -63,7 +65,10 @@ const Search = ({
             [className]: !!className,
           })}
           placeholder="Search table"
-          onFocus={() => setFocussed(true)}
+          onFocus={() => {
+            setFocussed(true);
+            speak('Search table input field');
+          }}
           onBlur={() => {
             if (searchText.length > 0) {
               setFocussed(false);

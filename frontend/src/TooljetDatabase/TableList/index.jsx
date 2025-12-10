@@ -9,6 +9,7 @@ import { BreadCrumbContext } from '../../App/App';
 import Search from '../Search';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { Button } from '@/components/ui/Button/Button';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const List = () => {
   const {
@@ -25,6 +26,7 @@ const List = () => {
   const [showInput, setShowInput] = useState(false);
   const { updateSidebarNAV } = useContext(BreadCrumbContext);
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
 
   async function fetchTables() {
     setLoading(true);
@@ -90,8 +92,10 @@ const List = () => {
               iconOnly
               aria-label="Search for folders"
               onClick={() => {
-                setShowInput(true);
+                speak('Opening search');
+                setTimeout(() => setShowInput(true), 400);
               }}
+              onFocus={() => speak('Search tables button')}
               data-cy="create-new-folder-button"
             >
               <SolidIcon

@@ -14,6 +14,7 @@ import Drawer from '@/_ui/Drawer';
 import CreateTableForm from '../Forms/TableForm';
 import { BreadCrumbContext } from '@/App/App';
 import Skeleton from 'react-loading-skeleton';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const TooljetDatabasePage = ({ totalTables, collapseSidebar }) => {
   const { organizationId, setSelectedTable, setTables, selectedTable, loadingState } =
@@ -24,6 +25,7 @@ const TooljetDatabasePage = ({ totalTables, collapseSidebar }) => {
   const emptyHeader = Array.from({ length: 5 }, (_, index) => index + 1);
   const emptyTableData = Array.from({ length: 10 }, (_, index) => index + 1);
   const EmptyState = () => {
+    const { speak } = useScreenReader();
     const [isCreateTableDrawerOpen, setIsCreateTableDrawerOpen] = useState(false);
     return (
       <>
@@ -40,7 +42,11 @@ const TooljetDatabasePage = ({ totalTables, collapseSidebar }) => {
               <ButtonSolid
                 variant={`${darkMode ? 'zBlack' : 'tertiary'}`}
                 disabled={false}
-                onClick={() => setIsCreateTableDrawerOpen(!isCreateTableDrawerOpen)}
+                onClick={() => {
+                  speak('Opening create new table drawer');
+                  setTimeout(() => setIsCreateTableDrawerOpen(!isCreateTableDrawerOpen), 800);
+                }}
+                onFocus={() => speak('Create new table button')}
                 size="sm"
                 className="px-1 pe-3 ps-2 gap-0"
               >
@@ -87,9 +93,8 @@ const TooljetDatabasePage = ({ totalTables, collapseSidebar }) => {
         <div className="table-responsive border-0 tj-db-table animation-fade tj-table-empty" style={{ height: 'auto' }}>
           {loadingState && (
             <table
-              className={`table card-table loading-table table-vcenter text-nowrap datatable ${
-                darkMode && 'dark-background'
-              }`}
+              className={`table card-table loading-table table-vcenter text-nowrap datatable ${darkMode && 'dark-background'
+                }`}
               style={{ position: 'relative' }}
             >
               <thead>

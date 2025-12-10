@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { ToolTip } from '@/_components';
 import LicenseBanner from '@/modules/common/components/LicenseBanner';
+import { useScreenReader } from '@/modules/common/hooks';
 
 function Header({
   featureAccess,
@@ -14,6 +15,7 @@ function Header({
 }) {
   const currentVersion = localStorage.getItem('currentVersion');
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
 
   const routes = (pathEnd, path) => {
     const pathParts = path.split('/');
@@ -109,7 +111,11 @@ function Header({
                       fill="#3E63DD"
                       iconWidth="14"
                       size="md"
-                      onClick={toggleCollapsibleSidebar}
+                      onClick={() => {
+                        speak('Collapsing sidebar');
+                        setTimeout(() => toggleCollapsibleSidebar(), 400);
+                      }}
+                      onFocus={() => speak('Collapse sidebar button')}
                       aria-label="Collapse sidebar"
                     />
                   </div>
@@ -141,7 +147,11 @@ function Header({
                     fill="#3E63DD"
                     iconWidth="14"
                     size="md"
-                    onClick={toggleCollapsibleSidebar}
+                    onClick={() => {
+                      speak('Opening sidebar');
+                      setTimeout(() => toggleCollapsibleSidebar(), 400);
+                    }}
+                    onFocus={() => speak('Open sidebar button')}
                     aria-label="Open sidebar"
                   />
                 </div>

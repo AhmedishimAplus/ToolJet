@@ -8,11 +8,13 @@ import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { BreadCrumbContext } from '@/App/App';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
 import { authenticationService } from '@/_services';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export default function CreateTableDrawer({ bannerVisible, setBannerVisible, tablesLimit, setTablesLimit }) {
   const { organizationId, setSelectedTable, setTables, tables } = useContext(TooljetDatabaseContext);
   const [isCreateTableDrawerOpen, setIsCreateTableDrawerOpen] = useState(false);
   const { updateSidebarNAV } = useContext(BreadCrumbContext);
+  const { speak } = useScreenReader();
   setBannerVisible(tablesLimit?.current >= tablesLimit?.total - 1 || false);
 
   useEffect(() => {
@@ -42,8 +44,10 @@ export default function CreateTableDrawer({ bannerVisible, setBannerVisible, tab
                 authenticationService?.currentSessionValue?.current_organization_id,
               datasource: 'tooljet_db',
             });
-            setIsCreateTableDrawerOpen(!isCreateTableDrawerOpen);
+            speak('Opening create new table drawer');
+            setTimeout(() => setIsCreateTableDrawerOpen(!isCreateTableDrawerOpen), 800);
           }}
+          onFocus={() => speak('Create new table button')}
           className="create-new-table-btn"
           data-cy="add-table-button"
         >

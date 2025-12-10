@@ -9,9 +9,11 @@ import Drawer from '@/_ui/Drawer';
 import EditTableForm from '../Forms/TableForm';
 import CreateColumnDrawer from '../Drawers/CreateColumnDrawer';
 import { dataTypes, getColumnDataType } from '../constants';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const ListItem = ({ active, onClick, text = '', onDeleteCallback }) => {
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
   const {
     organizationId,
     columns,
@@ -162,6 +164,8 @@ export const ListItem = ({ active, onClick, text = '', onDeleteCallback }) => {
       )}
       data-cy={`${String(text).toLowerCase().replace(/\s+/g, '-')}-table`}
       onClick={onClick}
+      onFocus={() => speak(`${text} table`)}
+      tabIndex="0"
     >
       <ToolTip message={text}>
         <span
