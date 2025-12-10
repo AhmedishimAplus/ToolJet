@@ -33,6 +33,9 @@ export const AddNewDataPopOver = ({
 
   // Handle keyboard navigation within menu
   const handleKeyDown = useCallback((e) => {
+    // Only handle if we're inside the popover
+    if (!document.activeElement?.closest('.add-new-data-popover')) return;
+
     const items = [
       document.querySelector('[data-cy="add-new-row-option"]'),
       document.querySelector('[data-cy="bulk-upload-data-option"]')
@@ -42,10 +45,14 @@ export const AddNewDataPopOver = ({
 
     if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       const nextIndex = (currentIndex + 1) % items.length;
       items[nextIndex]?.focus();
     } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       const prevIndex = (currentIndex - 1 + items.length) % items.length;
       items[prevIndex]?.focus();
     } else if (e.key === 'Escape') {
@@ -107,6 +114,9 @@ export const AddNewDataPopOver = ({
                 toggleAddNewDataMenu(false);
                 handleOnClickCreateNewRow(true);
               }, 800);
+            } else if (e.key === 'Tab' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              // Let the parent handler deal with navigation
+              return;
             }
           }}
           style={{ margin: 0, padding: '8px 12px', borderRadius: '4px' }}
@@ -139,6 +149,9 @@ export const AddNewDataPopOver = ({
                 toggleAddNewDataMenu(false);
                 handleOnClickBulkUpdateData(true);
               }, 800);
+            } else if (e.key === 'Tab' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              // Let the parent handler deal with navigation
+              return;
             }
           }}
           style={{ margin: 0, padding: '8px 12px', borderRadius: '4px' }}
