@@ -33,71 +33,62 @@ All color contrast improvements target **dark mode** (`.dark-theme` and `.theme-
 
 ---
 ## Latest Update - December 8, 2025
-**Web Speech API Screen Reader Implementation for Authentication Pages**
+**Web Speech API Screen Reader Implementation for Homepage and Modals**
 
-This update implements comprehensive screen reader support using the Web Speech API for keyboard navigation on three authentication pages: Sign In, Forgot Password, and Sign Up. The implementation provides audio announcements when users navigate with keyboard (Tab/Arrow keys) and activate elements (Enter key).
+This update implements comprehensive screen reader support using the Web Speech API across the ToolJet homepage, including keyboard navigation announcements for app cards, menus, and all modal dialogs. The implementation provides audio announcements when users navigate with keyboard and interact with UI elements.
 
 ### Overview
 
-Added Web Speech API integration to provide audio feedback for users navigating authentication forms using keyboard-only input. This complements the existing keyboard navigation system with real-time voice announcements.
+Extended Web Speech API integration from authentication pages to the entire homepage experience, including:
+- App card navigation and focus traps
+- Menu system with nested navigation
+- All modal dialogs (Rename, Add to Folder, Change Icon, Export, Clone, Template Selection)
+- Focus announcements for all interactive elements
+- Operation announcements with appropriate delays
+- Exit announcements when closing modals or exiting navigation modes
 
-**Pages Enhanced:**
-- Sign In page (`LoginForm.jsx`)
-- Forgot Password page (`ForgotPasswordForm.jsx`)
-- Sign Up page (`SignupForm.jsx`)
+**Components Enhanced:**
+- Homepage (`HomePage.jsx`)
+- App Cards (`AppCard.jsx`)
+- Folders navigation (`Folders.jsx`)
+- Header search (`Header.jsx`)
+- Import menu (`BaseImportAppMenu.jsx`)
+- All modal dialogs
+- Template Library Modal
+- Global keyboard navigation system
 
 **Features Implemented:**
-- ✅ Focus announcements when tabbing/arrowing to inputs, buttons, and links
-- ✅ Activation announcements when pressing Enter on buttons and links
-- ✅ Delayed action execution to ensure announcements complete before page navigation
-- ✅ Variable delay timing based on element type (2000ms for sign up button, 1200ms for others)
-- ✅ Dual announcement system (ARIA live regions + Web Speech API)
+- ✅ Focus announcements for app cards, folders, buttons, inputs, dropdowns, checkboxes, and radio buttons
+- ✅ Menu item announcements when navigating dropdown menus
+- ✅ Trap navigation announcements (Edit, Launch, Menu buttons in app cards)
+- ✅ Exit announcements with delays (800ms for card exit, 1500ms for modal exit)
+- ✅ Operation announcements before execution (Renaming, Adding to folder, Changing icon, Exporting, etc.)
+- ✅ Variable delay timing (1000ms for operations, 1500ms for exits)
+- ✅ Escape key announcements for all modal closures
 
 ### Implementation Details
 
-#### 1. Created Custom useScreenReader Hook
+#### 1. Custom useScreenReader Hook
 
 **File:** `frontend/src/modules/common/hooks/useScreenReader.js`
 
+The same hook from authentication pages is reused across the homepage:
+
 ```javascript
-import { useRef, useCallback } from 'react';
-
 export const useScreenReader = () => {
-  const utteranceRef = useRef(null);
-
   const speak = useCallback((text, options = {}) => {
-    if (!window.speechSynthesis) {
-      console.warn('Speech synthesis not supported');
-      return;
-    }
-
-    // Cancel any ongoing speech
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-
+    
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = options.rate || 1.0;
-    utterance.pitch = options.pitch || 1.0;
-    utterance.volume = options.volume || 1.0;
     utterance.lang = options.lang || 'en-US';
-
-    utteranceRef.current = utterance;
+    
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  const announceFocus = useCallback((elementName, elementType = 'element') => {
-    speak(`${elementName} ${elementType} focused`);
-  }, [speak]);
-
-  const announceError = useCallback((message) => {
-    speak(`Error: ${message}`);
-  }, [speak]);
-
-  const announceSuccess = useCallback((message) => {
-    speak(message);
-  }, [speak]);
-
-  const announceNavigationMode = useCallback(() => {
-    speak('Navigation mode activated. Use arrow keys to navigate, Enter to select, Escape to exit.');
+  return { speak, announceFocus, announceError, announceSuccess };
+};
   }, [speak]);
 
   const stop = useCallback(() => {
@@ -106,107 +97,369 @@ export const useScreenReader = () => {
     }
   }, []);
 
-  return {
-    speak,
-    announceFocus,
-    announceError,
-    announceSuccess,
-    announceNavigationMode,
-    stop,
-  };
-};
-```
+#### 2. Homepage Component Integration
 
-**Export added to:** `frontend/src/modules/common/hooks/index.js`
+**File:** `frontend/src/HomePage/HomePage.jsx`
+
+Added class component speak() method for non-functional components:
 
 ```javascript
-export { useScreenReader } from './useScreenReader';
+class HomePage extends Component {
+  // Add speak method for screen reader announcements
+  speak = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  };
+}
 ```
 
-#### 2. Integrated into LoginForm Component
+#### 3. App Card Focus Announcements
 
-**File:** `frontend/src/modules/auth/pages/LoginPage/components/LoginForm/LoginForm.jsx`
+**File:** `frontend/src/HomePage/AppCard.jsx`
 
-**Focus Announcements:**
 ```javascript
 import { useScreenReader } from '@/modules/common/hooks';
 
-export const LoginForm = ({ ...props }) => {
+export const AppCard = ({ app }) => {
   const { speak } = useScreenReader();
 
-  // Announce when input fields receive focus
-  const handleInputFocus = (e) => {
-    const inputName = e.target.name;
-    const label = inputName === 'email' ? 'email' : 'password';
-    speak(`${label} input field focused`);
-  };
-
-  // Announce when buttons/links receive focus
-  const handleElementFocus = (elementName, elementType) => {
-    speak(`${elementName} ${elementType} focused`);
+  const handleCardFocus = () => {
+    const appTypeName = appType === 'workflow' ? 'workflow' : 'app';
+    speak(`${app?.name} ${appTypeName}`);
   };
 
   return (
-    <form>
-      <input
-        name="email"
-        onFocus={handleInputFocus}
-      />
-      <input
-        name="password"
-        onFocus={handleInputFocus}
-      />
-      <button
-        onFocus={() => handleElementFocus('sign in', 'button')}
-      >
-        Sign in
-      </button>
-      <Link
-        onFocus={() => handleElementFocus('forgot password', 'link')}
-      >
-        Forgot password?
-      </Link>
-    </form>
+    <div
+      className="card homepage-app-card"
+      tabIndex="0"
+      onFocus={handleCardFocus}
+    >
+      {/* Card content */}
+    </div>
   );
 };
 ```
 
-**Activation Announcements with Delay:**
+#### 4. Keyboard Navigation with Button Announcements
+
+**File:** `frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx`
+
+**Trap Navigation - Announces buttons when entering app card:**
+
 ```javascript
-const handleEnterActivation = (e, elementName, elementType, action) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    const currentElement = e.currentTarget;
-    
-    // Announce activation
-    speak(`${elementName} ${elementType} activated`);
-    
-    // Delay action to allow speech to complete
-    setTimeout(() => {
-      if (action === 'submit') {
-        handleSubmit(e);
-      } else {
-        currentElement.click();
-      }
-    }, 1200); // 1200ms delay for speech completion
-  }
-};
+// Announce button name when focusing inside expanded card
+if (expandedCard && expandedCard.contains(elements[nextIndex])) {
+  const buttonName = getButtonName(elements[nextIndex]);
+  speak(`${buttonName} button`);
+}
 
-// Usage
-<button
-  onKeyDown={(e) => handleEnterActivation(e, 'sign in', 'button', 'submit')}
->
-  Sign in
-</button>
-
-<Link
-  onKeyDown={(e) => handleEnterActivation(e, 'forgot password', 'link', 'navigate')}
->
-  Forgot password?
-</Link>
+// Helper function to get button names
+const getButtonName = useCallback((button) => {
+  const dataCy = button.getAttribute('data-cy');
+  if (dataCy?.includes('edit')) return 'Edit app';
+  if (dataCy?.includes('launch')) return 'Launch';
+  if (dataCy?.includes('menu')) return 'Menu options';
+  return 'button';
+}, []);
 ```
 
-#### 3. Integrated into ForgotPasswordForm Component
+**Exit Announcements:**
+
+```javascript
+// Announce when exiting expanded card
+if (e.key === 'Escape' && expandedCard) {
+  const appName = expandedCard.querySelector('[data-cy*="-card"]')
+    ?.getAttribute('data-cy')
+    ?.replace('-card', '')
+    ?.replace(/-/g, ' ');
+  
+  speak(`Exiting ${appName}`);
+  
+  setTimeout(() => {
+    resetCardButtonsFocusability(expandedCard);
+    setExpandedCard(null);
+  }, 800); // 800ms delay
+}
+```
+
+#### 5. Menu Item Announcements
+
+**File:** `frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx`
+
+```javascript
+// Helper to get menu item names
+const getMenuItemName = useCallback((menuItem) => {
+  const dataCy = menuItem.getAttribute('data-cy');
+  if (dataCy) return dataCy.replace(/-option$/, '').replace(/-/g, ' ');
+  return menuItem.textContent?.trim().toLowerCase() || 'menu item';
+}, []);
+
+// Announce menu items when opening menu
+if (isMenuButton(activeElement)) {
+  setTimeout(() => {
+    const menuItems = makeMenuItemsFocusable();
+    if (menuItems.length > 0) {
+      menuItems[0].focus();
+      const itemName = getMenuItemName(menuItems[0]);
+      speak(`${itemName}`);
+    }
+  }, 350);
+}
+
+// Announce when navigating menu with Tab
+if (isMenuOpen) {
+  const itemName = getMenuItemName(elements[nextIndex]);
+  speak(`${itemName}`);
+}
+```
+
+**Menu Exit Announcement:**
+
+```javascript
+// When pressing Escape in menu
+if (isMenuOpen) {
+  speak('Exiting app menu options');
+  
+  setTimeout(() => {
+    resetMenuItemsFocusability();
+    setIsMenuOpen(false);
+  }, 1500);
+}
+```
+
+#### 6. Modal Dialog Announcements
+
+**File:** `frontend/src/_components/AppModal/AppModal.jsx`
+
+**Form Element Focus:**
+
+```javascript
+import { useScreenReader } from '@/modules/common/hooks';
+
+export const AppModal = ({ show, closeModal, handleClick, title, submitButtonText }) => {
+  const { speak } = useScreenReader();
+
+  const handleInputFocus = (e) => {
+    const inputType = e.target.type || 'text';
+    const label = e.target.placeholder || 'input';
+    speak(`${label} ${inputType} field`);
+  };
+
+  const handleCheckboxFocus = (label) => {
+    speak(`${label} checkbox`);
+  };
+
+  return (
+    <Modal show={show} closeModal={closeModal} speak={speak}>
+      <input
+        placeholder="App name"
+        onFocus={handleInputFocus}
+      />
+      <input
+        type="checkbox"
+        onFocus={() => handleCheckboxFocus('Make public')}
+      />
+    </Modal>
+  );
+};
+```
+
+**Operation Announcements with Delay:**
+
+```javascript
+const handleAction = (action) => {
+  let announcement = '';
+  if (action === 'rename') announcement = 'Renaming app';
+  else if (action === 'clone') announcement = 'Cloning app';
+  
+  speak(announcement);
+  
+  setTimeout(() => {
+    handleClick(action);
+    closeModal();
+  }, 1000); // 1000ms delay for operations
+};
+```
+
+#### 7. Modal Escape Handler
+
+**File:** `frontend/src/_components/Modal/Modal.jsx`
+
+```javascript
+export const Modal = ({ show, closeModal, title, speak, children }) => {
+  useEffect(() => {
+    if (!show || !speak) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        speak(`Exiting ${title || 'modal'}`);
+        
+        setTimeout(() => {
+          closeModal();
+        }, 1500); // 1500ms delay for exit announcements
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [show, closeModal, title, speak]);
+};
+```
+
+#### 8. Export Modal with Radio Buttons
+
+**File:** `frontend/src/HomePage/ExportAppModal/ExportAppModal.jsx`
+
+```javascript
+const handleRadioFocus = (label) => {
+  speak(`${label} radio button`);
+};
+
+const handleCheckboxFocus = (label) => {
+  speak(`${label} checkbox`);
+};
+
+const handleExport = (versionId) => {
+  speak('Exporting app');
+  
+  setTimeout(() => {
+    exportApp(versionId);
+    setShowAppExportModal(false);
+  }, 1000);
+};
+
+<input
+  type="radio"
+  onFocus={() => handleRadioFocus('Current version')}
+/>
+<input
+  type="checkbox"
+  onFocus={() => handleCheckboxFocus('Export with environment variables')}
+/>
+```
+
+#### 9. Template Library Modal
+
+**File:** `frontend/src/_components/TemplateLibraryModal/TemplateLibraryModal.jsx`
+
+```javascript
+const { speak } = useScreenReader();
+
+const handleSearchFocus = () => {
+  speak('Search templates');
+};
+
+const handleUseTemplate = (template) => {
+  speak(`Using template: ${template.name}`);
+  
+  setTimeout(() => {
+    useTemplate(template);
+  }, 1000);
+};
+
+const handleClose = () => {
+  speak('Exiting template library');
+  
+  setTimeout(() => {
+    onClose();
+  }, 1500);
+};
+```
+
+**Categories Component:**
+
+**File:** `frontend/src/_components/TemplateLibraryModal/Categories.jsx`
+
+```javascript
+const handleCategoryFocus = (categoryName) => {
+  speak(categoryName);
+};
+
+<div
+  className="template-category"
+  tabIndex="0"
+  onFocus={() => handleCategoryFocus(category.name)}
+>
+  {category.name}
+</div>
+```
+
+**AppList Component:**
+
+**File:** `frontend/src/_components/TemplateLibraryModal/AppList.jsx`
+
+```javascript
+const handleTemplateFocus = (templateName) => {
+  speak(templateName);
+};
+
+<div
+  className="template-item"
+  tabIndex="0"
+  onFocus={() => handleTemplateFocus(template.name)}
+>
+  {template.name}
+</div>
+```
+
+#### 10. Template Modal Text Color Fix
+
+**File:** `frontend/assets/stylesheets/theme.scss`
+
+```scss
+// Template Library Modal - White text for visibility
+.template-library-modal {
+  .template-category,
+  .category-name,
+  .template-item,
+  .template-name,
+  .template-title,
+  .template-description,
+  .template-search input {
+    color: white !important;
+  }
+}
+```
+
+### Key Patterns and Timing
+
+**Delay Strategy:**
+- **400ms** - Folder navigation (quick context)
+- **800ms** - Card exit announcements (medium context)
+- **1000ms** - Modal operations (rename, clone, export, use template)
+- **1200ms** - General activation (authentication forms)
+- **1500ms** - Modal exit with Escape (longer context)
+- **2000ms** - Sign up form submission (longest context)
+
+**Helper Functions:**
+- `getButtonName()` - Translates data-cy attributes to readable names
+- `getMenuItemName()` - Converts menu item data-cy to announcements
+- `handleInputFocus()` - Generic input field focus announcements
+- `handleCheckboxFocus()` - Checkbox-specific announcements
+- `handleRadioFocus()` - Radio button announcements
+
+**Component Patterns:**
+1. Import useScreenReader hook
+2. Destructure speak method
+3. Add onFocus handlers to interactive elements
+4. Add operation handlers with speak + setTimeout
+5. Pass speak prop to child modals for Escape handling
+
+### Testing Notes
+
+- Web Speech API requires user interaction before first use
+- speechSynthesis.cancel() prevents overlapping announcements
+- Variable delays allow speech to complete before navigation
+- Helper functions ensure consistent naming across components
+- Modal speak prop enables proper Escape key handling
+- CSS !important needed for Bootstrap modal text color overrides
+
+---
 
 **File:** `frontend/src/modules/auth/pages/ForgotPasswordPage/components/ForgotPasswordForm/ForgotPasswordForm.jsx`
 
