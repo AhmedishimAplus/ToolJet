@@ -1,6 +1,11 @@
 /* Add new data menu item hover and focus styles */
 .add-new-data-menu-item {
     transition: background-color 0.2s ease;
+    color: black !important;
+
+    .tj-text {
+        color: black !important;
+    }
 
     &:hover {
         background-color: rgba(62, 99, 221, 0.08) !important;
@@ -10,5 +15,16 @@
         outline: 2px solid #3E63DD !important;
         outline-offset: 2px !important;
         background-color: rgba(62, 99, 221, 0.08) !important;
+    }
+}
+
+/* Dark mode styles */
+.add-new-data-popover.dark-theme {
+    .add-new-data-menu-item {
+        color: white !important;
+
+        .tj-text {
+            color: white !important;
+        }
     }
 }

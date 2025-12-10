@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
 import './AddNewDataPopOver.scss';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const AddNewDataPopOver = ({
   disabled,
@@ -13,6 +14,8 @@ export const AddNewDataPopOver = ({
   handleOnClickCreateNewRow,
   handleOnClickBulkUpdateData,
 }) => {
+  const { speak } = useScreenReader();
+
   if (disabled) return children;
 
   // Focus first menu item when menu opens
@@ -22,13 +25,14 @@ export const AddNewDataPopOver = ({
         const firstItem = document.querySelector('[data-cy="add-new-row-option"]');
         if (firstItem) {
           firstItem.focus();
+          speak('Add new row');
         }
       }, 100);
     }
-  }, [show]);
+  }, [show, speak]);
 
   // Handle keyboard navigation within menu
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     const items = [
       document.querySelector('[data-cy="add-new-row-option"]'),
       document.querySelector('[data-cy="bulk-upload-data-option"]')
@@ -48,14 +52,28 @@ export const AddNewDataPopOver = ({
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      toggleAddNewDataMenu(false);
-      // Return focus to the button
+      speak('Closing add new data menu');
       setTimeout(() => {
-        const button = document.querySelector('[data-cy="add-new-data-button"]');
-        button?.focus();
-      }, 50);
+        toggleAddNewDataMenu(false);
+        // Return focus to the button
+        setTimeout(() => {
+          const button = document.querySelector('[data-cy="add-new-data-button"]');
+          button?.focus();
+        }, 50);
+      }, 1500);
     }
-  };
+  }, [speak, toggleAddNewDataMenu]);
+
+  // Attach document-level keydown listener when menu is open
+  // Use capture phase (true) to intercept Escape before Bootstrap's rootClose
+  useEffect(() => {
+    if (!show) return;
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [show, handleKeyDown]);
 
   const popover = (
     <Popover
@@ -73,15 +91,22 @@ export const AddNewDataPopOver = ({
           role="menuitem"
           onClick={(event) => {
             event.stopPropagation();
-            toggleAddNewDataMenu(false);
-            handleOnClickCreateNewRow(true);
+            speak('Opening add new row drawer');
+            setTimeout(() => {
+              toggleAddNewDataMenu(false);
+              handleOnClickCreateNewRow(true);
+            }, 800);
           }}
+          onFocus={() => speak('Add new row')}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               e.stopPropagation();
-              toggleAddNewDataMenu(false);
-              handleOnClickCreateNewRow(true);
+              speak('Opening add new row drawer');
+              setTimeout(() => {
+                toggleAddNewDataMenu(false);
+                handleOnClickCreateNewRow(true);
+              }, 800);
             }
           }}
           style={{ margin: 0, padding: '8px 12px', borderRadius: '4px' }}
@@ -98,15 +123,22 @@ export const AddNewDataPopOver = ({
           role="menuitem"
           onClick={(event) => {
             event.stopPropagation();
-            toggleAddNewDataMenu(false);
-            handleOnClickBulkUpdateData(true);
+            speak('Opening bulk upload data drawer');
+            setTimeout(() => {
+              toggleAddNewDataMenu(false);
+              handleOnClickBulkUpdateData(true);
+            }, 800);
           }}
+          onFocus={() => speak('Bulk upload data')}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               e.stopPropagation();
-              toggleAddNewDataMenu(false);
-              handleOnClickBulkUpdateData(true);
+              speak('Opening bulk upload data drawer');
+              setTimeout(() => {
+                toggleAddNewDataMenu(false);
+                handleOnClickBulkUpdateData(true);
+              }, 800);
             }
           }}
           style={{ margin: 0, padding: '8px 12px', borderRadius: '4px' }}
@@ -122,12 +154,14 @@ export const AddNewDataPopOver = ({
 
   return (
     <OverlayTrigger
-      trigger="click"
+      trigger={[]}
       placement="bottom"
       rootClose
       rootCloseEvent="click"
-      onToggle={() => {
-        toggleAddNewDataMenu(!show);
+      onToggle={(nextShow) => {
+        if (!nextShow) {
+          toggleAddNewDataMenu(false);
+        }
       }}
       show={show}
       overlay={popover}

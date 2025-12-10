@@ -14,6 +14,7 @@ import InfoIcon from '@assets/images/icons/info.svg';
 import { deepClone } from '@/_helpers/utilities/utils.helpers';
 import './styles.scss';
 import { toast } from 'react-hot-toast';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const Filter = ({
   filters,
@@ -27,6 +28,7 @@ const Filter = ({
   const [tempFilters, setTempFilters] = useState(deepClone(filters));
   const [show, setShow] = useState(false);
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
   const filterKeys = Object.keys(tempFilters);
   const tempFilterCount = Object.keys(tempFilters).length;
   const filterCount = Object.keys(filters).length;
@@ -49,12 +51,15 @@ const Filter = ({
         if (e.key === 'Escape') {
           e.preventDefault();
           e.stopPropagation();
-          setTempFilters(deepClone(filters));
-          setShow(false);
+          speak('Exiting filters');
           setTimeout(() => {
-            const filterButton = document.querySelector('[data-cy="filter-button"]');
-            filterButton?.focus();
-          }, 50);
+            setTempFilters(deepClone(filters));
+            setShow(false);
+            setTimeout(() => {
+              const filterButton = document.querySelector('[data-cy="filter-button"]');
+              filterButton?.focus();
+            }, 50);
+          }, 800);
         }
       };
 
@@ -267,6 +272,7 @@ const Filter = ({
               'tj-db-filter-btn-active-filter': show && filterCount > 0,
               'tj-db-filter-btn-active': show && filterCount === 0,
             })}
+            onFocus={() => speak(filterCount > 0 ? `Filter button, ${pluralize(filterCount, 'filter')} applied` : 'Filter button')}
           >
             <SolidIcon
               name="filter"

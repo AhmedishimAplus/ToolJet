@@ -7,11 +7,13 @@ import { SortForm } from '../Forms/SortForm';
 import { isEmpty } from 'lodash';
 import { useMounted } from '@/_hooks/use-mount';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => {
   const [show, setShow] = useState(false);
   const darkMode = localStorage.getItem('darkMode') === 'true';
   const filterKeys = Object.keys(filters);
+  const { speak } = useScreenReader();
 
   const isMounted = useMounted();
 
@@ -31,11 +33,14 @@ const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => 
         if (e.key === 'Escape') {
           e.preventDefault();
           e.stopPropagation();
-          setShow(false);
+          speak('Exiting sort');
           setTimeout(() => {
-            const sortButton = document.querySelector('[data-cy="sort-button"]');
-            sortButton?.focus();
-          }, 50);
+            setShow(false);
+            setTimeout(() => {
+              const sortButton = document.querySelector('[data-cy="sort-button"]');
+              sortButton?.focus();
+            }, 50);
+          }, 800);
         }
       };
 
@@ -79,9 +84,23 @@ const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => 
         <div
           className="card-footer cursor-pointer"
           data-cy="sort-card-footer"
-          onClick={() =>
-            setFilters((prevFilters) => ({ ...prevFilters, [+Object.keys(prevFilters).pop() + 1 || 0]: {} }))
-          }
+          tabIndex="0"
+          onClick={() => {
+            speak('Adding another sort');
+            setTimeout(() => {
+              setFilters((prevFilters) => ({ ...prevFilters, [+Object.keys(prevFilters).pop() + 1 || 0]: {} }));
+            }, 400);
+          }}
+          onFocus={() => speak('Add another sort button')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              speak('Adding another sort');
+              setTimeout(() => {
+                setFilters((prevFilters) => ({ ...prevFilters, [+Object.keys(prevFilters).pop() + 1 || 0]: {} }));
+              }, 400);
+            }
+          }}
         >
           <svg
             width="11"
@@ -127,6 +146,10 @@ const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => 
         data-cy="sort-button"
         style={{
           width: '70px',
+        }}
+        onFocus={() => {
+          const sortCount = Object.values(filters).filter((filter) => !isEmpty(filter.column) && !isEmpty(filter.order)).length;
+          speak(sortCount > 0 ? `Sort button, ${sortCount} ${sortCount === 1 ? 'sort' : 'sorts'} applied` : 'Sort button');
         }}
       >
         <SolidIcon

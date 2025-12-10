@@ -15,6 +15,7 @@ import { tooljetDatabaseService } from '@/_services';
 import { isEmpty } from 'lodash';
 import DeleteIcon from '../Icons/DeleteIcon.svg';
 import config from 'config';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const Header = ({
   isCreateColumnDrawerOpen,
@@ -35,6 +36,7 @@ const Header = ({
   setReferencedColumnDetails,
 }) => {
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
   const [isAddNewDataMenuOpen, setIsAddNewDataMenuOpen] = useState(false);
   const [bulkUploadFile, setBulkUploadFile] = useState(null);
   const [activeFilters, setActiveFilters] = useState(0);
@@ -167,7 +169,11 @@ const Header = ({
                           <ButtonSolid
                             variant="tertiary"
                             disabled={false}
-                            onClick={() => toggleAddNewDataMenu(true)}
+                            onClick={() => {
+                              speak('Opening add new data menu');
+                              setTimeout(() => toggleAddNewDataMenu(true), 2000);
+                            }}
+                            onFocus={() => speak('Add new data button')}
                             size="sm"
                             className="px-1 pe-3 ps-2 gap-1"
                             data-cy="add-new-data-button"
