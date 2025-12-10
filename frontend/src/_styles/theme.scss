@@ -1210,10 +1210,10 @@ button {
   .modal-header {
     background-color: var(--surfaces-surface-01) !important;
     border-bottom: 1px solid var(--slate5);
-    color: white !important;
+    color: black !important;
 
     .modal-title {
-      color: white !important;
+      color: black !important;
     }
   }
 
@@ -1255,7 +1255,7 @@ button {
     .tj-list-item,
     .tj-list-item p {
       border: 0;
-      color: white !important;
+      color: black !important;
     }
 
     .list-group-item.active {
@@ -1270,7 +1270,7 @@ button {
     .list-group-item,
     .tj-list-item {
       border: 0;
-      color: white !important;
+      color: black !important;
     }
 
     .list-group-item.active {
@@ -1284,12 +1284,12 @@ button {
     flex-direction: row;
     align-items: center;
     height: 100%;
-    color: white !important;
+    color: black !important;
 
     h3.title {
       font-weight: 600;
       line-height: 17px;
-      color: white !important;
+      color: black !important;
     }
 
     p.description {
@@ -1297,7 +1297,7 @@ button {
       font-size: 13px;
       line-height: 15px;
       letter-spacing: -0.1px;
-      color: #b8c2cc !important;
+      color: #6c757d !important;
     }
 
     img.template-image {
@@ -1330,17 +1330,17 @@ button {
     .template-search-box {
       input {
         border-radius: 5px !important;
-        color: white !important;
+        color: black !important;
         background-color: rgba(255, 255, 255, 0.1);
       }
 
       input::placeholder {
-        color: rgba(255, 255, 255, 0.6) !important;
+        color: rgba(0, 0, 0, 0.4) !important;
       }
 
       .input-icon {
         display: flex;
-        color: white !important;
+        color: black !important;
       }
     }
 
@@ -1367,83 +1367,71 @@ button {
   }
 }
 
+// Dark mode - override with white text only
 .template-library-modal.dark-mode {
 
-  .template-modal-control-column,
-  .template-list-column,
-  .categories-column,
   .modal-header {
-    border-color: var(--slate5) !important;
-  }
+    color: white !important;
 
-  .modal-body {
-    height: 80%;
-    padding: 0 10px;
-    background-color: var(--surfaces-surface-01) !important;
-
-    .container-fluid {
-      height: 100%;
-      padding: 0;
-
-      .row {
-        height: 100%;
-      }
+    .modal-title {
+      color: white !important;
     }
-  }
-
-  .modal-footer,
-  .modal-header,
-  .modal-content {
-    color: white;
-    background-color: var(--surfaces-surface-01);
   }
 
   .template-categories {
-    .list-group-item {
-      color: white;
-      border: 0;
-    }
 
-    .list-group-item:hover {
-      background-color: #232e3c;
+    .list-group-item,
+    .tj-list-item,
+    .tj-list-item p {
+      color: white !important;
     }
 
     .list-group-item.active {
-      background-color: $primary-light;
-      color: white;
-      font-weight: 600;
+      color: $primary-light !important;
     }
   }
 
   .template-app-list {
-    .list-group-item {
-      border: 0;
-      color: white;
-    }
 
-    .list-group-item:hover {
-      border: 0;
-      background-color: #232e3c;
+    .list-group-item,
+    .tj-list-item {
+      color: white !important;
     }
 
     .list-group-item.active {
-      background-color: $primary-light;
-      color: white;
+      color: white !important;
     }
 
     .no-results-item {
-      background-color: var(--slate4);
-      color: white;
+      color: white !important;
     }
   }
 
   .template-list {
     .template-search-box {
       input {
-        background-color: #2b394a;
-        border-color: #232e3c;
-        color: white;
+        color: white !important;
       }
+
+      input::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
+      }
+
+      .input-icon {
+        color: white !important;
+      }
+    }
+  }
+
+  .template-display {
+    color: white !important;
+
+    h3.title {
+      color: white !important;
+    }
+
+    p.description {
+      color: #b8c2cc !important;
     }
   }
 }
