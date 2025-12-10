@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import Drawer from '@/_ui/Drawer';
 import { toast } from 'react-hot-toast';
 import CreateRowForm from '../../Forms/RowForm';
@@ -6,6 +6,7 @@ import { TooljetDatabaseContext } from '../../index';
 import { tooljetDatabaseService } from '@/_services';
 import { listAllPrimaryKeyColumns } from '@/TooljetDatabase/constants';
 import PostgrestQueryBuilder from '@/_helpers/postgrestQueryBuilder';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const CreateRowDrawer = ({
   isCreateRowDrawerOpen,
@@ -23,7 +24,23 @@ const CreateRowDrawer = ({
     setQueryFilters,
     columns,
   } = useContext(TooljetDatabaseContext);
+  const { speak } = useScreenReader();
   const [shouldResetRowForm, setShouldResetRowForm] = useState(0);
+
+  // Announce when drawer opens and focus first input
+  useEffect(() => {
+    if (isCreateRowDrawerOpen) {
+      speak('Create row drawer opened');
+      // Focus first focusable element in drawer after it renders
+      setTimeout(() => {
+        const drawer = document.querySelector('.tj-db-drawer');
+        if (drawer) {
+          const firstFocusable = drawer.querySelector('input:not([disabled]), [tabindex="0"]');
+          firstFocusable?.focus();
+        }
+      }, 300);
+    }
+  }, [isCreateRowDrawerOpen, speak]);
 
   return (
     <>

@@ -89,27 +89,27 @@ const RowForm = ({
   const inputValuesDefaultValues = () => {
     return Array.isArray(rowColumns)
       ? rowColumns.map((item, _index) => {
-          if (item.dataType === 'timestamp with time zone' && !item.column_default) {
-            return { value: new Date().toISOString(), checkboxValue: false, disabled: false, label: '' };
-          }
-          if (item.accessor === 'id') {
-            return { value: '', checkboxValue: false, disabled: false, label: '' };
-          }
-          if (item.column_default !== null && item.constraints_type.is_primary_key !== true) {
-            return {
-              value: item.column_default || '',
-              checkboxValue: item.column_default === 'true' ? true : false,
-              disabled: true,
-              label: item.column_default || '',
-            };
-          }
-          if (item.column_default !== null && item.constraints_type.is_primary_key === true) {
-            return { value: '', checkboxValue: false, disabled: false, label: '' };
-          } else if (item.constraints_type.is_not_null === false) {
-            return { value: '', checkboxValue: false, disabled: false, label: '' };
-          }
+        if (item.dataType === 'timestamp with time zone' && !item.column_default) {
+          return { value: new Date().toISOString(), checkboxValue: false, disabled: false, label: '' };
+        }
+        if (item.accessor === 'id') {
           return { value: '', checkboxValue: false, disabled: false, label: '' };
-        })
+        }
+        if (item.column_default !== null && item.constraints_type.is_primary_key !== true) {
+          return {
+            value: item.column_default || '',
+            checkboxValue: item.column_default === 'true' ? true : false,
+            disabled: true,
+            label: item.column_default || '',
+          };
+        }
+        if (item.column_default !== null && item.constraints_type.is_primary_key === true) {
+          return { value: '', checkboxValue: false, disabled: false, label: '' };
+        } else if (item.constraints_type.is_not_null === false) {
+          return { value: '', checkboxValue: false, disabled: false, label: '' };
+        }
+        return { value: '', checkboxValue: false, disabled: false, label: '' };
+      })
       : [];
   };
 
@@ -227,8 +227,8 @@ const RowForm = ({
           inputValuesArr[index].value === null
             ? null
             : compareValueInObject(inputValuesArr[index].value, defaultVal)
-            ? defaultVal
-            : inputValuesArr[index].value,
+              ? defaultVal
+              : inputValuesArr[index].value,
       });
     } else {
       setData({
@@ -237,8 +237,8 @@ const RowForm = ({
           inputValuesArr[index].value === null
             ? null
             : inputValuesArr[index].value === 'Default'
-            ? defaultVal
-            : inputValuesArr[index].value,
+              ? defaultVal
+              : inputValuesArr[index].value,
       });
     }
   };
@@ -439,15 +439,20 @@ const RowForm = ({
               <input
                 //defaultValue={!isPrimaryKey && defaultValue?.length > 0 ? removeQuotes(defaultValue.split('::')[0]) : ''}
                 type="text"
+                tabIndex="0"
                 value={
                   isSerialDataTypeColumn
                     ? 'Auto-generated'
                     : inputValues[index]?.value === null
-                    ? ''
-                    : inputValues[index]?.value
+                      ? ''
+                      : inputValues[index]?.value
                 }
                 onFocus={handleInputFocus}
                 onChange={(e) => handleInputChange(index, e.target.value, columnName)}
+                onKeyDown={(e) => {
+                  // Allow all keyboard input, stop propagation to prevent interference
+                  e.stopPropagation();
+                }}
                 disabled={isSerialDataTypeColumn || inputValues[index]?.disabled}
                 placeholder={
                   isSerialDataTypeColumn ? 'Auto-generated' : inputValues[index]?.value !== null && 'Enter a value'
@@ -456,10 +461,10 @@ const RowForm = ({
                   isSerialDataTypeColumn && !darkMode
                     ? 'primary-idKey-light'
                     : isSerialDataTypeColumn && darkMode
-                    ? 'primary-idKey-dark'
-                    : !darkMode
-                    ? 'form-control'
-                    : 'form-control dark-form-row',
+                      ? 'primary-idKey-dark'
+                      : !darkMode
+                        ? 'form-control'
+                        : 'form-control dark-form-row',
                   errorMap[columnName] ? 'input-error-border' : ''
                 )}
                 data-cy={`${String(columnName).toLocaleLowerCase().replace(/\s+/g, '-')}-input-field`}
@@ -553,6 +558,19 @@ const RowForm = ({
           <div style={{ position: 'relative' }}>
             {inputValues[index]?.value === null ? (
               <div
+                onClick={() => {
+                  speak('Opening value options');
+                  handleDisabledInputClick(index, columnName, defaultValue, isNullable, dataType);
+                }}
+                onFocus={() => speak('Null value for ' + columnName)}
+                onKeyDown={(e) => {
+                  e.stopPropagation(); // Prevent KeyboardNavigation interference
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    speak('Opening value options');
+                    handleDisabledInputClick(index, columnName, defaultValue, isNullable, dataType);
+                  }
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -562,9 +580,11 @@ const RowForm = ({
                   border: '1px solid var(--slate7)',
                   padding: '5px 5px',
                   borderRadius: '6px',
+                  cursor: 'pointer',
                 }}
                 className={'null-container'}
-                tabindex="0"
+                tabIndex="-1"
+                role="button"
               >
                 <span
                   style={{
@@ -578,6 +598,7 @@ const RowForm = ({
               </div>
             ) : activeTab[index] === 'Default' ? (
               <div
+                onFocus={() => speak('Default value selected')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -592,7 +613,7 @@ const RowForm = ({
                   maxHeight: '36px',
                   fontSize: '12px',
                 }}
-                tabindex="0"
+                tabIndex="0"
                 className="truncate"
               >
                 {transformJSONValue(defaultValue)}
@@ -725,9 +746,8 @@ const RowForm = ({
                               <div className="d-flex align-item-center justify-content-between mt-2 custom-tooltip-style">
                                 <span>{isMatchingForeignKeyColumnDetails(Header)?.column_names[0]}</span>
                                 <ArrowRight />
-                                <span>{`${isMatchingForeignKeyColumnDetails(Header)?.referenced_table_name}.${
-                                  isMatchingForeignKeyColumnDetails(Header)?.referenced_column_names[0]
-                                }`}</span>
+                                <span>{`${isMatchingForeignKeyColumnDetails(Header)?.referenced_table_name}.${isMatchingForeignKeyColumnDetails(Header)?.referenced_column_names[0]
+                                  }`}</span>
                               </div>
                             </div>
                           ) : null
@@ -746,26 +766,47 @@ const RowForm = ({
                     </div>
                   </div>
                   <div
-                    className={`${
-                      darkMode ? 'row-tabs-dark' : 'row-tabs'
-                    } d-flex align-items-center justify-content-start gap-2`}
+                    className={`${darkMode ? 'row-tabs-dark' : 'row-tabs'
+                      } d-flex align-items-center justify-content-start gap-2`}
                   >
                     {isNullable && !isPrimaryKey && (
                       <div
                         onClick={() => handleTabClick(index, 'Null', column_default, isNullable, accessor, dataType)}
+                        tabIndex="0"
+                        role="button"
+                        onFocus={() => speak(`Null tab for ${headerText}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleTabClick(index, 'Null', column_default, isNullable, accessor, dataType);
+                          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const tablist = e.currentTarget.parentElement;
+                            const allTabs = Array.from(tablist.querySelectorAll('[role="button"]'));
+                            const currentIdx = allTabs.indexOf(e.currentTarget);
+                            const nextIdx = e.key === 'ArrowRight'
+                              ? (currentIdx + 1) % allTabs.length
+                              : (currentIdx - 1 + allTabs.length) % allTabs.length;
+                            allTabs[nextIdx]?.focus();
+                          } else if (e.key === 'Tab') {
+                            // Allow Tab to naturally move to next focusable element (input field)
+                            e.stopPropagation();
+                          }
+                        }}
                         style={{
                           backgroundColor:
                             activeTab[index] === 'Null' && !darkMode
                               ? 'white'
                               : activeTab[index] === 'Null' && darkMode
-                              ? '#242f3c'
-                              : 'transparent',
+                                ? '#242f3c'
+                                : 'transparent',
                           color:
                             activeTab[index] === 'Null' && !darkMode
                               ? '#3E63DD'
                               : activeTab[index] === 'Null' && darkMode
-                              ? 'white'
-                              : '#687076',
+                                ? 'white'
+                                : '#687076',
                         }}
                         className="row-tab-content"
                       >
@@ -775,19 +816,41 @@ const RowForm = ({
                     {column_default !== null && !isSerialDataTypeColumn && (
                       <div
                         onClick={() => handleTabClick(index, 'Default', column_default, isNullable, accessor, dataType)}
+                        tabIndex="0"
+                        role="button"
+                        onFocus={() => speak(`Default value tab for ${headerText}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleTabClick(index, 'Default', column_default, isNullable, accessor, dataType);
+                          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const tablist = e.currentTarget.parentElement;
+                            const allTabs = Array.from(tablist.querySelectorAll('[role="button"]'));
+                            const currentIdx = allTabs.indexOf(e.currentTarget);
+                            const nextIdx = e.key === 'ArrowRight'
+                              ? (currentIdx + 1) % allTabs.length
+                              : (currentIdx - 1 + allTabs.length) % allTabs.length;
+                            allTabs[nextIdx]?.focus();
+                          } else if (e.key === 'Tab') {
+                            // Allow Tab to naturally move to next focusable element (input field)
+                            e.stopPropagation();
+                          }
+                        }}
                         style={{
                           backgroundColor:
                             activeTab[index] === 'Default' && !darkMode
                               ? 'white'
                               : activeTab[index] === 'Default' && darkMode
-                              ? '#242f3c'
-                              : 'transparent',
+                                ? '#242f3c'
+                                : 'transparent',
                           color:
                             activeTab[index] === 'Default' && !darkMode
                               ? '#3E63DD'
                               : activeTab[index] === 'Default' && darkMode
-                              ? 'white'
-                              : '#687076',
+                                ? 'white'
+                                : '#687076',
                         }}
                         className="row-tab-content"
                       >
@@ -797,19 +860,41 @@ const RowForm = ({
                     {!isSerialDataTypeColumn && (
                       <div
                         onClick={() => handleTabClick(index, 'Custom', column_default, isNullable, accessor, dataType)}
+                        tabIndex="0"
+                        role="button"
+                        onFocus={() => speak(`Custom tab for ${headerText}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleTabClick(index, 'Custom', column_default, isNullable, accessor, dataType);
+                          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const tablist = e.currentTarget.parentElement;
+                            const allTabs = Array.from(tablist.querySelectorAll('[role="button"]'));
+                            const currentIdx = allTabs.indexOf(e.currentTarget);
+                            const nextIdx = e.key === 'ArrowRight'
+                              ? (currentIdx + 1) % allTabs.length
+                              : (currentIdx - 1 + allTabs.length) % allTabs.length;
+                            allTabs[nextIdx]?.focus();
+                          } else if (e.key === 'Tab') {
+                            // Allow Tab to naturally move to next focusable element (input field)
+                            e.stopPropagation();
+                          }
+                        }}
                         style={{
                           backgroundColor:
                             activeTab[index] === 'Custom' && !darkMode
                               ? 'white'
                               : activeTab[index] === 'Custom' && darkMode
-                              ? '#242f3c'
-                              : 'transparent',
+                                ? '#242f3c'
+                                : 'transparent',
                           color:
                             activeTab[index] === 'Custom' && !darkMode
                               ? '#3E63DD'
                               : activeTab[index] === 'Custom' && darkMode
-                              ? 'white'
-                              : '#687076',
+                                ? 'white'
+                                : '#687076',
                         }}
                         className="row-tab-content"
                       >
