@@ -163,8 +163,18 @@ export const ListItem = ({ active, onClick, text = '', onDeleteCallback }) => {
         }
       )}
       data-cy={`${String(text).toLowerCase().replace(/\s+/g, '-')}-table`}
-      onClick={onClick}
-      onFocus={() => speak(`${text} table`)}
+      onClick={(e) => {
+        // Only trigger onClick if not clicking on the menu button
+        if (!e.target.closest('.table-list-item-popover')) {
+          onClick();
+        }
+      }}
+      onFocus={(e) => {
+        // Only announce if focusing directly on the table item, not on child elements
+        if (e.target === e.currentTarget) {
+          speak(`${text} table`);
+        }
+      }}
       tabIndex="0"
     >
       <ToolTip message={text}>
@@ -175,24 +185,38 @@ export const ListItem = ({ active, onClick, text = '', onDeleteCallback }) => {
           {text}
         </span>
       </ToolTip>
-      {focused && (
-        <div>
-          <ListItemPopover
-            onEdit={() => {
+      <div onClick={(e) => e.stopPropagation()}>
+        <ListItemPopover
+          onEdit={() => {
+            speak('Opening edit table drawer');
+            setTimeout(() => {
               setShowDropDownMenu(false);
               setIsEditTableDrawerOpen(true);
-            }}
-            onDelete={handleDeleteTable}
-            darkMode={darkMode}
-            handleExportTable={handleExportTable}
-            onMenuToggle={onMenuToggle}
-            onAddNewColumnBtnClick={() => {
+            }, 800);
+          }}
+          onDelete={() => {
+            speak(`Deleting ${text} table`);
+            setTimeout(() => {
+              handleDeleteTable();
+            }, 800);
+          }}
+          darkMode={darkMode}
+          handleExportTable={() => {
+            speak(`Exporting ${text} table`);
+            setTimeout(() => {
+              handleExportTable();
+            }, 800);
+          }}
+          onMenuToggle={onMenuToggle}
+          onAddNewColumnBtnClick={() => {
+            speak('Opening add new column drawer');
+            setTimeout(() => {
               setShowDropDownMenu(false);
               setIsAddNewColumnDrawerOpen(true);
-            }}
-          />
-        </div>
-      )}
+            }, 800);
+          }}
+        />
+      </div>
 
       <Drawer
         disableFocus={true}

@@ -126,8 +126,11 @@ const List = () => {
               text={table_name}
               onDeleteCallback={fetchTables}
               onClick={() => {
-                setSelectedTable({ table_name, id });
-                updateSidebarNAV(table_name);
+                speak(`Selecting ${table_name} table`);
+                setTimeout(() => {
+                  setSelectedTable({ table_name, id });
+                  updateSidebarNAV(table_name);
+                }, 800);
               }}
             />
           ))}

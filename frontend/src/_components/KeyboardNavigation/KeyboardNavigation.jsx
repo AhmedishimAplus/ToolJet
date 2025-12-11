@@ -669,6 +669,12 @@ const KeyboardNavigation = () => {
             document.querySelector('.datasource-list-container, .datasource-modal-container') !== null;
     }, []);
 
+    // Check if we're on the database page
+    const isOnDatabasePage = useCallback(() => {
+        return window.location.pathname.includes('/database') ||
+            document.querySelector('.tooljet-database-sidebar, .tooljet-database') !== null;
+    }, []);
+
     // Check if element is a data source card
     const isDataSourceCard = useCallback((element) => {
         return element && (
@@ -1714,8 +1720,8 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        // On data sources page, use native browser tab navigation
-        if (isOnDataSourcesPage()) {
+        // On data sources page or database page, use native browser tab navigation
+        if (isOnDataSourcesPage() || isOnDatabasePage()) {
             return;
         }
 
@@ -1744,8 +1750,8 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        // On data sources page, use native browser tab navigation
-        if (isOnDataSourcesPage()) {
+        // On data sources page or database page, use native browser tab navigation
+        if (isOnDataSourcesPage() || isOnDatabasePage()) {
             return;
         }
 
