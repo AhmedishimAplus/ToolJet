@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { GlobalDataSourcesContext } from '../../pages/GlobalDataSourcesPage';
 import { ListItem } from '../LIstItem';
 import { ConfirmDialog } from '@/_components';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import { globalDatasourceService } from '@/_services';
 import EmptyFoldersIllustration from '@assets/images/icons/no-queries-added.svg';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
@@ -26,6 +27,7 @@ export const List = ({ updateSelectedDatasource }) => {
     setLoading,
   } = useContext(GlobalDataSourcesContext);
 
+  const { speak } = useScreenReader();
   const [isDeletingDatasource, setDeletingDatasource] = useState(false);
   const [isDeleteModalVisible, setDeleteModalVisibility] = React.useState(false);
   const [filteredData, setFilteredData] = useState(dataSources);
@@ -63,6 +65,7 @@ export const List = ({ updateSelectedDatasource }) => {
       .then(() => {
         setDeleteModalVisibility(false);
         toast.success('Data Source Deleted');
+        speak('Data source deleted successfully');
         setDeletingDatasource(false);
         setSelectedDataSource(null);
         fetchDataSources(true);
@@ -149,6 +152,7 @@ export const List = ({ updateSelectedDatasource }) => {
                       onClick={() => {
                         setShowInput(true);
                       }}
+                      onFocus={() => speak('Search for data sources button')}
                       data-cy="added-ds-search-icon"
                     >
                       <SolidIcon name="search" width="14" fill={darkMode ? '#CFD3D8E6' : '#6A727C'} />

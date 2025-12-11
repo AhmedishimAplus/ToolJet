@@ -3,6 +3,7 @@ import cx from 'classnames';
 import { GlobalDataSourcesContext } from '../../pages/GlobalDataSourcesPage';
 import { DataSourceTypes } from '../../../common/components/DataSourceComponents';
 import { getSvgIcon } from '@/_helpers/appUtils';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import useGlobalDatasourceUnsavedChanges from '@/_hooks/useGlobalDatasourceUnsavedChanges';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { ToolTip } from '@/_components';
@@ -27,6 +28,16 @@ export const ListItem = ({
     canDeleteDataSource,
   } = useContext(GlobalDataSourcesContext);
   const { handleActions } = useGlobalDatasourceUnsavedChanges();
+  const { speak } = useScreenReader();
+
+  const handleDataSourceFocus = () => {
+    const sourceType = isSampleDb ? 'Sample data source (postgres)' : `${dataSource.name} data source`;
+    speak(sourceType);
+  };
+
+  const handleDeleteFocus = () => {
+    speak(`Delete ${dataSource.name} data source button`);
+  };
 
   const getSourceMetaData = (dataSource) => {
     if (dataSource.pluginId) {
@@ -83,6 +94,7 @@ export const ListItem = ({
             onDelete(dataSource);
           }
         }}
+        onFocus={handleDeleteFocus}
         tabIndex={0}
         aria-label={`Delete ${dataSource.name} data source`}
         data-cy={`${String(dataSource.name).toLowerCase().replace(/\s+/g, '-')}-delete-button`}
@@ -112,7 +124,15 @@ export const ListItem = ({
     >
       <div
         role="button"
+        tabIndex={0}
         onClick={() => handleActions(selectDataSource)}
+        onFocus={handleDataSourceFocus}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleActions(selectDataSource);
+          }
+        }}
         className="col d-flex align-items-center overflow-hidden"
         data-cy={`${String(dataSource.name).toLowerCase().replace(/\s+/g, '-')}-button`}
       >

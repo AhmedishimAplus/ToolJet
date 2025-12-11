@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { ChangesComponent } from '../TooljetDatabase/constants';
 import cx from 'classnames';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export function ConfirmDialog({
   show,
@@ -35,6 +36,7 @@ export function ConfirmDialog({
 }) {
   darkMode = darkMode ?? (localStorage.getItem('darkMode') === 'true' || false);
   const { t } = useTranslation();
+  const { speak } = useScreenReader();
   const pendingActionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(show);
 
@@ -44,8 +46,14 @@ export function ConfirmDialog({
   React.useEffect(() => {
     if (show) {
       setIsVisible(true);
+      // Announce the dialog when it opens
+      setTimeout(() => {
+        const dialogTitle = title || 'Confirmation dialog';
+        const dialogMessage = typeof message === 'string' ? message : 'Please confirm your action';
+        speak(`${dialogTitle}. ${dialogMessage}`);
+      }, 300);
     }
-  }, [show]);
+  }, [show, title, message, speak]);
 
   const handleClose = useCallback(() => {
     pendingActionRef.current = 'cancel';
@@ -123,13 +131,19 @@ export function ConfirmDialog({
         })}
         style={footerStyle}
       >
-        <ButtonSolid variant={cancelButtonType} onClick={handleClose} data-cy="cancel-button">
+        <ButtonSolid
+          variant={cancelButtonType}
+          onClick={handleClose}
+          onFocus={() => speak(`${cancelButtonText || 'Cancel'} button`)}
+          data-cy="cancel-button"
+        >
           {cancelButtonText ?? t('globals.cancel', 'Cancel')}
         </ButtonSolid>
         <ButtonSolid
           variant={confirmButtonType}
           data-cy="yes-button"
           onClick={handleConfirm}
+          onFocus={() => speak(`${buttonText} button`)}
           isLoading={confirmButtonLoading}
           leftIcon={confirmButtonIcon}
           iconWidth={confirmButtonIconWidth}
