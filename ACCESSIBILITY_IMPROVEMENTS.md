@@ -180,6 +180,64 @@ const handleCreateClick = () => {
 };
 ```
 
+### Toggle Buttons (Radio Buttons)
+**File:** `ColumnForm.jsx`
+
+Implemented screen reader announcements for toggle buttons (constraint switches) that announce both the toggle name and its current state:
+
+```jsx
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
+const { speak } = useScreenReader();
+
+// Foreign key relation toggle - announces name and current state
+<div
+  className="form-check form-switch"
+  onFocus={() => speak(`Foreign key relation toggle, ${isForeignKey ? 'enabled' : 'disabled'}`)}
+>
+  <input
+    className="form-check-input"
+    type="checkbox"
+    checked={isForeignKey}
+    onChange={handleForeignKeyChange}
+  />
+  <label className="form-check-label">Foreign key relation</label>
+</div>
+
+// NOT NULL constraint toggle - announces name and current state
+<div
+  className="form-check form-switch"
+  onFocus={() => speak(`NOT NULL constraint toggle, ${isNotNull ? 'enabled' : 'disabled'}`)}
+>
+  <input
+    className="form-check-input"
+    type="checkbox"
+    checked={isNotNull}
+    onChange={handleNotNullChange}
+  />
+  <label className="form-check-label">NOT NULL</label>
+</div>
+
+// UNIQUE constraint toggle - announces name and current state
+<div
+  className="form-check form-switch"
+  onFocus={() => speak(`UNIQUE constraint toggle, ${isUniqueConstraint ? 'enabled' : 'disabled'}`)}
+>
+  <input
+    className="form-check-input"
+    type="checkbox"
+    checked={isUniqueConstraint}
+    onChange={handleUniqueChange}
+  />
+  <label className="form-check-label">UNIQUE</label>
+</div>
+```
+
+**Key Implementation Details:**
+- **State-Based Announcements:** Each toggle announces its current state (enabled/disabled) when focused
+- **Focus on Parent Container:** `onFocus` handler is placed on the parent `div` to capture focus before the checkbox input
+- **Descriptive Naming:** Announcements include both the constraint name and type (e.g., "toggle", "constraint")
+- **Consistent Pattern:** All toggles follow the same announcement pattern: `{Name} toggle, {state}`
+
 **Standard Delays:** Menu actions: 800ms | Button actions: 400-800ms | Focus transitions: 50-100ms
 
 ---
