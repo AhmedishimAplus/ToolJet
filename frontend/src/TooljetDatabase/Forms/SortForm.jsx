@@ -2,8 +2,10 @@ import React, { useContext } from 'react';
 import Select from '@/_ui/Select';
 import { TooljetDatabaseContext } from '../index';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const SortForm = ({ filters, setFilters, index, column = '', order = '' }) => {
+  const { speak } = useScreenReader();
   const { columns } = useContext(TooljetDatabaseContext);
 
   const orders = [
@@ -45,6 +47,7 @@ export const SortForm = ({ filters, setFilters, index, column = '', order = '' }
           value={column}
           options={displayColumns}
           onChange={handleColumnChange}
+          onFocus={() => speak(`Column dropdown, ${column || 'Select column'} selected`)}
         />
       </div>
       <div className="col-4 py-3 select-order-field" data-cy="select-order-field">
@@ -54,9 +57,31 @@ export const SortForm = ({ filters, setFilters, index, column = '', order = '' }
           placeholder="Select order"
           options={orders}
           onChange={handleFilterChange}
+          onFocus={() => speak(`Order dropdown, ${order === 'asc' ? 'Ascending' : order === 'desc' ? 'Descending' : 'Select order'} selected`)}
         />
       </div>
-      <div className="col-1 py-3 cursor-pointer" data-cy="delete-icon" onClick={() => handleDelete()}>
+      <div
+        className="col-1 py-3 cursor-pointer"
+        data-cy="delete-icon"
+        onClick={() => {
+          speak('Deleting sort');
+          setTimeout(() => {
+            handleDelete();
+          }, 800);
+        }}
+        tabIndex="0"
+        role="button"
+        onFocus={() => speak('Delete sort button')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            speak('Deleting sort');
+            setTimeout(() => {
+              handleDelete();
+            }, 800);
+          }
+        }}
+      >
         <SolidIcon name="trash" fill="#E54D2E" width="14" />
       </div>
     </div>

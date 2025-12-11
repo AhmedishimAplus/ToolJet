@@ -17,22 +17,62 @@ const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => 
 
   const isMounted = useMounted();
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation with focus trap
   useEffect(() => {
     if (show) {
       // Focus first input when dialog opens
       setTimeout(() => {
-        const firstInput = document.querySelector('#storage-sort-popover select, #storage-sort-popover input');
+        const firstInput = document.querySelector('#storage-sort-popover select, #storage-sort-popover input, #storage-sort-popover button');
         if (firstInput) {
           firstInput.focus();
         }
       }, 100);
 
-      // Handle Escape key
+      // Handle keyboard navigation within sort menu (focus trap)
       const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
+        // Only handle if we're inside the sort popover
+        if (!document.activeElement?.closest('#storage-sort-popover')) return;
+
+        // Get all focusable elements in the sort popup
+        const getFocusableElements = () => {
+          const popup = document.querySelector('#storage-sort-popover');
+          if (!popup) return [];
+
+          // Select all focusable elements: inputs, selects, buttons, and our delete icons
+          const selectors = [
+            'input:not([disabled])',
+            'select:not([disabled])',
+            'button:not([disabled])',
+            '[tabindex="0"]'
+          ].join(', ');
+
+          return Array.from(popup.querySelectorAll(selectors)).filter(el => {
+            // Filter out hidden elements
+            return el.offsetParent !== null;
+          });
+        };
+
+        if (e.key === 'Tab') {
           e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
+
+          const items = getFocusableElements();
+          const currentIndex = items.indexOf(document.activeElement);
+
+          if (e.shiftKey) {
+            // Shift+Tab: go to previous item (wrap around)
+            const prevIndex = (currentIndex - 1 + items.length) % items.length;
+            items[prevIndex]?.focus();
+          } else {
+            // Tab: go to next item (wrap around)
+            const nextIndex = (currentIndex + 1) % items.length;
+            items[nextIndex]?.focus();
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
           speak('Exiting sort');
           setTimeout(() => {
             setShow(false);
@@ -44,10 +84,10 @@ const Sort = ({ filters, setFilters, handleBuildSortQuery, resetSortQuery }) => 
         }
       };
 
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+      return () => document.removeEventListener('keydown', handleKeyDown, true);
     }
-  }, [show]);
+  }, [show, speak]);
 
   const reset = () => {
     setFilters({});
