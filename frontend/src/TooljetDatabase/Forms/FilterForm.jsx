@@ -69,56 +69,52 @@ export const FilterForm = ({ filters, setFilters, index, column = '', operator =
   const displayColumns = columns.map(({ accessor }) => ({ value: accessor, label: accessor }));
 
   return (
-    <div className="row g-0 d-flex align-items-center justify-content-center tw-w-[525px]">
-      <div className="col-11">
-        <div className="row g-0 align-items-center">
-          <div className="col-4 select-column-field width-lg" data-cy="select-column-field">
-            <Select
-              useMenuPortal={false}
-              placeholder="Select.."
-              value={column}
-              options={displayColumns}
-              onChange={handleColumnChange}
-              width="100%"
-              borderRadius="8px 0px 0px 8px"
-              onMenuOpen={handleSelectOpen}
-              onMenuClose={handleSelectClose}
-            />
-          </div>
-          <ToolTip
-            message={generateMessage(operator)}
-            trigger={['hover']}
-            delay={{ show: '0', hide: '0' }}
-            show={['gt', 'lte', 'gte'].includes(operator)}
-          >
-            <div className="col-4 select-operation-field width-sm" data-cy="select-operation-field">
-              <Select
-                placeholder="Select.."
-                useMenuPortal={false}
-                value={operator}
-                options={operators}
-                onChange={handleOperatorChange}
-                width="100%"
-                borderRadius="0px"
-                onMenuOpen={handleSelectOpen}
-                onMenuClose={handleSelectClose}
-              />
-            </div>
-          </ToolTip>
-          <div className="col-4">
-            <input
-              value={filterInputValue}
-              className="form-control css-zz6spl-container input-element"
-              data-cy="value-input-field"
-              placeholder="Enter value"
-              onChange={(event) => {
-                setFilterInputValue(event.target.value);
-              }}
-            />
-          </div>
-        </div>
+    <div className="d-flex align-items-center">
+      <div className="select-column-field width-lg" data-cy="select-column-field">
+        <Select
+          useMenuPortal={false}
+          placeholder="Select.."
+          value={column}
+          options={displayColumns}
+          onChange={handleColumnChange}
+          width="100%"
+          borderRadius="8px 0px 0px 8px"
+          onMenuOpen={handleSelectOpen}
+          onMenuClose={handleSelectClose}
+        />
       </div>
-      <div className="col-1 delete-icon-wrapper" data-cy="delete-icon" onClick={handleDelete}>
+      <ToolTip
+        message={generateMessage(operator)}
+        trigger={['hover']}
+        delay={{ show: '0', hide: '0' }}
+        show={['gt', 'lte', 'gte'].includes(operator)}
+      >
+        <div className="select-operation-field width-sm" data-cy="select-operation-field">
+          <Select
+            placeholder="Select.."
+            useMenuPortal={false}
+            value={operator}
+            options={operators}
+            onChange={handleOperatorChange}
+            width="100%"
+            borderRadius="0px"
+            onMenuOpen={handleSelectOpen}
+            onMenuClose={handleSelectClose}
+          />
+        </div>
+      </ToolTip>
+      <div>
+        <input
+          value={filterInputValue}
+          className="form-control css-zz6spl-container input-element"
+          data-cy="value-input-field"
+          placeholder="Enter value"
+          onChange={(event) => {
+            setFilterInputValue(event.target.value);
+          }}
+        />
+      </div>
+      <div className="delete-icon-wrapper" data-cy="delete-icon" onClick={handleDelete}>
         <SolidIcon name="trash" fill="#E54D2E" width="14" />
       </div>
     </div>
