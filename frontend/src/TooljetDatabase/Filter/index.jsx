@@ -197,9 +197,13 @@ const Filter = ({
             <ButtonSolid
               variant="ghostBlue"
               size="sm"
-              onClick={() =>
-                setTempFilters((prevFilters) => ({ ...prevFilters, [+Object.keys(prevFilters).pop() + 1 || 0]: {} }))
-              }
+              onClick={() => {
+                speak('Adding filter');
+                setTimeout(() => {
+                  setTempFilters((prevFilters) => ({ ...prevFilters, [+Object.keys(prevFilters).pop() + 1 || 0]: {} }));
+                }, 400);
+              }}
+              onFocus={() => speak('Add filter button')}
             >
               <AddRectangle width="15" fill="#3E63DD" opacity="1" secondaryFill="#ffffff" />
               Add filter
@@ -212,8 +216,12 @@ const Filter = ({
               variant="ghostBlue"
               size="sm"
               onClick={() => {
-                setTempFilters({});
+                speak('Clearing all filters');
+                setTimeout(() => {
+                  setTempFilters({});
+                }, 400);
               }}
+              onFocus={() => speak('Clear all filters button')}
             >
               <ClearIndicator width="15" fill="#3E63DD" opacity="1" secondaryFill="#ffffff" />
               Clear all
@@ -223,9 +231,13 @@ const Filter = ({
             variant="tertiary"
             size="sm"
             onClick={() => {
-              setTempFilters(deepClone(filters));
-              document.activeElement.blur();
+              speak('Cancelling');
+              setTimeout(() => {
+                setTempFilters(deepClone(filters));
+                setShow(false);
+              }, 800);
             }}
+            onFocus={() => speak('Cancel button')}
           >
             Cancel
           </ButtonSolid>
@@ -233,9 +245,13 @@ const Filter = ({
             variant="primary"
             size="sm"
             onClick={() => {
-              setFilters(tempFilters);
-              setShow(false);
+              speak('Applying filters');
+              setTimeout(() => {
+                setFilters(tempFilters);
+                setShow(false);
+              }, 800);
             }}
+            onFocus={() => speak('Apply filters button')}
             disabled={!allValidFilters || (filterCount === 0 && tempFilterCount === 0)}
           >
             Apply

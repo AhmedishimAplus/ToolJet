@@ -6,8 +6,10 @@ import { operators } from '../constants';
 import { debounce } from 'lodash';
 import { ToolTip } from '@/_components';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const FilterForm = ({ filters, setFilters, index, column = '', operator = '', value = '', generateMessage }) => {
+  const { speak } = useScreenReader();
   const { columns, setPageCount } = useContext(TooljetDatabaseContext);
 
   const [filterInputValue, setFilterInputValue] = useState(value);
@@ -81,6 +83,7 @@ export const FilterForm = ({ filters, setFilters, index, column = '', operator =
           borderRadius="8px 0px 0px 8px"
           onMenuOpen={handleSelectOpen}
           onMenuClose={handleSelectClose}
+          onFocus={() => speak(`Column dropdown, ${column || 'Select..'} selected`)}
         />
       </div>
       <ToolTip
@@ -100,6 +103,7 @@ export const FilterForm = ({ filters, setFilters, index, column = '', operator =
             borderRadius="0px"
             onMenuOpen={handleSelectOpen}
             onMenuClose={handleSelectClose}
+            onFocus={() => speak(`Operation dropdown, ${operator || 'Select..'} selected`)}
           />
         </div>
       </ToolTip>
@@ -112,19 +116,28 @@ export const FilterForm = ({ filters, setFilters, index, column = '', operator =
           onChange={(event) => {
             setFilterInputValue(event.target.value);
           }}
+          onFocus={() => speak(filterInputValue ? `Value input field, current value: ${filterInputValue}` : 'Value input field')}
         />
       </div>
       <div
         className="delete-icon-wrapper"
         data-cy="delete-icon"
-        onClick={handleDelete}
+        onClick={() => {
+          speak('Deleting filter');
+          setTimeout(() => {
+            handleDelete();
+          }, 800);
+        }}
         tabIndex="0"
         role="button"
-        onFocus={() => console.log('Delete filter')}
+        onFocus={() => speak('Delete filter button')}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            handleDelete();
+            speak('Deleting filter');
+            setTimeout(() => {
+              handleDelete();
+            }, 800);
           }
         }}
       >
