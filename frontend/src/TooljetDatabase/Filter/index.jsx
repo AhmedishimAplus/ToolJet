@@ -35,22 +35,62 @@ const Filter = ({
   const validFilterCountRef = React.useRef(0);
   const isMounted = useMounted();
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation with focus trap
   useEffect(() => {
     if (show) {
       // Focus first input when dialog opens
       setTimeout(() => {
-        const firstInput = document.querySelector('#storage-filter-popover select, #storage-filter-popover input');
+        const firstInput = document.querySelector('#storage-filter-popover select, #storage-filter-popover input, #storage-filter-popover button');
         if (firstInput) {
           firstInput.focus();
         }
       }, 100);
 
-      // Handle Escape key
+      // Handle keyboard navigation within filter menu (focus trap)
       const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
+        // Only handle if we're inside the filter popup
+        if (!document.activeElement?.closest('.filter-popup')) return;
+
+        // Get all focusable elements in the filter popup
+        const getFocusableElements = () => {
+          const popup = document.querySelector('.filter-popup');
+          if (!popup) return [];
+
+          // Select all focusable elements: inputs, selects, buttons, and our delete icons
+          const selectors = [
+            'input:not([disabled])',
+            'select:not([disabled])',
+            'button:not([disabled])',
+            '[tabindex="0"]'
+          ].join(', ');
+
+          return Array.from(popup.querySelectorAll(selectors)).filter(el => {
+            // Filter out hidden elements
+            return el.offsetParent !== null;
+          });
+        };
+
+        if (e.key === 'Tab') {
           e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
+
+          const items = getFocusableElements();
+          const currentIndex = items.indexOf(document.activeElement);
+
+          if (e.shiftKey) {
+            // Shift+Tab: go to previous item (wrap around)
+            const prevIndex = (currentIndex - 1 + items.length) % items.length;
+            items[prevIndex]?.focus();
+          } else {
+            // Tab: go to next item (wrap around)
+            const nextIndex = (currentIndex + 1) % items.length;
+            items[nextIndex]?.focus();
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
           speak('Exiting filters');
           setTimeout(() => {
             setTempFilters(deepClone(filters));
@@ -63,10 +103,10 @@ const Filter = ({
         }
       };
 
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+      return () => document.removeEventListener('keydown', handleKeyDown, true);
     }
-  }, [show, filters]);
+  }, [show, filters, speak, tempFilters]);
 
   const reset = () => {
     setFilters({});

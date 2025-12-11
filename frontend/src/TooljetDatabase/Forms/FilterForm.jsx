@@ -114,7 +114,20 @@ export const FilterForm = ({ filters, setFilters, index, column = '', operator =
           }}
         />
       </div>
-      <div className="delete-icon-wrapper" data-cy="delete-icon" onClick={handleDelete}>
+      <div
+        className="delete-icon-wrapper"
+        data-cy="delete-icon"
+        onClick={handleDelete}
+        tabIndex="0"
+        role="button"
+        onFocus={() => console.log('Delete filter')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleDelete();
+          }
+        }}
+      >
         <SolidIcon name="trash" fill="#E54D2E" width="14" />
       </div>
     </div>
