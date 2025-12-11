@@ -100,6 +100,58 @@ const getFocusableElements = () => {
 };
 ```
 
+### Sort Menu
+**Files:** `Sort/index.jsx`, `SortForm.jsx`
+
+Implemented focus trap and screen reader announcements for all sort elements:
+
+```jsx
+// Column dropdown announcement
+onFocus={() => speak(`Column dropdown, ${column || 'Select column'} selected`)}
+
+// Order dropdown announcement  
+onFocus={() => speak(`Order dropdown, ${order === 'asc' ? 'Ascending' : order === 'desc' ? 'Descending' : 'Select order'} selected`)}
+
+// Keyboard accessible delete icon
+<div
+  tabIndex="0"
+  role="button"
+  onFocus={() => speak('Delete sort button')}
+  onClick={() => {
+    speak('Deleting sort');
+    setTimeout(() => handleDelete(), 800);
+  }}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      speak('Deleting sort');
+      setTimeout(() => handleDelete(), 800);
+    }
+  }}
+/>
+
+// Focus trap - Tab cycles within sort menu only
+const handleKeyDown = (e) => {
+  if (!document.activeElement?.closest('#storage-sort-popover')) return;
+  
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    
+    const items = getFocusableElements();
+    const currentIndex = items.indexOf(document.activeElement);
+    
+    const nextIndex = e.shiftKey 
+      ? (currentIndex - 1 + items.length) % items.length
+      : (currentIndex + 1) % items.length;
+    items[nextIndex]?.focus();
+  }
+};
+
+document.addEventListener('keydown', handleKeyDown, true); // Capture phase
+```
+
 ### Create Row Drawer
 **File:** `RowForm.jsx`
 
