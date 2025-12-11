@@ -14,6 +14,7 @@ import cx from 'classnames';
 import { deepClone } from '@/_helpers/utilities/utils.helpers';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
 import { authenticationService } from '@/_services';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const TableForm = ({
   selectedTable = {},
@@ -36,6 +37,7 @@ const TableForm = ({
   const selectedTableColumns = isEditMode ? selectedTableData : selectedColumns;
   const selectedTableColumnDetails = Object.values(selectedTableColumns);
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
 
   //Following state and handleInputError is to disable footer if JSON value is invalid for JSON column type
   const [disabledCreateButton, setDisabledCreateButton] = useState(false);
@@ -322,6 +324,7 @@ const TableForm = ({
                 onChange={(e) => {
                   setTableName(e.target.value);
                 }}
+                onFocus={() => speak(tableName ? `Table name input field, current value: ${tableName}` : 'Table name input field')}
                 autoFocus
               />
             </div>

@@ -24,6 +24,7 @@ import {
 import CodeHinter from '@/AppBuilder/CodeEditor';
 import { resolveReferences } from '@/AppBuilder/CodeEditor/utils';
 import _ from 'lodash';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 function areEqual(prevProps, nextProps) {
   return _.isEqual(prevProps.defaultValue, nextProps.defaultValue);
@@ -73,6 +74,7 @@ function TableSchema({
   existingForeignKeyDetails,
   handleInputError,
 }) {
+  const { speak } = useScreenReader();
   const [referencedColumnDetails, setReferencedColumnDetails] = useState([]);
   const [previousColumnNames, setPreviousColumnNames] = useState([]);
 
@@ -225,11 +227,10 @@ function TableSchema({
                   className="form-control"
                   placeholder="Enter name"
                   data-cy={`name-input-field-${columnDetails[index].column_name}`}
-                  // disabled={columns[index]?.constraints_type?.is_primary_key === true}
+                  onFocus={() => speak(columnDetails[index].column_name ? `Column name input, current value: ${columnDetails[index].column_name}` : 'Column name input')}
+                // disabled={columns[index]?.constraints_type?.is_primary_key === true}
                 />
-              </div>
-
-              <ToolTip
+              </div>              <ToolTip
                 message={
                   foreignKeyDetails.some((item) => item.column_names[0] === columnDetails[index]?.column_name) ? (
                     <div>
@@ -242,13 +243,11 @@ function TableSchema({
                           }
                         </span>
                         <ArrowRight />
-                        <span>{`${
-                          foreignKeyDetails.find((item) => item.column_names[0] === columnDetails[index]?.column_name)
-                            ?.referenced_table_name
-                        }.${
-                          foreignKeyDetails.find((item) => item.column_names[0] === columnDetails[index]?.column_name)
+                        <span>{`${foreignKeyDetails.find((item) => item.column_names[0] === columnDetails[index]?.column_name)
+                          ?.referenced_table_name
+                          }.${foreignKeyDetails.find((item) => item.column_names[0] === columnDetails[index]?.column_name)
                             ?.referenced_column_names[0]
-                        }`}</span>
+                          }`}</span>
                       </div>
                     </div>
                   ) : columnDetails[index]?.data_type === 'boolean' ? (
@@ -283,8 +282,8 @@ function TableSchema({
                   columnDetails[index]?.constraints_type?.is_primary_key === true
                     ? 'Primary key data type cannot be modified'
                     : columnDetails[index]?.data_type === 'timestamp with time zone'
-                    ? 'Date with time'
-                    : null
+                      ? 'Date with time'
+                      : null
                 }
                 placement="top"
                 tooltipClassName="tootip-table"
@@ -304,6 +303,10 @@ function TableSchema({
                       columnDetails[index]?.constraints_type?.is_primary_key === true ? serialDataType : null
                     }
                     options={dataTypes}
+                    onFocus={() => {
+                      const currentType = columnDetails[index]?.data_type || 'not selected';
+                      speak(`Type dropdown for ${columnDetails[index]?.column_name || 'column'}, ${currentType} selected`);
+                    }}
                     onChange={(value) => {
                       setColumnSelection((prevState) => ({
                         ...prevState,
@@ -324,8 +327,8 @@ function TableSchema({
                       columnConstraints.is_unique = prevColumns[index].constraints_type?.is_primary_key
                         ? true
                         : value?.value === 'boolean'
-                        ? false
-                        : false;
+                          ? false
+                          : false;
 
                       columnConstraints.is_primary_key = value.value === 'boolean' && false;
                       // columnConstraints.is_primary_key = value.value === 'serial' && true;
@@ -372,7 +375,7 @@ function TableSchema({
                       control: (state) => cx({
                         '!tw-border-border-default': true,
                       }),
-                      
+
                     }}
                   />
                 </div>
@@ -411,7 +414,7 @@ function TableSchema({
                   topPlaceHolder={
                     (columnDetails[index].data_type === 'serial' &&
                       columnDetails[index]?.constraints_type?.is_primary_key === true) ||
-                    columnDetails[index].data_type === 'serial'
+                      columnDetails[index].data_type === 'serial'
                       ? 'Auto-generated'
                       : 'Null'
                   }
@@ -443,11 +446,11 @@ function TableSchema({
                       ? 'Serial data type values cannot be modified'
                       : columnDetails[index]?.data_type === 'timestamp with time zone' &&
                         columnDetails[index]?.column_default
-                      ? convertDateToTimeZoneFormatted(
+                        ? convertDateToTimeZoneFormatted(
                           columnDetails[index].column_default,
                           columnDetails[index]?.configurations?.timezone || getLocalTimeZone()
                         )
-                      : null
+                        : null
                   }
                   placement="top"
                   tooltipClassName="tootip-table"
@@ -474,7 +477,7 @@ function TableSchema({
                           isOpenOnStart={columnDetails[index]?.isOpenOnStart}
                           isClearable={true}
                           isPlaceholderEnabled={true}
-                          // format="dd/MM/yyyy"
+                        // format="dd/MM/yyyy"
                         />
                       </div>
                     )}
@@ -507,10 +510,10 @@ function TableSchema({
                             : // : checkDefaultValue(columnDetails[index].column_default)
                             // ? null
                             columnDetails[index].data_type === 'jsonb'
-                            ? columnDetails[index].constraints_type?.is_not_null
-                              ? JSON.stringify({})
-                              : null
-                            : columnDetails[index].column_default
+                              ? columnDetails[index].constraints_type?.is_not_null
+                                ? JSON.stringify({})
+                                : null
+                              : columnDetails[index].column_default
                         }
                         type="text"
                         className="form-control defaultValue"
@@ -518,10 +521,14 @@ function TableSchema({
                         placeholder={
                           (columnDetails[index].data_type === 'serial' &&
                             columnDetails[index]?.constraints_type?.is_primary_key === true) ||
-                          columnDetails[index].data_type === 'serial'
+                            columnDetails[index].data_type === 'serial'
                             ? 'Auto-generated'
                             : 'Enter value'
                         }
+                        onFocus={() => {
+                          const currentValue = columnDetails[index].column_default;
+                          speak(currentValue ? `Default value input for ${columnDetails[index]?.column_name || 'column'}, current value: ${currentValue}` : `Default value input for ${columnDetails[index]?.column_name || 'column'}`);
+                        }}
                         disabled={
                           (columnDetails[index].data_type === 'serial' &&
                             columnDetails[index]?.constraints_type?.is_primary_key === true) ||
@@ -538,10 +545,10 @@ function TableSchema({
                   columnDetails[index]?.data_type === 'boolean'
                     ? 'Boolean type column cannot be a primary key'
                     : columnDetails[index]?.data_type === 'timestamp with time zone'
-                    ? ' Primary key cannot be created with this column type'
-                    : columnDetails[index]?.data_type === 'jsonb'
-                    ? 'JSON type column cannot be a primary key'
-                    : 'There must be atleast one Primary key'
+                      ? ' Primary key cannot be created with this column type'
+                      : columnDetails[index]?.data_type === 'jsonb'
+                        ? 'JSON type column cannot be a primary key'
+                        : 'There must be atleast one Primary key'
                 }
                 placement="top"
                 tooltipClassName="tootip-table"
@@ -554,11 +561,11 @@ function TableSchema({
                   <IndeterminateCheckbox
                     checked={
                       columnDetails[index]?.constraints_type?.is_primary_key &&
-                      ['boolean', 'timestamp with time zone', 'jsonb'].includes(columnDetails[index]?.data_type)
+                        ['boolean', 'timestamp with time zone', 'jsonb'].includes(columnDetails[index]?.data_type)
                         ? false
                         : columnDetails[index]?.constraints_type?.is_primary_key
-                        ? true
-                        : false
+                          ? true
+                          : false
                     }
                     onChange={(e) => {
                       const prevColumns = { ...columnDetails };
@@ -569,14 +576,14 @@ function TableSchema({
                         // isEditMode && e.target.checked === false
                         //   ? true
                         e.target.checked === true ||
-                        prevColumns[index].data_type === 'serial' ||
-                        e.target.checked === false
+                          prevColumns[index].data_type === 'serial' ||
+                          e.target.checked === false
                           ? true
                           : false;
                       columnConstraints.is_unique =
                         e.target.checked === true ||
-                        prevColumns[index].data_type === 'serial' ||
-                        e.target.checked === false
+                          prevColumns[index].data_type === 'serial' ||
+                          e.target.checked === false
                           ? true
                           : false;
                       prevColumns[index].constraints_type = { ...columnConstraints };
@@ -598,8 +605,8 @@ function TableSchema({
                     ? 'Primary key values cannot be null'
                     : columnDetails[index]?.data_type === 'serial' &&
                       columnDetails[index]?.constraints_type?.is_primary_key !== true
-                    ? 'Serial data type cannot have NULL value'
-                    : null
+                      ? 'Serial data type cannot have NULL value'
+                      : null
                 }
                 placement="top"
                 tooltipClassName="tootip-table"
@@ -643,9 +650,8 @@ function TableSchema({
                     className="m-0"
                   >
                     <span
-                      className={`${
-                        columnDetails[index]?.constraints_type?.is_primary_key === true ? 'not-null-with-disable' : ''
-                      }`}
+                      className={`${columnDetails[index]?.constraints_type?.is_primary_key === true ? 'not-null-with-disable' : ''
+                        }`}
                     >
                       NOT NULL
                     </span>

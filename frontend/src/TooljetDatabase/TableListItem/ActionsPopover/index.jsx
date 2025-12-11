@@ -96,6 +96,19 @@ export const ListItemPopover = ({
           className={`row cursor-pointer`}
           tabIndex="0"
           onFocus={() => speak('Edit table option')}
+          onClick={(event) => {
+            event.stopPropagation();
+            closeMenu();
+            onEdit();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              closeMenu();
+              onEdit();
+            }
+          }}
         >
           <div className="col-auto" data-cy="edit-option-icon">
             <EditIcon />
@@ -103,19 +116,6 @@ export const ListItemPopover = ({
           <div
             className="col text-truncate"
             data-cy="rename-table-option"
-            onClick={(event) => {
-              event.stopPropagation();
-              closeMenu();
-              onEdit();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                e.stopPropagation();
-                closeMenu();
-                onEdit();
-              }
-            }}
           >
             Edit table
           </div>
@@ -124,6 +124,19 @@ export const ListItemPopover = ({
           className={`row mt-3 cursor-pointer`}
           tabIndex="0"
           onFocus={() => speak('Add new column option')}
+          onClick={(event) => {
+            event.stopPropagation();
+            closeMenu();
+            onAddNewColumnBtnClick();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              closeMenu();
+              onAddNewColumnBtnClick();
+            }
+          }}
         >
           <div className="col-auto" data-cy="add-new-column-icon">
             <SolidIcon name="column" width="14" />
@@ -131,19 +144,6 @@ export const ListItemPopover = ({
           <div
             className="col text-truncate"
             data-cy="add-new-column-option"
-            onClick={(event) => {
-              event.stopPropagation();
-              closeMenu();
-              onAddNewColumnBtnClick();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                e.stopPropagation();
-                closeMenu();
-                onAddNewColumnBtnClick();
-              }
-            }}
           >
             Add new column
           </div>
@@ -152,6 +152,17 @@ export const ListItemPopover = ({
           className="row mt-3 cursor-pointer"
           tabIndex="0"
           onFocus={() => speak('Export schema option')}
+          onClick={() => {
+            closeMenu();
+            handleExportTable();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              closeMenu();
+              handleExportTable();
+            }
+          }}
         >
           <div className="col-auto" data-cy="export-schema-option-icon">
             <SolidIcon name="filedownload" width="14" viewBox="0 0 25 25" />
@@ -159,17 +170,6 @@ export const ListItemPopover = ({
           <div
             className="col text-truncate"
             data-cy="export-schema-option"
-            onClick={() => {
-              closeMenu();
-              handleExportTable();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                closeMenu();
-                handleExportTable();
-              }
-            }}
           >
             Export schema
           </div>
@@ -184,6 +184,17 @@ export const ListItemPopover = ({
           className="row mt-3 cursor-pointer"
           tabIndex="0"
           onFocus={() => speak('Delete table option')}
+          onClick={() => {
+            closeMenu();
+            onDelete();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              closeMenu();
+              onDelete();
+            }
+          }}
         >
           <div className="col-auto" data-cy="delete-table-option-icon">
             <DeleteIcon />
@@ -191,17 +202,6 @@ export const ListItemPopover = ({
           <div
             className="col text-truncate"
             data-cy="delete-table-option"
-            onClick={() => {
-              closeMenu();
-              onDelete();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                closeMenu();
-                onDelete();
-              }
-            }}
           >
             Delete table
           </div>

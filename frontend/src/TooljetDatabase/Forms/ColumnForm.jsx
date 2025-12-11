@@ -23,6 +23,7 @@ import { getLocalTimeZone, timeZonesWithOffsets } from '@/Editor/QueryManager/Qu
 import defaultStyles from '@/_ui/Select/styles';
 import CodeHinter from '@/AppBuilder/CodeEditor';
 import { resolveReferences } from '@/AppBuilder/CodeEditor/utils';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const ColumnForm = ({
   onCreate,
@@ -33,6 +34,7 @@ const ColumnForm = ({
   setReferencedColumnDetails,
   initiator,
 }) => {
+  const { speak } = useScreenReader();
   const [columnName, setColumnName] = useState('');
   const [defaultValue, setDefaultValue] = useState('');
   const [dataType, setDataType] = useState();
@@ -301,6 +303,7 @@ const ColumnForm = ({
                 });
               setColumnName(e.target.value);
             }}
+            onFocus={() => speak(columnName ? `Column name input, current value: ${columnName}` : 'Column name input')}
             autoFocus
           />
         </div>
@@ -315,6 +318,7 @@ const ColumnForm = ({
             formatOptionLabel={formatOptionLabel}
             options={dataTypes}
             onChange={handleTypeChange}
+            onFocus={() => speak(dataType ? `Data type dropdown, ${dataType.label} selected` : 'Data type dropdown, no type selected')}
             components={{ Option: CustomSelectOption, IndicatorSeparator: () => null }}
             styles={customStyles}
           />
@@ -408,6 +412,7 @@ const ColumnForm = ({
                   data-cy="default-value-input-field"
                   autoComplete="off"
                   onChange={(e) => setDefaultValue(e.target.value)}
+                  onFocus={() => speak(defaultValue ? `Default value input, current value: ${defaultValue}` : 'Default value input')}
                   disabled={dataType?.value === 'serial'}
                 />
               ) : (
@@ -448,8 +453,8 @@ const ColumnForm = ({
                       dataType === 'serial'
                         ? 'Auto-generated'
                         : foreignKeyDefaultValue?.value === null
-                        ? 'Null'
-                        : 'Enter a value'
+                          ? 'Null'
+                          : 'Enter a value'
                     }
                     onChange={(value) => {
                       setForeignKeyDefaultValue(value);
@@ -481,12 +486,12 @@ const ColumnForm = ({
               dataType?.value === 'serial'
                 ? 'Foreign key relation cannot be created for serial type column'
                 : dataType?.value === 'boolean'
-                ? 'Foreign key relation cannot be created for boolean type column'
-                : dataType?.value === 'timestamp with time zone'
-                ? 'Foreign key relation cannot be created with this data type'
-                : isJsonbColumnType
-                ? 'Foreign key relation cannot be created for jsonb type column'
-                : 'Fill in column details to create a foreign key relation'
+                  ? 'Foreign key relation cannot be created for boolean type column'
+                  : dataType?.value === 'timestamp with time zone'
+                    ? 'Foreign key relation cannot be created with this data type'
+                    : isJsonbColumnType
+                      ? 'Foreign key relation cannot be created for jsonb type column'
+                      : 'Fill in column details to create a foreign key relation'
             }
             placement="top"
             tooltipClassName="tootip-table"
@@ -511,6 +516,7 @@ const ColumnForm = ({
                       setIsForeignKeyDraweOpen(e.target.checked);
                     }
                   }}
+                  onFocus={() => speak(`Foreign key relation toggle, ${isForeignKey ? 'enabled' : 'disabled'}`)}
                   disabled={
                     isEmpty(dataType) ||
                     isEmpty(columnName) ||
@@ -528,7 +534,7 @@ const ColumnForm = ({
             {foreignKeyDetails?.length > 0 &&
               isForeignKey &&
               foreignKeyDetails?.map((detail, index) => (
-                <div className="foreignKey-details mt-0" key={index} onClick={() => {}}>
+                <div className="foreignKey-details mt-0" key={index} onClick={() => { }}>
                   <span className="foreignKey-text">{detail.column_names[0]}</span>
                   <div className="foreign-key-relation">
                     <ForeignKeyRelationIcon width="13" height="13" />
@@ -601,6 +607,7 @@ const ColumnForm = ({
                     setDefaultValue('');
                   }
                 }}
+                onFocus={() => speak(`NOT NULL constraint toggle, ${isNotNull ? 'enabled' : 'disabled'}`)}
                 disabled={dataType?.value === 'serial'}
               />
             </label>
@@ -618,10 +625,10 @@ const ColumnForm = ({
               dataType?.value === 'boolean'
                 ? 'Unique constraint cannot be added for boolean type column'
                 : dataType?.value === 'timestamp with time zone'
-                ? 'Unique constraint cannot be added for this type column'
-                : isJsonbColumnType
-                ? 'Unique constraint cannot be added for JSON type column'
-                : ''
+                  ? 'Unique constraint cannot be added for this type column'
+                  : isJsonbColumnType
+                    ? 'Unique constraint cannot be added for JSON type column'
+                    : ''
             }
             placement="top"
             tooltipClassName="tootip-table"
@@ -636,6 +643,7 @@ const ColumnForm = ({
                   onChange={(e) => {
                     setIsUniqueConstraint(e.target.checked);
                   }}
+                  onFocus={() => speak(`UNIQUE constraint toggle, ${isUniqueConstraint ? 'enabled' : 'disabled'}`)}
                   disabled={['serial', 'boolean', 'timestamp with time zone', 'jsonb'].includes(dataType?.value)}
                 />
               </label>

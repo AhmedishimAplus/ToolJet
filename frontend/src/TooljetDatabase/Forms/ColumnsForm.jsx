@@ -6,6 +6,7 @@ import ForeignKeyRelation from './ForeignKeyRelation';
 import AddRectangle from '@/_ui/Icon/bulkIcons/AddRectangle';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import _, { isEmpty } from 'lodash';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const ColumnsForm = ({
   columns,
@@ -24,6 +25,7 @@ const ColumnsForm = ({
   setForeignKeys,
   handleInputError,
 }) => {
+  const { speak } = useScreenReader();
   const [columnSelection, setColumnSelection] = useState({ index: 0, value: '', configurations: {} });
   const [hoveredColumn, setHoveredColumn] = useState(null);
   const [isForeignKeyDraweOpen, setIsForeignKeyDraweOpen] = useState(false);
@@ -127,12 +129,16 @@ const ColumnsForm = ({
             size="sm"
             style={{ fontSize: '14px' }}
             onClick={() => {
-              setColumns((prevColumns) => ({
-                ...prevColumns,
-                [+Object.keys(prevColumns).pop() + 1 || 0]: { configurations: {} },
-              })),
-                setColumnSelection({ index: 0, value: '', configurations: {} });
+              speak('Adding new column');
+              setTimeout(() => {
+                setColumns((prevColumns) => ({
+                  ...prevColumns,
+                  [+Object.keys(prevColumns).pop() + 1 || 0]: { configurations: {} },
+                })),
+                  setColumnSelection({ index: 0, value: '', configurations: {} });
+              }, 400);
             }}
+            onFocus={() => speak('Add more columns button')}
             data-cy="add-more-columns-button"
           >
             <AddRectangle width="14" height="14" fill="#3E63DD" opacity="1" secondaryFill="#ffffff" />
