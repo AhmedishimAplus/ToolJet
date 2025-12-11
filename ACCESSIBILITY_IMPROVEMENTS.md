@@ -33,7 +33,105 @@ All color contrast improvements target **dark mode** (`.dark-theme` and `.theme-
 - Light Pink (`#FFC2F5`): 7.5:1 contrast - Version text, accent elements
 
 ---
-## Latest Update - December 8, 2025
+## Latest Update - December 11, 2025
+**Database Page Screen Reader Implementation - Add New Data Menu & Filter Menu**
+
+Added Web Speech API screen reader support to database page interactive components with focus trap implementation and comprehensive keyboard navigation.
+
+### Add New Data Menu
+**File:** `AddNewDataPopOver.jsx`
+
+Implemented focus trap and screen reader announcements:
+
+```jsx
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
+const { speak } = useScreenReader();
+
+// Focus announcements
+onFocus={() => speak('Add new row')}
+
+// Action with delay
+onClick={() => {
+  speak('Opening add new row drawer');
+  setTimeout(() => { /* execute */ }, 800);
+}}
+
+// Focus trap - Tab cycles within menu only
+const handleKeyDown = (e) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    // Cycle through menu items
+  }
+};
+```
+
+### Filter Menu
+**Files:** `Filter/index.jsx`, `FilterForm.jsx`
+
+Implemented focus trap and announcements for all elements:
+
+```jsx
+// Dropdown announcements with current selection
+onFocus={() => speak(`Column dropdown, ${column || 'Select..'} selected`)}
+
+// Input field with value announcement
+onFocus={() => speak(value ? `Value input field, current value: ${value}` : 'Value input field')}
+
+// Keyboard accessible delete icon
+<div
+  tabIndex="0"
+  role="button"
+  onFocus={() => speak('Delete filter button')}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      speak('Deleting filter');
+      setTimeout(() => handleDelete(), 800);
+    }
+  }}
+/>
+
+// Focus trap implementation
+const getFocusableElements = () => {
+  const selectors = 'input:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex="0"]';
+  return Array.from(popup.querySelectorAll(selectors));
+};
+```
+
+### Create Row Drawer
+**File:** `RowForm.jsx`
+
+Tab options with arrow key navigation and Tab key for field progression:
+
+```jsx
+// Arrow keys for tab options (Null/Default/Custom)
+onKeyDown={(e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    e.stopPropagation();
+    const allTabs = Array.from(tablist.querySelectorAll('[role="button"]'));
+    // Navigate between tabs
+  } else if (e.key === 'Tab') {
+    e.stopPropagation(); // Allow natural tab to input field
+  }
+}}
+
+// Field announcements
+onFocus={() => speak(`Editing ${columnName} field`)}
+
+// Action with delay
+const handleCreateClick = () => {
+  speak('Creating row');
+  setTimeout(() => handleSubmit(), 400);
+};
+```
+
+**Standard Delays:** Menu actions: 800ms | Button actions: 400-800ms | Focus transitions: 50-100ms
+
+---
+## Update - December 8, 2025
 **Web Speech API Screen Reader Implementation for Homepage and Modals**
 
 This update implements comprehensive screen reader support using the Web Speech API across the ToolJet homepage, including keyboard navigation announcements for app cards, menus, and all modal dialogs. The implementation provides audio announcements when users navigate with keyboard and interact with UI elements.
