@@ -5,6 +5,7 @@ import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import AddRectangle from '@/_ui/Icon/bulkIcons/AddRectangle';
 import '@/_ui/HttpHeaders/sourceEditorStyles.scss';
 import InfoIcon from '@assets/images/icons/info.svg';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export default ({
   options,
@@ -17,6 +18,23 @@ export default ({
   dataCy,
 }) => {
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
+
+  const handleKeyFocus = (index, value) => {
+    speak(value ? `Key input field, current value: ${value}` : 'Key input field');
+  };
+
+  const handleValueFocus = (index, value) => {
+    speak(value ? `Value input field, current value: ${value}` : 'Value input field');
+  };
+
+  const handleDeleteFocus = (index) => {
+    speak(`Delete connection option button`);
+  };
+
+  const handleAddFocus = () => {
+    speak('Add connection option button');
+  };
 
   return (
     <div className="table-content-wrapper">
@@ -39,6 +57,7 @@ export default ({
             placeholder="Key"
             autoComplete="off"
             disabled={isDisabled}
+            onFocus={() => handleKeyFocus(index, option[0])}
             style={{
               flex: 1,
               width: '316px',
@@ -58,6 +77,7 @@ export default ({
             onChange={(e) => keyValuePairValueChanged(e.target.value, 1, index)}
             workspaceConstants={workspaceConstants}
             disabled={isDisabled}
+            onFocus={() => handleValueFocus(index, option[1])}
             style={{
               flex: 2,
               width: width ? width : '316px',
@@ -70,13 +90,13 @@ export default ({
 
           <button
             data-cy={`${dataCy}-delete-button-${index}`}
-            className={`d-flex justify-content-center align-items-center delete-field-option bg-transparent border-0 rounded-0 border-top border-bottom border-end rounded-end ${
-              darkMode ? 'delete-field-option-dark' : ''
-            }`}
+            className={`d-flex justify-content-center align-items-center delete-field-option bg-transparent border-0 rounded-0 border-top border-bottom border-end rounded-end ${darkMode ? 'delete-field-option-dark' : ''
+              }`}
             style={{ height: '35px' }}
             role="button"
             disabled={isDisabled}
             onClick={() => removeKeyValuePair(index)}
+            onFocus={() => handleDeleteFocus(index)}
           >
             <Trash fill="var(--slate9)" style={{ height: '16px' }} />
           </button>
@@ -89,6 +109,7 @@ export default ({
           variant="ghostBlue"
           size="sm"
           onClick={() => addNewKeyValuePair(options)}
+          onFocus={handleAddFocus}
           style={{ gap: '0px', fontSize: '12px', fontWeight: '500', padding: '0px 9px' }}
           disabled={isDisabled}
         >

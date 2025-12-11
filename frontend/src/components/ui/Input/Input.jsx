@@ -3,11 +3,21 @@ import { cn } from '@/lib/utils';
 import { inputVariants } from './InputUtils/Variants';
 import SolidIcon from '../../../_ui/Icon/SolidIcons';
 import { useEffect } from 'react';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const Input = React.forwardRef(
   ({ className, size, type, multiline, response, isWorkspaceConstant, rows = 3, ...props }, ref) => {
     const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
+    const { speak } = useScreenReader();
     const isPasswordField = type === 'password';
+
+    const handleInputFocus = (e) => {
+      const label = props['aria-label'] || props.label || props.placeholder || 'input field';
+      const value = props.value || '';
+      const announcement = value ? `${label}, current value: ${value}` : label;
+      speak(announcement);
+      if (props.onFocus) props.onFocus(e);
+    };
 
     const togglePasswordVisibility = () => {
       if (!props.disabled) {
@@ -35,6 +45,7 @@ const Input = React.forwardRef(
             rows={rows}
             ref={ref}
             {...props}
+            onFocus={handleInputFocus}
           />
         ) : (
           <input
@@ -46,6 +57,7 @@ const Input = React.forwardRef(
             )}
             ref={ref}
             {...props}
+            onFocus={handleInputFocus}
           />
         )}
         {isPasswordField && !multiline && (

@@ -1,4 +1,5 @@
 import React from 'react';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import './Toggle.scss';
 function Toggle({
   onChange,
@@ -10,6 +11,14 @@ function Toggle({
   subtext = '',
   dataCy = '',
 }) {
+  const { speak } = useScreenReader();
+
+  const handleToggleFocus = () => {
+    const toggleLabel = label || text || 'toggle';
+    const state = checked ? 'enabled' : 'disabled';
+    speak(`${toggleLabel}, ${state}`);
+  };
+
   return (
     <label className={`form-check form-switch ${className}`}>
       <input
@@ -17,6 +26,7 @@ function Toggle({
         type="checkbox"
         checked={checked}
         onChange={onChange}
+        onFocus={handleToggleFocus}
         disabled={disabled}
         data-cy={`${dataCy}-toggle-input`}
       />

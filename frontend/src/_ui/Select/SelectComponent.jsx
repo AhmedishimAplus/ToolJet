@@ -2,9 +2,11 @@ import React from 'react';
 import _ from 'lodash';
 import Select from 'react-select';
 import defaultStyles from './styles';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const SelectComponent = ({ options = [], value, onChange, closeMenuOnSelect, darkMode, ...restProps }) => {
   const selectRef = React.useRef(null);
+  const { speak } = useScreenReader();
   const isDarkMode = darkMode ?? localStorage.getItem('darkMode') === 'true';
   const {
     isMulti = false,
@@ -56,6 +58,12 @@ export const SelectComponent = ({ options = [], value, onChange, closeMenuOnSele
     return option.label;
   };
 
+  const handleSelectFocus = () => {
+    const label = restProps['aria-label'] || restProps.ariaLabel || restProps.label || 'dropdown';
+    const selectedValue = currentValue ? currentValue.label || currentValue.value : 'no selection';
+    speak(`${label}, ${selectedValue} selected`);
+  };
+
   return (
     <Select
       {...restProps}
@@ -70,6 +78,7 @@ export const SelectComponent = ({ options = [], value, onChange, closeMenuOnSele
       placeholder={placeholder}
       styles={customStyles}
       openMenuOnFocus={openMenuOnFocus}
+      onFocus={handleSelectFocus}
       formatOptionLabel={(option) => renderCustomOption(option)}
       menuPlacement={menuPlacement}
       maxMenuHeight={maxMenuHeight}
