@@ -4,6 +4,7 @@ import cx from 'classnames';
 import useDebounce from '@/_hooks/useDebounce';
 import { useMounted } from '@/_hooks/use-mount';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 import './_styles/search-box.scss';
 
 export const SearchBox = forwardRef(
@@ -29,6 +30,11 @@ export const SearchBox = forwardRef(
     const [searchText, setSearchText] = useState('');
     const debouncedSearchTerm = useDebounce(searchText, debounceDelay);
     const [isFocused, setFocussed] = useState(false);
+    const { speak } = useScreenReader();
+
+    const handleSearchFocus = () => {
+      speak(`${placeholder} input field${searchText ? `, current value: ${searchText}` : ''}`);
+    };
 
     const handleChange = (e) => {
       setSearchText(e.target.value);
@@ -83,7 +89,10 @@ export const SearchBox = forwardRef(
               [className]: !!className,
             })}
             placeholder={placeholder}
-            onFocus={() => setFocussed(true)}
+            onFocus={() => {
+              setFocussed(true);
+              handleSearchFocus();
+            }}
             onBlur={() => setFocussed(false)}
             data-cy={`${dataCy}-search-bar`}
             autoFocus={autoFocus}

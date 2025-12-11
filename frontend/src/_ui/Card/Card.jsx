@@ -2,6 +2,7 @@ import React from 'react';
 // eslint-disable-next-line import/no-unresolved
 import { allSvgs } from '@tooljet/plugins/client';
 import AiBanner from '@/_ui/AiBanner';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const Card = ({
   title,
@@ -18,6 +19,12 @@ const Card = ({
   tags = [],
   tabIndex = 0,
 }) => {
+  const { speak } = useScreenReader();
+
+  const handleCardFocus = () => {
+    speak(`${title} data source`);
+  };
+
   const DisplayIcon = ({ src }) => {
     if (typeof src !== 'string') return;
 
@@ -62,6 +69,7 @@ const Card = ({
         tabIndex={tabIndex}
         onClick={handleClickEvent}
         onKeyDown={handleKeyDown}
+        onFocus={handleCardFocus}
         data-cy={`data-source-${String(title).toLocaleLowerCase()}`}
       >
         <div className="card-body">

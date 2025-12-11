@@ -1,13 +1,19 @@
 import React from 'react';
 import cx from 'classnames';
 import useGlobalDatasourceUnsavedChanges from '@/_hooks/useGlobalDatasourceUnsavedChanges';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const SegregatedList = ({ dataSources, activeDatasourceList, handleOnSelect }) => {
   const { handleActions } = useGlobalDatasourceUnsavedChanges();
+  const { speak } = useScreenReader();
   const totalDataSources = dataSources.reduce((acc, filteredGroup) => [...acc, ...filteredGroup.list], []).length;
 
   const handleCategoryClick = (dataSource) => {
     handleActions(() => handleOnSelect(dataSource.key, dataSource.type));
+  };
+
+  const handleCategoryFocus = (dataSource) => {
+    speak(`${dataSource.type} category, ${dataSource.list.length} data sources`);
   };
 
   const handleCategoryKeyDown = (e, dataSource) => {
@@ -39,6 +45,7 @@ export const SegregatedList = ({ dataSources, activeDatasourceList, handleOnSele
               aria-label={`${dataSource.type} data sources category`}
               onClick={() => handleCategoryClick(dataSource)}
               onKeyDown={(e) => handleCategoryKeyDown(e, dataSource)}
+              onFocus={() => handleCategoryFocus(dataSource)}
               className="col d-flex align-items-center overflow-hidden"
               data-cy={`${dataSource.key
                 .toLowerCase()
