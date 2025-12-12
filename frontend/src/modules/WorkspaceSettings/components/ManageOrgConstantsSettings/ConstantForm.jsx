@@ -233,7 +233,24 @@ const ConstantForm = ({
                       checked={fields['type'] === Constants.Global}
                       onChange={handleFieldChange}
                       disabled={mode === 'edit'}
-                      onFocus={() => speak('Global constants radio button. Use left and right arrow keys to switch between radio buttons.')}
+                      onFocus={() => speak('Global constants radio button. Use left and right arrow keys to move focus. Press Enter to select.')}
+                      onKeyDown={(e) => {
+                        if (mode === 'edit') return;
+
+                        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          const radios = document.querySelectorAll('input[name="type"]:not([disabled])');
+                          const currentIndex = Array.from(radios).indexOf(e.target);
+                          if (e.key === 'ArrowRight' && currentIndex < radios.length - 1) {
+                            radios[currentIndex + 1].focus();
+                          } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                            radios[currentIndex - 1].focus();
+                          }
+                        } else if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleFieldChange({ target: { name: 'type', value: 'Global' } });
+                        }
+                      }}
                       data-cy="global-constants-input"
                     />
                     Global constants
@@ -251,7 +268,24 @@ const ConstantForm = ({
                       checked={fields['type'] === Constants.Secret}
                       onChange={handleFieldChange}
                       disabled={mode === 'edit'}
-                      onFocus={() => speak('Secrets radio button. Use left and right arrow keys to switch between radio buttons.')}
+                      onFocus={() => speak('Secrets radio button. Use left and right arrow keys to move focus. Press Enter to select.')}
+                      onKeyDown={(e) => {
+                        if (mode === 'edit') return;
+
+                        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          const radios = document.querySelectorAll('input[name="type"]:not([disabled])');
+                          const currentIndex = Array.from(radios).indexOf(e.target);
+                          if (e.key === 'ArrowRight' && currentIndex < radios.length - 1) {
+                            radios[currentIndex + 1].focus();
+                          } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                            radios[currentIndex - 1].focus();
+                          }
+                        } else if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleFieldChange({ target: { name: 'type', value: 'Secret' } });
+                        }
+                      }}
                       data-cy="secrets-constants-input"
                     />
                     Secrets
