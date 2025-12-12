@@ -191,13 +191,13 @@ ul li.keyboard-focused,
     opacity: 1;
 }
 
-/* Override any conflicting hover styles - but not for sidebar elements */
-*:hover:not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer):not(.left-sidebar):not(.left-sidebar *) {
+/* Override any conflicting hover styles - but not for sidebar, modal, drawer, or popover elements */
+*:hover:not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer):not(.left-sidebar):not(.left-sidebar *):not(.drawer):not(.drawer *):not(.drawer-container):not(.drawer-container *):not(.popover):not(.popover *):not([class*="popover"]):not([class*="popover"] *) {
     position: relative;
 }
 
-/* Ensure outlines are visible above other elements - but not for sidebar elements */
-*:hover:not([disabled]):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer):not(.left-sidebar):not(.left-sidebar *) {
+/* Ensure outlines are visible above other elements - but not for sidebar, modal, drawer, or popover elements */
+*:hover:not([disabled]):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.modal-header):not(.modal-body):not(.modal-footer):not(.left-sidebar):not(.left-sidebar *):not(.drawer):not(.drawer *):not(.drawer-container):not(.drawer-container *):not(.popover):not(.popover *):not([class*="popover"]):not([class*="popover"] *) {
     z-index: 1;
 }
 

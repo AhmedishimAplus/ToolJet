@@ -403,16 +403,17 @@
           height: 35px !important;
           padding: 7px 0px 7px 12px !important;
           border-radius: 4px !important;
+          border: 1px solid transparent !important;
 
-          &:hover {
-            border: 1px solid transparent !important;
-            // background: transparent !important;
-          }
-
-          &:focus {
+          &:focus-visible {
             border: 1px solid transparent !important;
             background: transparent !important;
-            box-shadow: 0px 0px 0px 1px #C6D4F9
+            box-shadow: 0px 0px 0px 1px #C6D4F9 !important;
+            outline: none;
+          }
+
+          &:focus:not(:focus-visible) {
+            outline: none;
           }
 
           .text-truncate {
@@ -733,15 +734,15 @@
     border-radius: 4px !important;
     border: 1px solid transparent !important;
 
-    &:hover {
-      border: 1px solid transparent !important;
-      // background: transparent !important;
-    }
-
-    &:focus {
+    &:focus-visible {
       border: 1px solid var(--indigo-09, #3E63DD) !important;
       background: transparent !important;
-      box-shadow: 0px 0px 0px 1px #C6D4F9
+      box-shadow: 0px 0px 0px 1px #C6D4F9 !important;
+      outline: none;
+    }
+
+    &:focus:not(:focus-visible) {
+      outline: none;
     }
 
     .text-truncate {
@@ -778,66 +779,75 @@
   max-width: 100%;
 }
 
-.tjdb-codehinter-wrapper-drawer{
-  .cm-editor{
+.tjdb-codehinter-wrapper-drawer {
+  .cm-editor {
     max-height: 36px !important;
     height: 36px !important;
-    &.cm-focused{
+
+    &.cm-focused {
       outline: none !important;
       background: var(--indigo2) !important;
       border: 1px solid var(--indigo9) !important;
     }
-    .cm-content{
+
+    .cm-content {
       display: flex;
       align-items: center;
       font-size: 12px;
     }
   }
-  .tjdb-hinter-error{
-    .cm-editor{
+
+  .tjdb-hinter-error {
+    .cm-editor {
       outline: none !important;
-      border:1px solid red !important;
+      border: 1px solid red !important;
     }
   }
 }
+
 // added this to border when codehinter is open in the portal, if any error is there
-.tjdb-hinter-error{
-  .cm-focused{
+.tjdb-hinter-error {
+  .cm-focused {
     outline: none !important;
-    border:1px solid red !important;
+    border: 1px solid red !important;
   }
 }
-.tjdb-codehinter-wrapper-drawer-tableSchema{
-  .cm-editor{
+
+.tjdb-codehinter-wrapper-drawer-tableSchema {
+  .cm-editor {
     max-height: 36px !important;
     min-height: 36px !important;
-    &.cm-focused{
+
+    &.cm-focused {
       outline: none !important;
       border: 1px solid !important;
       border-color: #90b5e2 !important;
     }
-    .cm-content{
+
+    .cm-content {
       display: flex;
       align-items: center;
       font-size: 12px;
     }
   }
-  .tjdb-hinter-error{
-    .cm-editor{
+
+  .tjdb-hinter-error {
+    .cm-editor {
       outline: none !important;
-      border:1px solid red !important;
+      border: 1px solid red !important;
     }
   }
 }
-.width-lg{
+
+.width-lg {
   width: 181.5px;
 }
 
-.width-sm{
+.width-sm {
   width: 120px;
 }
 
-.input-element{
+.input-element {
   width: 181.5px !important;
   background-color: transparent !important;
   color: var(--text-default) !important;
@@ -845,7 +855,7 @@
   border: 1px solid var(--border-default) !important;
 }
 
-.delete-icon-wrapper{
+.delete-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -857,11 +867,12 @@
   border-left: none;
 }
 
-.select-operation-field{
-  .react-select__control{
-    .react-select__value-container{
+.select-operation-field {
+  .react-select__control {
+    .react-select__value-container {
       position: relative;
-      .react-select__input-container{
+
+      .react-select__input-container {
         position: absolute;
         right: 0;
       }
@@ -870,19 +881,21 @@
 }
 
 .select-operation-field,
-.select-column-field{
-    position: static;
-    .react-select__control {
-      position: relative;
-      z-index: 2;
-      border-right: none !important;
-    }
-    .react-select__menu {
-      position: fixed;
-      z-index: 9999;
-      left: var(--select-left);
-      top: var(--select-top);
-    }
+.select-column-field {
+  position: static;
+
+  .react-select__control {
+    position: relative;
+    z-index: 2;
+    border-right: none !important;
+  }
+
+  .react-select__menu {
+    position: fixed;
+    z-index: 9999;
+    left: var(--select-left);
+    top: var(--select-top);
+  }
 }
 
 .select-column-field .react-select__menu {
@@ -900,14 +913,15 @@ body.react-select-open .filter-body {
 body.react-select-open .select-operation-field {
   pointer-events: auto;
 }
+
 body.react-select-open .select-column-field {
   pointer-events: auto;
 }
 
 .select-operation-field,
-.select-column-field{
-  .react-select__menu{
-    .react-select__menu-list{
+.select-column-field {
+  .react-select__menu {
+    .react-select__menu-list {
       overflow-y: hidden;
 
       &:hover {
