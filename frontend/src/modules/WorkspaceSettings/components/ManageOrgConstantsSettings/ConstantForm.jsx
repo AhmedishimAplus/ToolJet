@@ -9,6 +9,7 @@ import EyeShow from '@/../assets/images/onboardingassets/Icons/EyeShow';
 import './ConstantFormStyle.scss';
 import { Constants } from '@/_helpers/utils';
 import CloseIcon from '@/_ui/Icon/bulkIcons/CloseIcon';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const ConstantForm = ({
   selectedConstant,
@@ -25,6 +26,7 @@ const ConstantForm = ({
   }));
 
   const [showValue, setShowValue] = useState(false);
+  const { speak } = useScreenReader();
 
   const toggleShowValue = () => {
     setShowValue(!showValue);
@@ -123,15 +125,22 @@ const ConstantForm = ({
     if (isActiveErrorState(error) || error['value']) {
       return;
     }
-    createOrUpdate(fields, mode === 'edit');
+
+    // Announce to screen reader before executing
+    speak(mode === 'edit' ? 'Updating constant...' : 'Adding constant...');
+
+    // Delay execution to allow screen reader to finish announcing
+    setTimeout(() => {
+      createOrUpdate(fields, mode === 'edit');
+    }, 1200);
   };
 
   const shouldDisableButton =
     !isActiveErrorState(error) &&
-    fields['name'] &&
-    fields['value'] &&
-    fields['type'] &&
-    (fields['name'].length > 0 || fields['value'].length > 0)
+      fields['name'] &&
+      fields['value'] &&
+      fields['type'] &&
+      (fields['name'].length > 0 || fields['value'].length > 0)
       ? false
       : true;
 
@@ -182,6 +191,13 @@ const ConstantForm = ({
                   onChange={handleFieldChange}
                   value={fields['name']}
                   disabled={!!selectedConstant}
+                  onFocus={() => {
+                    if (selectedConstant) {
+                      speak('Constant name input. Cannot edit constant name.');
+                    } else {
+                      speak(`Constant name input. ${fields['name'] ? 'Current value: ' + fields['name'] : 'Enter constant name. Name must be unique and max 50 characters.'}`);
+                    }
+                  }}
                   data-tooltip-id="tooltip-for-org-input-disabled"
                   data-tooltip-content={'Cannot edit constant name'}
                   data-tooltip-offset={5}
@@ -212,6 +228,7 @@ const ConstantForm = ({
                       checked={fields['type'] === Constants.Global}
                       onChange={handleFieldChange}
                       disabled={mode === 'edit'}
+                      onFocus={() => speak('Global constants radio button. Use left and right arrow keys to switch between radio buttons.')}
                       data-cy="global-constants-input"
                     />
                     Global constants
@@ -229,6 +246,7 @@ const ConstantForm = ({
                       checked={fields['type'] === Constants.Secret}
                       onChange={handleFieldChange}
                       disabled={mode === 'edit'}
+                      onFocus={() => speak('Secrets radio button. Use left and right arrow keys to switch between radio buttons.')}
                       data-cy="secrets-constants-input"
                     />
                     Secrets
@@ -276,6 +294,7 @@ const ConstantForm = ({
                   onFocus={() => {
                     setShowValue(true);
                     !!selectedConstant && handleInput();
+                    speak(`Value input. Encrypted. ${fields['value'] ? 'Value is set.' : 'Enter constant value.'}`);
                   }}
                   onBlur={handleBlur}
                   style={{
@@ -308,8 +327,8 @@ const ConstantForm = ({
                             ? '#D1D5DB'
                             : '#656565'
                           : String(fields['value'])?.length
-                          ? '#384151'
-                          : '#D1D5DB'
+                            ? '#384151'
+                            : '#D1D5DB'
                       }
                     />
                   ) : (
@@ -320,8 +339,8 @@ const ConstantForm = ({
                             ? '#D1D5DB'
                             : '#656565'
                           : String(fields['value'])?.length
-                          ? '#384151'
-                          : '#D1D5DB'
+                            ? '#384151'
+                            : '#D1D5DB'
                       }
                       data-cy="test"
                     />
@@ -337,7 +356,12 @@ const ConstantForm = ({
         </FormWrapper>
       </div>
       <div className="form-footer gap-2 variable-form-footer">
-        <ButtonSolid onClick={onCancelBtnClicked} data-cy="cancel-button" variant="tertiary">
+        <ButtonSolid
+          onClick={onCancelBtnClicked}
+          onFocus={() => speak('Cancel button. Press Enter to cancel and close the drawer.')}
+          data-cy="cancel-button"
+          variant="tertiary"
+        >
           Cancel
         </ButtonSolid>
         <ButtonSolid
@@ -348,6 +372,14 @@ const ConstantForm = ({
             shouldDisableButton ||
             (selectedConstant?.value === fields['value'] && selectedConstant?.type === fields['type'])
           }
+          onFocus={() => {
+            const isDisabled = isLoading || shouldDisableButton || (selectedConstant?.value === fields['value'] && selectedConstant?.type === fields['type']);
+            if (isDisabled) {
+              speak(mode === 'edit' ? 'Update button, disabled. Fill in all required fields to enable.' : 'Add constant button, disabled. Fill in all required fields to enable.');
+            } else {
+              speak(mode === 'edit' ? 'Update button. Press Enter to update the constant.' : 'Add constant button. Press Enter to add the constant.');
+            }
+          }}
           data-cy="add-constant-button"
           form="variable-form"
         >

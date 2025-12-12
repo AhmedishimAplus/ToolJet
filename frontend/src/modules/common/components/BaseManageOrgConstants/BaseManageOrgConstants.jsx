@@ -80,6 +80,37 @@ const BaseManageOrgConstants = ({
     return () => document.removeEventListener('keydown', handleEscKey);
   }, [isManageVarDrawerOpen, onCancelBtnClicked]);
 
+  // Handle Ctrl+Arrow keys for pagination
+  useEffect(() => {
+    const handlePaginationShortcut = (e) => {
+      // Only handle if Ctrl key is pressed and not inside input fields or drawer
+      if (e.ctrlKey && !isManageVarDrawerOpen) {
+        const activeElement = document.activeElement;
+        const isInInput = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.tagName === 'SELECT'
+        );
+
+        // Don't interfere with typing
+        if (isInInput) return;
+
+        if (e.key === 'ArrowRight' && currentPage < totalPages) {
+          e.preventDefault();
+          speak(`Going to page ${currentPage + 1} of ${totalPages}`);
+          goToNextPage();
+        } else if (e.key === 'ArrowLeft' && currentPage > 1) {
+          e.preventDefault();
+          speak(`Going to page ${currentPage - 1} of ${totalPages}`);
+          goToPreviousPage();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handlePaginationShortcut);
+    return () => document.removeEventListener('keydown', handlePaginationShortcut);
+  }, [currentPage, totalPages, isManageVarDrawerOpen, speak]);
+
   const handleTabChange = (tab) => {
     setCurrentPage(1);
     updateTableData(constants, activeTabEnvironment?.name, 0, perPage, true, tab, searchTerm);

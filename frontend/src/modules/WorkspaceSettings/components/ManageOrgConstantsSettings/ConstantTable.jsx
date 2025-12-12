@@ -3,6 +3,7 @@ import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { ToolTip } from '@/_components';
 import EyeHide from '@/../assets/images/onboardingassets/Icons/EyeHide';
 import EyeShow from '@/../assets/images/onboardingassets/Icons/EyeShow';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const WithTooltip = ({ children, message, placement, show = false }) => {
   return (
@@ -21,6 +22,7 @@ const ConstantTable = ({
 }) => {
   const tableRef = React.createRef(null);
   const [showValues, setShowValues] = useState({});
+  const { speak } = useScreenReader();
   const toggleShowValue = (id) => {
     setShowValues((prev) => ({
       ...prev,
@@ -114,11 +116,10 @@ const ConstantTable = ({
                       </td>
                       <td className={`text-muted p-3-constants workspace-constant-value `} style={{ width: '350px' }}>
                         <a
-                          className={`text-reset ${
-                            showValues[constant?.id] && constant.type === 'Secret' && constant.fromEnv
-                              ? ''
-                              : 'user-email'
-                          }`}
+                          className={`text-reset ${showValues[constant?.id] && constant.type === 'Secret' && constant.fromEnv
+                            ? ''
+                            : 'user-email'
+                            }`}
                           data-cy={`${constant.name.toLowerCase().replace(/\s+/g, '-')}-workspace-constant-value`}
                         >
                           {!showValues[constant.id] ? (
@@ -143,6 +144,18 @@ const ConstantTable = ({
                           >
                             <div
                               onClick={() => toggleShowValue(constant.id)}
+                              onFocus={() => speak(`${showValues[constant.id] ? 'Hide' : 'Show'} value button for constant ${constant.name}`)}
+                              tabIndex={0}
+                              role="button"
+                              aria-label={`${showValues[constant.id] ? 'Hide' : 'Show'} value for ${constant.name}`}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleShowValue(constant.id);
+                                }
+                              }}
+                              style={{ cursor: 'pointer' }}
                               data-cy={`${constant.name.toLowerCase().replace(/\s+/g, '-')}-constant-visibility`}
                             >
                               {!showValues[constant.id] ? (
@@ -153,8 +166,8 @@ const ConstantTable = ({
                                         ? '#D1D5DB'
                                         : '#656565'
                                       : String(constant.value)?.length
-                                      ? '#384151'
-                                      : '#D1D5DB'
+                                        ? '#384151'
+                                        : '#D1D5DB'
                                   }
                                 />
                               ) : (
@@ -165,8 +178,8 @@ const ConstantTable = ({
                                         ? '#D1D5DB'
                                         : '#656565'
                                       : String(constant.value)?.length
-                                      ? '#384151'
-                                      : '#D1D5DB'
+                                        ? '#384151'
+                                        : '#D1D5DB'
                                   }
                                 />
                               )}
@@ -199,6 +212,13 @@ const ConstantTable = ({
                                     fill="#3b5ccc"
                                     iconWidth="12"
                                     onClick={() => onEditBtnClicked(constant)}
+                                    onFocus={() => {
+                                      if (constant.fromEnv) {
+                                        speak(`Edit button for ${constant.name}, disabled. Constants from environment variables cannot be edited.`);
+                                      } else {
+                                        speak(`Edit button for ${constant.name}. Press Enter to edit this constant.`);
+                                      }
+                                    }}
                                     data-cy={`${constant.name.toLowerCase().replace(/\s+/g, '-')}-edit-button`}
                                   >
                                     Edit
@@ -213,6 +233,13 @@ const ConstantTable = ({
                                     fill="#E54D2E"
                                     iconWidth="12"
                                     onClick={() => onDeleteBtnClicked(constant)}
+                                    onFocus={() => {
+                                      if (constant.fromEnv) {
+                                        speak(`Delete button for ${constant.name}, disabled. Constants from environment variables cannot be deleted.`);
+                                      } else {
+                                        speak(`Delete button for ${constant.name}. Press Enter to delete this constant.`);
+                                      }
+                                    }}
                                     data-cy={`${constant.name.toLowerCase().replace(/\s+/g, '-')}-delete-button`}
                                   >
                                     Delete
