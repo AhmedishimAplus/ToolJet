@@ -138,6 +138,20 @@ const ColumnsForm = ({
                   setColumnSelection({ index: 0, value: '', configurations: {} });
               }, 400);
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                speak('Adding new column');
+                setTimeout(() => {
+                  setColumns((prevColumns) => ({
+                    ...prevColumns,
+                    [+Object.keys(prevColumns).pop() + 1 || 0]: { configurations: {} },
+                  })),
+                    setColumnSelection({ index: 0, value: '', configurations: {} });
+                }, 400);
+              }
+            }}
             onFocus={() => speak('Add more columns button')}
             data-cy="add-more-columns-button"
           >

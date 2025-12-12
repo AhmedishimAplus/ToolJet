@@ -671,7 +671,13 @@ function TableSchema({
                   tzDictionary={tzDictionary}
                   tzOptions={tzOptions}
                 >
-                  <div className="cursor-pointer">
+                  <div
+                    className="cursor-pointer"
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Column options menu for ${columnDetails[index]?.column_name || 'column'}`}
+                    onFocus={() => speak(`Column options menu for ${columnDetails[index]?.column_name || 'column'}`)}
+                  >
                     <MenuIcon />
                   </div>
                 </UniqueConstraintPopOver>
