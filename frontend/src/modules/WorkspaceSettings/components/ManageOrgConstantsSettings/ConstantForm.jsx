@@ -70,16 +70,19 @@ const ConstantForm = ({
     const invalidName = !isValidPropertyName(value);
 
     if (invalidNameLength) {
+      speak(`Go back to Name input. ${ERROR_MESSAGES.invalid_name_length}`);
       return setError({
         name: ERROR_MESSAGES.invalid_name_length,
       });
     }
     if (maxNameLengthReached) {
+      speak(`Go back to Name input. ${ERROR_MESSAGES.max_name_length_reached}`);
       return setError({
         name: ERROR_MESSAGES.max_name_length_reached,
       });
     }
     if (invalidName) {
+      speak(`Go back to Name input. ${ERROR_MESSAGES.invalid_name}`);
       return setError({
         name: ERROR_MESSAGES.invalid_name,
       });
@@ -92,10 +95,12 @@ const ConstantForm = ({
     const invalidValueLength = value.trim().length > 10000 || value.trim().length === 0;
 
     if (invalidValueLength) {
+      speak(`Go back to Value input. ${ERROR_MESSAGES.invalid_value_length}`);
       setError((prev) => ({ ...prev, value: ERROR_MESSAGES.invalid_value_length }));
     }
 
     if (mode === 'edit' && value === selectedConstant.value) {
+      speak(`Go back to Value input. ${ERROR_MESSAGES.invalid_value}`);
       setError((prev) => ({ ...prev, value: ERROR_MESSAGES.invalid_value }));
     }
   };
