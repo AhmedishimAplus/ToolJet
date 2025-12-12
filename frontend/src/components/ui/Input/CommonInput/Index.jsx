@@ -4,6 +4,7 @@ import TextInput from './TextInput';
 import { HelperMessage, InputLabel, ValidationMessage } from '../InputUtils/InputUtils';
 import { ButtonSolid } from '../../../../_components/AppButton';
 import { generateCypressDataCy } from '../../../../modules/common/helpers/cypressHelpers.js';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const CommonInput = ({ label, helperText, disabled, required, onChange: change, ...restProps }) => {
   const {
@@ -21,6 +22,7 @@ const CommonInput = ({ label, helperText, disabled, required, onChange: change, 
   const InputComponentType = type === 'number' ? NumberInput : TextInput;
   const [isValid, setIsValid] = useState(null);
   const [message, setMessage] = useState('');
+  const { speak } = useScreenReader();
 
   const isEncrypted = type === 'password' || encrypted;
   const isWorkspaceConstant =
@@ -71,6 +73,11 @@ const CommonInput = ({ label, helperText, disabled, required, onChange: change, 
                 disabled={isDisabled}
                 onClick={(e) => handleEncryptedFieldsToggle(e, propertyKey)}
                 data-cy={`button-${generateCypressDataCy(isEditing ? 'Cancel' : 'Edit')}`}
+                onFocus={() => {
+                  const action = isEditing ? 'Cancel editing' : 'Edit';
+                  const status = isDisabled ? 'Disabled' : `Press Enter to ${action.toLowerCase()} encrypted field`;
+                  speak(`${action} button. ${status}.`);
+                }}
               >
                 {isEditing ? 'Cancel' : 'Edit'}
               </ButtonSolid>
@@ -91,6 +98,8 @@ const CommonInput = ({ label, helperText, disabled, required, onChange: change, 
         response={isValid}
         onChange={handleChange}
         isWorkspaceConstant={isWorkspaceConstant}
+        speak={speak}
+        label={label}
         {...restProps}
       />
       {helperText && (

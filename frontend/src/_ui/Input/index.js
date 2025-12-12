@@ -3,12 +3,14 @@ import cx from 'classnames';
 import OrgConstantVariablesPreviewBox from '../../_components/OrgConstantsVariablesResolver';
 import SolidIcon from '../Icon/SolidIcons';
 import { toast } from 'react-hot-toast';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const Input = ({ helpText, onBlur, ...props }) => {
   const { workspaceVariables, workspaceConstants, value, type, disabled, encrypted, isWorkspaceConstant } = props;
   const [isFocused, setIsFocused] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { speak } = useScreenReader();
   const inputType = type === 'password' || encrypted ? (showPassword ? 'text' : 'password') : type;
   const iconType = showPassword ? 'eye' : 'eyedisable';
 
@@ -37,6 +39,15 @@ const Input = ({ helpText, onBlur, ...props }) => {
     }
   };
 
+  const handleFocus = () => {
+    setIsFocused(true);
+    const label = props['aria-label'] || props.label || props.placeholder || 'input';
+    const currentValue = value || '';
+    const encryptedStatus = (type === 'password' || encrypted) ? ', encrypted' : '';
+    const announcement = currentValue ? `${label}${encryptedStatus}, current value: ${currentValue}` : `${label}${encryptedStatus}`;
+    speak(announcement);
+  };
+
   return (
     <div className="tj-app-input">
       <div
@@ -45,10 +56,10 @@ const Input = ({ helpText, onBlur, ...props }) => {
         <input
           {...props}
           type={inputType}
-          onFocus={() => setIsFocused(true)}
+          onFocus={handleFocus}
           onBlur={(event) => {
             setIsFocused(false);
-            onBlur(event);
+            if (onBlur) onBlur(event);
           }}
         />
         {(type === 'password' || encrypted) && (

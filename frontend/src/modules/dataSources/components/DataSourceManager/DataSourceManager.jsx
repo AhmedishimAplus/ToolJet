@@ -38,6 +38,7 @@ import DataSourceSchemaManager from '@/_helpers/dataSourceSchemaManager';
 import MultiEnvTabs from './MultiEnvTabs';
 import { generateCypressDataCy } from '../../../common/helpers/cypressHelpers';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 class DataSourceManagerComponent extends React.Component {
   constructor(props) {
@@ -989,7 +990,19 @@ class DataSourceManagerComponent extends React.Component {
                     <div
                       className={`back-btn me-3 mt-3 ${this.props.darkMode ? 'dark' : ''}`}
                       role="button"
+                      tabIndex={0}
                       onClick={() => this.setState({ selectedDataSource: false }, () => this.onExit())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          this.setState({ selectedDataSource: false }, () => this.onExit());
+                        }
+                      }}
+                      onFocus={(e) => {
+                        if (this.props.speak) {
+                          this.props.speak('Back button. Press Enter to go back to datasource list.');
+                        }
+                      }}
                     >
                       <img
                         data-cy="button-back-ds-connection-modal"
@@ -997,6 +1010,7 @@ class DataSourceManagerComponent extends React.Component {
                         src="assets/images/icons/back.svg"
                         width="30"
                         height="30"
+                        alt="Back"
                       />
                     </div>
                   )}
@@ -1015,6 +1029,13 @@ class DataSourceManagerComponent extends React.Component {
                             autoFocus
                             autoComplete="off"
                             disabled={!canUpdateDataSource(selectedDataSource.id)}
+                            onFocus={(e) => {
+                              if (this.props.speak) {
+                                const status = canUpdateDataSource(selectedDataSource.id) ? 'editable' : 'read-only';
+                                this.props.speak(`Data source name input. Current value: ${decodeEntities(selectedDataSource.name)}. ${status}.`);
+                              }
+                            }}
+                            aria-label="Data source name"
                           />
                           {!this.props.isEditing && (
                             <span className="input-icon-addon">
@@ -1044,7 +1065,21 @@ class DataSourceManagerComponent extends React.Component {
                     <span
                       data-cy="button-close-ds-connection-modal"
                       className={`close-btn mx-4 mt-3 ${this.props.darkMode ? 'dark' : ''}`}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => this.hideModal()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          this.hideModal();
+                        }
+                      }}
+                      onFocus={(e) => {
+                        if (this.props.speak) {
+                          this.props.speak('Close button. Press Enter to close datasource manager.');
+                        }
+                      }}
+                      aria-label="Close"
                     >
                       <SolidIcon name="remove" width="20" fill={'var(--slate12)'} />
                     </span>
@@ -1113,7 +1148,7 @@ class DataSourceManagerComponent extends React.Component {
                               </div>
 
                               <div className="col" style={{ maxWidth: '480px' }}>
-                                <p data-cy="white-list-ip-text" className="tj-text">
+                                <p data-cy="white-list-ip-text" className="tj-text" style={{ color: this.props.darkMode ? '#ffffff' : '#000000' }}>
                                   {this.props.t(
                                     'editor.queryManager.dataSourceManager.whiteListIP',
                                     'Please white-list our IP address if the data source is not publicly accessible.'
@@ -1133,6 +1168,11 @@ class DataSourceManagerComponent extends React.Component {
                                     text={config.SERVER_IP}
                                     onCopy={() => {
                                       this.setState({ isCopied: true });
+                                      if (this.props.speak) {
+                                        setTimeout(() => {
+                                          this.props.speak('IP address copied to clipboard.');
+                                        }, 400);
+                                      }
                                     }}
                                   >
                                     <ButtonSolid
@@ -1142,6 +1182,11 @@ class DataSourceManagerComponent extends React.Component {
                                       variant="tertiary"
                                       leftIcon="copy"
                                       iconWidth="12"
+                                      onFocus={(e) => {
+                                        if (this.props.speak) {
+                                          this.props.speak(`Copy IP address button. Press Enter to copy server IP address: ${config.SERVER_IP}.`);
+                                        }
+                                      }}
                                     >
                                       {this.props.t('editor.queryManager.dataSourceManager.copy', 'Copy')}
                                     </ButtonSolid>
@@ -1187,6 +1232,11 @@ class DataSourceManagerComponent extends React.Component {
                           target="_blank"
                           rel="noreferrer"
                           data-cy="link-read-documentation"
+                          onFocus={(e) => {
+                            if (this.props.speak) {
+                              this.props.speak(`Read documentation link for ${selectedDataSource?.kind || 'datasource'}. Press Enter to open in new tab.`);
+                            }
+                          }}
                         >
                           {this.props.t('globals.readDocumentation', 'Read documentation')}
                         </a>
@@ -1217,6 +1267,12 @@ class DataSourceManagerComponent extends React.Component {
                             onClick={this.createDataSource}
                             leftIcon="floppydisk"
                             fill={this.props.darkMode && this.props.isVersionReleased ? '#4c5155' : '#FDFDFE'}
+                            onFocus={(e) => {
+                              if (this.props.speak) {
+                                const status = isSaving ? 'Saving' : (isSaveDisabled ? 'Disabled. No changes to save' : 'Ready to save');
+                                this.props.speak(`Save button. ${status}.`);
+                              }
+                            }}
                           >
                             {this.props.t('globals.save', 'Save')}
                           </ButtonSolid>
@@ -1247,6 +1303,11 @@ class DataSourceManagerComponent extends React.Component {
                           }
                           target="_blank"
                           rel="noreferrer"
+                          onFocus={(e) => {
+                            if (this.props.speak) {
+                              this.props.speak(`Read documentation link for ${selectedDataSource?.kind || 'datasource'}. Press Enter to open in new tab.`);
+                            }
+                          }}
                         >
                           {this.props.t('globals.readDocumentation', 'Read documentation')}
                         </a>
@@ -1259,6 +1320,12 @@ class DataSourceManagerComponent extends React.Component {
                           disabled={isSaving || this.props.isVersionReleased || isSaveDisabled}
                           variant="primary"
                           onClick={this.createDataSource}
+                          onFocus={(e) => {
+                            if (this.props.speak) {
+                              const status = isSaving ? 'Saving' : (isSaveDisabled ? 'Disabled. No changes to save' : 'Ready to save');
+                              this.props.speak(`Save button. ${status}.`);
+                            }
+                          }}
                         >
                           {isSaving
                             ? this.props.t('editor.queryManager.dataSourceManager.saving' + '...', 'Saving...')
@@ -1298,6 +1365,7 @@ const EmptyStateContainer = ({
   placeholder,
 }) => {
   const { t } = useTranslation();
+  const { speak } = useScreenReader();
   const [inputValue, set] = React.useState(() => '');
 
   const [status, setStatus] = React.useState(false);
@@ -1332,6 +1400,7 @@ const EmptyStateContainer = ({
             <button
               className={`datasource-modal-button ${darkMode && 'dark-button'}`}
               onClick={handleBackToAllDatasources}
+              onFocus={() => speak('Go to all Datasources button. Press Enter to return to datasource list.')}
             >
               {t('editor.queryManager.dataSourceManager.goToAllDatasources', 'Go to all Datasources')}
             </button>
@@ -1351,11 +1420,22 @@ const EmptyStateContainer = ({
                       handleSend();
                     }
                   }}
+                  onFocus={() => speak('Suggest an integration input. Type your suggestion and press Enter or click Send button.')}
+                  aria-label="Suggest an integration"
                 />
               </div>
             </div>
             <div className="col-auto">
-              <Button className="mt-2" disabled={!inputValue.length} variant="primary" onClick={handleSend}>
+              <Button
+                className="mt-2"
+                disabled={!inputValue.length}
+                variant="primary"
+                onClick={handleSend}
+                onFocus={() => {
+                  const status = !inputValue.length ? 'Disabled. Enter text first' : 'Press Enter to send suggestion';
+                  speak(`Send button. ${status}.`);
+                }}
+              >
                 {t('editor.queryManager.dataSourceManager.send', 'Send')}
               </Button>
             </div>
@@ -1369,6 +1449,7 @@ const EmptyStateContainer = ({
 const SearchBoxContainer = ({ onChange, onClear, queryString, activeDatasourceList, dataCy, scope }) => {
   const [searchText, setSearchText] = React.useState(queryString ?? '');
   const { t } = useTranslation();
+  const { speak } = useScreenReader();
   const handleChange = (e) => {
     setSearchText(e.target.value);
     onChange(e.target.value, activeDatasourceList);
@@ -1444,9 +1525,27 @@ const SearchBoxContainer = ({ onChange, onClear, queryString, activeDatasourceLi
           placeholder={t('globals.search', 'Search')}
           autoFocus
           data-cy={dataCy}
+          onFocus={() => {
+            const value = searchText.length > 0 ? `Current search: ${searchText}` : 'No search term';
+            speak(`Search datasources input. ${value}.`);
+          }}
+          aria-label="Search datasources"
         />
         {searchText.length > 0 && (
-          <span className="clear-icon mt-2" onClick={clearSearch}>
+          <span
+            className="clear-icon mt-2"
+            onClick={clearSearch}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                clearSearch();
+              }
+            }}
+            onFocus={() => speak('Clear search button. Press Enter to clear search.')}
+            aria-label="Clear search"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="icon icon-tabler icon-tabler-circle-x"
@@ -1495,8 +1594,9 @@ const withStore = (Component) => (props) => {
   );
 
   const { handleActions } = useGlobalDatasourceUnsavedChanges();
+  const { speak } = useScreenReader();
 
-  return <Component {...props} setGlobalDataSourceStatus={setGlobalDataSourceStatus} handleActions={handleActions} />;
+  return <Component {...props} setGlobalDataSourceStatus={setGlobalDataSourceStatus} handleActions={handleActions} speak={speak} />;
 };
 
 export const DataSourceManager = withTranslation()(withRouter(withStore(DataSourceManagerComponent)));

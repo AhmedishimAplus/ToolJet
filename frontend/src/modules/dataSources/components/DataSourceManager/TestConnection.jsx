@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { DATA_SOURCE_TYPE } from '@/_helpers/constants';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const TestConnection = ({
   kind,
@@ -20,16 +21,18 @@ export const TestConnection = ({
   const [connectionStatus, setConnectionStatus] = useState('unknown');
   const [buttonText, setButtonText] = useState('Test connection');
   const { t } = useTranslation();
+  const { speak } = useScreenReader();
 
   useEffect(() => {
     if (isTesting) {
       setButtonText('Testing connection...');
     } else if (connectionStatus === 'success') {
       setButtonText('Connection verified');
+      speak('Connection verified successfully.');
     } else {
       setButtonText('Test connection');
     }
-  }, [isTesting, connectionStatus]);
+  }, [isTesting, connectionStatus, speak]);
 
   useEffect(() => {
     setConnectionStatus('unknown');
@@ -79,13 +82,27 @@ export const TestConnection = ({
   return (
     <div>
       {connectionStatus === 'failed' && (
-        <span className="badge bg-red-lt" data-cy={`test-connection-failed-text`}>
+        <span
+          className="badge bg-red-lt"
+          data-cy={`test-connection-failed-text`}
+          role="status"
+          aria-live="polite"
+          tabIndex={0}
+          onFocus={() => speak('Connection test failed. Could not connect to datasource.')}
+        >
           {t('globals.noConnection', 'could not connect')}
         </span>
       )}
 
       {connectionStatus === 'success' && (
-        <span className="badge bg-green-lt" data-cy={`test-connection-verified-text`}>
+        <span
+          className="badge bg-green-lt"
+          data-cy={`test-connection-verified-text`}
+          role="status"
+          aria-live="polite"
+          tabIndex={0}
+          onFocus={() => speak('Connection verified successfully.')}
+        >
           {t('globals.connectionVerified', 'connection verified')}
         </span>
       )}
@@ -97,6 +114,10 @@ export const TestConnection = ({
           data-cy={`test-connection-button`}
           variant="tertiary"
           leftIcon="arrowsort"
+          onFocus={() => {
+            const status = isTesting ? 'Testing connection' : 'Press Enter to test datasource connection';
+            speak(`Test connection button. ${status}.`);
+          }}
         >
           {buttonText}
         </ButtonSolid>

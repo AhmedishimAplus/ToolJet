@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
 import OrgConstantVariablesPreviewBox from '../../_components/OrgConstantsVariablesResolver';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const Textarea = ({ helpText, ...props }) => {
   const { workspaceVariables, workspaceConstants, value } = props;
   const [isFocused, setIsFocused] = useState(false);
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    const label = props['aria-label'] || props.label || props.placeholder || 'textarea';
+    const currentValue = value || '';
+    const announcement = currentValue ? `${label}, current value: ${currentValue}` : label;
+    speak(announcement);
+  };
 
   return (
     <div className="tj-app-input">
-      <textarea {...props} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} />
+      <textarea {...props} onFocus={handleFocus} onBlur={() => setIsFocused(false)} />
       <OrgConstantVariablesPreviewBox
         workspaceVariables={workspaceVariables}
         workspaceConstants={workspaceConstants}

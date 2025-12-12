@@ -342,6 +342,7 @@ const DynamicFormV2 = ({
           propertyKey: key,
           widget,
           label,
+          'aria-label': label || description || key,
           placeholder: workspaceConstant ? workspaceConstant : isEncrypted ? '**************' : description,
           className: cx('form-control', {
             'dynamic-form-encrypted-field': isEncrypted,
@@ -364,6 +365,7 @@ const DynamicFormV2 = ({
           propertyKey: key,
           widget,
           label,
+          'aria-label': label || description || key,
           placeholder: workspaceConstant ? workspaceConstant : isEncrypted ? '**************' : description,
           className: cx('form-control', {
             'dynamic-form-encrypted-field': isEncrypted,
@@ -379,10 +381,10 @@ const DynamicFormV2 = ({
           isValidatedMessages: skipValidation
             ? { valid: null, message: '' } // skip validation for initial render and untouched elements
             : validationMessages[key]
-            ? { valid: false, message: validationMessages[key] }
-            : isRequired
-            ? { valid: true, message: '' }
-            : { valid: null, message: '' }, // handle optional && encrypted fields
+              ? { valid: false, message: validationMessages[key] }
+              : isRequired
+                ? { valid: true, message: '' }
+                : { valid: null, message: '' }, // handle optional && encrypted fields
           isDisabled: !canUpdateDataSource(selectedDataSource?.id) && !canDeleteDataSource(),
           workspaceVariables,
           workspaceConstants: currentOrgEnvironmentConstants,
@@ -398,6 +400,8 @@ const DynamicFormV2 = ({
           isRenderedAsQueryEditor = !isGDS;
         }
         return {
+          label: label || key,
+          'aria-label': label || description || key,
           getter: key,
           options: isRenderedAsQueryEditor
             ? options?.[key] ?? schema?.defaults?.[key]
@@ -413,6 +417,8 @@ const DynamicFormV2 = ({
       }
       case 'toggle':
         return {
+          label: label || key,
+          'aria-label': label || description || key,
           defaultChecked: currentValue,
           checked: currentValue,
           onChange: (e) => handleOptionChange(key, e.target.checked, true),
@@ -420,6 +426,8 @@ const DynamicFormV2 = ({
       case 'dropdown':
       case 'dropdown-component-flip':
         return {
+          label: label || key,
+          'aria-label': label || description || key,
           options: list,
           value: options?.[key]?.value || options?.[key],
           onChange: (value) => handleOptionChange(key, value, true),
