@@ -27,7 +27,6 @@ export const UniqueConstraintPopOver = ({
   const { speak } = useScreenReader();
   const toggleRef = useRef(null);
   const deleteRef = useRef(null);
-  const triggerRef = useRef(null);
   const [isOpen, setIsOpen] = React.useState(false);
 
   // Focus trap effect when popover opens
@@ -47,67 +46,26 @@ export const UniqueConstraintPopOver = ({
           e.preventDefault();
           e.stopPropagation();
           setIsOpen(false);
-          // Return focus to the trigger button
-          setTimeout(() => {
-            if (triggerRef.current) {
-              triggerRef.current.focus();
-            }
-          }, 100);
           return;
         }
 
         if (e.key === 'Tab') {
           e.preventDefault();
-          e.stopPropagation();
           // Focus trap: cycle between toggle and delete button
-          if (e.shiftKey) {
-            // Shift+Tab (reverse)
-            if (document.activeElement === deleteRef.current) {
-              toggleRef.current?.focus();
-            } else if (document.activeElement === toggleRef.current) {
-              deleteRef.current?.focus();
-            } else {
-              deleteRef.current?.focus();
-            }
+          if (document.activeElement === toggleRef.current) {
+            deleteRef.current?.focus();
+          } else if (document.activeElement === deleteRef.current) {
+            toggleRef.current?.focus();
           } else {
-            // Tab (forward)
-            if (document.activeElement === toggleRef.current) {
-              deleteRef.current?.focus();
-            } else if (document.activeElement === deleteRef.current) {
-              toggleRef.current?.focus();
-            } else {
-              toggleRef.current?.focus();
-            }
+            // If focus is elsewhere, move to toggle
+            toggleRef.current?.focus();
           }
         }
       };
 
-      // Force focus back if it escapes the menu (only when menu is visible)
-      const handleFocusIn = (e) => {
-        // Only trap focus if the menu elements are actually visible
-        if (!toggleRef.current || !deleteRef.current) return;
-
-        const isInsideMenu =
-          toggleRef.current.contains(e.target) ||
-          deleteRef.current.contains(e.target);
-
-        if (!isInsideMenu && isOpen) {
-          // Prevent focus from leaving but don't stop propagation to allow other handlers
-          e.preventDefault();
-          // Return focus to toggle
-          setTimeout(() => {
-            if (toggleRef.current && isOpen) {
-              toggleRef.current.focus();
-            }
-          }, 0);
-        }
-      };
-
-      document.addEventListener('keydown', handleKeyDown, true);
-      document.addEventListener('focusin', handleFocusIn, true);
+      document.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.removeEventListener('keydown', handleKeyDown, true);
-        document.removeEventListener('focusin', handleFocusIn, true);
+        document.removeEventListener('keydown', handleKeyDown);
       };
     }
   }, [isOpen, speak]);
@@ -284,13 +242,7 @@ export const UniqueConstraintPopOver = ({
             setTimeout(() => {
               onDelete();
               setIsOpen(false);
-              // Return focus to the trigger button after closing menu
-              setTimeout(() => {
-                if (triggerRef.current) {
-                  triggerRef.current.focus();
-                }
-              }, 100);
-            }, 1200);
+            }, 800);
           }}
           tabIndex={0}
           role="button"
@@ -303,13 +255,7 @@ export const UniqueConstraintPopOver = ({
               setTimeout(() => {
                 onDelete();
                 setIsOpen(false);
-                // Return focus to the trigger button after closing menu
-                setTimeout(() => {
-                  if (triggerRef.current) {
-                    triggerRef.current.focus();
-                  }
-                }, 100);
-              }, 1200);
+              }, 800);
             }
           }}
         >
@@ -354,15 +300,6 @@ export const UniqueConstraintPopOver = ({
 
   // Clone children and add click handlers with delay
   const enhancedChildren = React.cloneElement(children, {
-    ref: (node) => {
-      triggerRef.current = node;
-      // Call original ref if exists
-      if (typeof children.ref === 'function') {
-        children.ref(node);
-      } else if (children.ref) {
-        children.ref.current = node;
-      }
-    },
     onClick: handleTriggerClick,
     onKeyDown: (e) => {
       handleTriggerKeyDown(e);

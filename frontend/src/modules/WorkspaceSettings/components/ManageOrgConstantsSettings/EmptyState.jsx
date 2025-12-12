@@ -1,7 +1,10 @@
 import React from 'react';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const EmptyState = ({ canCreateVariable, setIsManageVarDrawerOpen, isLoading, searchTerm = '' }) => {
+  const { speak } = useScreenReader();
+
   if (isLoading) return null;
 
   return (
@@ -23,6 +26,7 @@ const EmptyState = ({ canCreateVariable, setIsManageVarDrawerOpen, isLoading, se
                   data-cy="table-add-new-constant-button"
                   vaiant="primary"
                   onClick={() => setIsManageVarDrawerOpen(true)}
+                  onFocus={() => speak('Create new constant button. No workspace constants yet.')}
                   className="add-new-constant-button"
                   customStyles={{ minWidth: '200px', height: '32px' }}
                 >

@@ -19,6 +19,7 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { Constants, redirectToWorkspace } from '@/_helpers/utils';
 import { SearchBox } from '@/_components/SearchBox';
 import { ConstantsEnvironmentsTabs } from '@/modules/WorkspaceSettings/components/ManageOrgConstantsSettings/components';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const MODES = Object.freeze({
   CREATE: 'create',
@@ -63,6 +64,7 @@ const BaseManageOrgConstants = ({
   const [globalCount, setGlobalCount] = useState(0);
   const [secretCount, setSecretCount] = useState(0);
   const NoPermissionMessage = 'You do not have permissions to perform this action';
+  const { speak } = useScreenReader();
 
   const handleTabChange = (tab) => {
     setCurrentPage(1);
@@ -491,6 +493,7 @@ const BaseManageOrgConstants = ({
                       setMode(() => MODES.CREATE);
                       setIsManageVarDrawerOpen(() => true);
                     }}
+                    onFocus={() => speak('Create new constant button')}
                     className="add-new-constant-button"
                     customStyles={{ minWidth: '200px', height: '32px' }}
                     disabled={isManageVarDrawerOpen}
@@ -510,6 +513,7 @@ const BaseManageOrgConstants = ({
                     <button
                       className={`tab ${activeTab === Constants.Global ? 'active' : ''}`}
                       onClick={() => handleTabChange(Constants.Global)}
+                      onFocus={() => speak(`Global constants tab, ${globalCount} constants`)}
                       style={{ color: 'var(--text-default)' }}
                     >
                       <span className="workspace-constant-text">
@@ -522,6 +526,7 @@ const BaseManageOrgConstants = ({
                     <button
                       className={`tab ${activeTab === Constants.Secret ? 'active' : ''}`}
                       onClick={() => handleTabChange(Constants.Secret)}
+                      onFocus={() => speak(`Secrets tab, ${secretCount} secrets`)}
                       style={{ color: 'var(--text-default)' }}
                     >
                       <span className="workspace-constant-text">

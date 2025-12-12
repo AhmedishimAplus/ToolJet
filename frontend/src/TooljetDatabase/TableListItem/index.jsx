@@ -219,6 +219,7 @@ export const ListItem = ({ active, onClick, text = '', onDeleteCallback }) => {
       </div>
 
       <Drawer
+        disableFocus={true}
         isOpen={isEditTableDrawerOpen}
         onClose={() => setIsEditTableDrawerOpen(false)}
         position="right"

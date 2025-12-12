@@ -78,7 +78,21 @@ const Drawer = ({
     <ErrorBoundary showFallback={true}>
       <FocusTrap
         // The allowOutsideClick option is used to enable or disable clicks outside the popover for functions that are inside the popover but not within the focus trap. On the other hand, clickOutsideDeactivates is used to unfocus the last focused element which is outside the popover.
-        focusTrapOptions={{ initialFocus: false, allowOutsideClick: true, clickOutsideDeactivates: true }}
+        focusTrapOptions={{
+          initialFocus: false,
+          allowOutsideClick: (e) => {
+            // Allow clicks/focus on popovers and overlays that are rendered outside the drawer
+            const target = e.target;
+            return target.closest('.popover') ||
+              target.closest('.create-table-list-items') ||
+              target.closest('.overlay') ||
+              target.closest('[role="tooltip"]');
+          },
+          clickOutsideDeactivates: false,
+          escapeDeactivates: false, // Let the popover handle its own ESC key
+          returnFocusOnDeactivate: false, // Don't return focus when drawer closes
+          preventScroll: true // Prevent scrolling when focusing elements
+        }}
         active={isOpen && !disableFocus}
       >
         <div
