@@ -380,6 +380,7 @@ const BaseManageOrgConstants = ({
     );
     if (constantExists && !shouldUpdate) {
       toast.error(`${variable.type} constant already exists!`);
+      speak(`Failed to add constant. ${variable.type} constant already exists!`);
       return;
     }
     const shouldUpdateConstant = mode === 'edit' && shouldUpdate ? true : constantExistsInDiffEnv;
@@ -393,11 +394,14 @@ const BaseManageOrgConstants = ({
         .update(variableId, variable.value, currentEnv['id'])
         .then(() => {
           toast.success('Constant updated successfully');
+          speak('Constant updated successfully');
           onCancelBtnClicked();
         })
         .catch(({ error, data }) => {
           setErrors(error);
-          toast.error(data?.statusCode === 403 ? 'You do not have permissions to perform this action' : data?.message);
+          const errorMessage = data?.statusCode === 403 ? 'You do not have permissions to perform this action' : data?.message;
+          toast.error(errorMessage);
+          speak(`Failed to update constant. ${errorMessage}`);
           if (error === NoPermissionMessage || data?.statusCode === 403) {
             redirectToWorkspace();
           }
@@ -409,11 +413,14 @@ const BaseManageOrgConstants = ({
       .create(variable.name, variable.value, variable.type, [currentEnv['id']])
       .then(() => {
         toast.success(`${variable.type} constant created successfully!`);
+        speak(`${variable.type} constant created successfully!`);
         onCancelBtnClicked();
       })
       .catch(({ error, data }) => {
         setErrors(error);
-        toast.error(data?.statusCode === 403 ? 'You do not have permissions to perform this action' : data?.message);
+        const errorMessage = data?.statusCode === 403 ? 'You do not have permissions to perform this action' : data?.message;
+        toast.error(errorMessage);
+        speak(`Failed to create constant. ${errorMessage}`);
         if (error === NoPermissionMessage || data?.statusCode === 403) {
           redirectToWorkspace();
         }
