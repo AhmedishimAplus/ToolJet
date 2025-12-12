@@ -1367,9 +1367,9 @@ const KeyboardNavigation = () => {
         const handleGlobalKeyDown = (e) => {
             const activeElement = document.activeElement;
 
-            // Don't intercept if inside a popover or modal dialog (check this FIRST)
-            if (activeElement && activeElement.closest('.popover, .modal, .filter-popup, .tj-db-drawer, [role="dialog"], [id*="popover"]')) {
-                return; // Let the modal/popover handle its own keyboard navigation
+            // Don't intercept if inside a popover, modal dialog, or drawer (check this FIRST)
+            if (activeElement && activeElement.closest('.popover, .modal, .filter-popup, .tj-db-drawer, .drawer-container, .drawer, [role="dialog"], [id*="popover"]')) {
+                return; // Let the modal/popover/drawer handle its own keyboard navigation
             }
 
             // Don't intercept if user is typing in an input field

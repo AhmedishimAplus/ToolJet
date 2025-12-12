@@ -80,6 +80,7 @@ const Drawer = ({
         // The allowOutsideClick option is used to enable or disable clicks outside the popover for functions that are inside the popover but not within the focus trap. On the other hand, clickOutsideDeactivates is used to unfocus the last focused element which is outside the popover.
         focusTrapOptions={{
           initialFocus: false,
+          fallbackFocus: () => document.querySelector('.drawer'),
           allowOutsideClick: (e) => {
             // Allow clicks/focus on popovers and overlays that are rendered outside the drawer
             const target = e.target;
@@ -91,7 +92,29 @@ const Drawer = ({
           clickOutsideDeactivates: false,
           escapeDeactivates: false, // Let the popover handle its own ESC key
           returnFocusOnDeactivate: false, // Don't return focus when drawer closes
-          preventScroll: true // Prevent scrolling when focusing elements
+          preventScroll: true, // Prevent scrolling when focusing elements
+          checkCanFocusTrap: (trapContainers) => {
+            // Wait for content to be ready before activating focus trap
+            const results = trapContainers.map((trapContainer) => {
+              return new Promise((resolve) => {
+                const interval = setInterval(() => {
+                  const tabbable = trapContainer.querySelectorAll(
+                    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                  );
+                  if (tabbable.length > 0) {
+                    clearInterval(interval);
+                    resolve();
+                  }
+                }, 50);
+                // Timeout after 1 second
+                setTimeout(() => {
+                  clearInterval(interval);
+                  resolve();
+                }, 1000);
+              });
+            });
+            return Promise.all(results);
+          }
         }}
         active={isOpen && !disableFocus}
       >

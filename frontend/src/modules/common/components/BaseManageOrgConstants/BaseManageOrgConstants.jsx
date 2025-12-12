@@ -66,6 +66,20 @@ const BaseManageOrgConstants = ({
   const NoPermissionMessage = 'You do not have permissions to perform this action';
   const { speak } = useScreenReader();
 
+  // Handle ESC key to close drawer
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape' && isManageVarDrawerOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        onCancelBtnClicked();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    return () => document.removeEventListener('keydown', handleEscKey);
+  }, [isManageVarDrawerOpen, onCancelBtnClicked]);
+
   const handleTabChange = (tab) => {
     setCurrentPage(1);
     updateTableData(constants, activeTabEnvironment?.name, 0, perPage, true, tab, searchTerm);
@@ -448,7 +462,7 @@ const BaseManageOrgConstants = ({
       />
 
       {isManageVarDrawerOpen && (
-        <Drawer disableFocus={true} isOpen={isManageVarDrawerOpen} onClose={onCancelBtnClicked} position="right">
+        <Drawer isOpen={isManageVarDrawerOpen} onClose={onCancelBtnClicked} position="right">
           <ConstantForm
             errors={errors}
             selectedConstant={selectedConstant}
