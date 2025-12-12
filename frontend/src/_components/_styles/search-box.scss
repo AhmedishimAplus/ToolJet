@@ -1,10 +1,18 @@
 .search-box-wrapper {
+  // Ensure keyboard focus works on the wrapper
+  pointer-events: auto !important;
+
+  .input-icon {
+    pointer-events: auto !important;
+  }
+
   input {
     width: 200px;
     border-radius: 5px !important;
     color: var(--text-primary);
     background-color: var(--surfaces-surface-01) !important;
     border-bottom: 1px solid var(--border-weak) !important;
+    pointer-events: auto !important;
   }
 
   .input-icon .form-control:not(:first-child),
@@ -17,7 +25,12 @@
     background-color: var(--surfaces-surface-02);
   }
 
+  // Show icon on focus as well as hover
   .input-icon .input-icon-addon {
+    display: flex;
+  }
+
+  .input-icon:focus-within .input-icon-addon {
     display: flex;
   }
 

@@ -96,6 +96,7 @@ export const SearchBox = forwardRef(
             onBlur={() => setFocussed(false)}
             data-cy={`${dataCy}-search-bar`}
             autoFocus={autoFocus}
+            tabIndex={0}
             ref={ref}
           />
           {searchText.length >= 0 ? (

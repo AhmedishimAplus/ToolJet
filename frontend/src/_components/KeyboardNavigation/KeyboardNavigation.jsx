@@ -675,6 +675,12 @@ const KeyboardNavigation = () => {
             document.querySelector('.tooljet-database-sidebar, .tooljet-database') !== null;
     }, []);
 
+    // Check if we're on the workspace constants page
+    const isOnWorkspaceConstantsPage = useCallback(() => {
+        return window.location.pathname.includes('/workspace-constants') ||
+            document.querySelector('.constant-page-wrapper, .workspace-constant-header') !== null;
+    }, []);
+
     // Check if element is a data source card
     const isDataSourceCard = useCallback((element) => {
         return element && (
@@ -1720,8 +1726,8 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        // On data sources page or database page, use native browser tab navigation
-        if (isOnDataSourcesPage() || isOnDatabasePage()) {
+        // On data sources page, database page, or workspace constants page, use native browser tab navigation
+        if (isOnDataSourcesPage() || isOnDatabasePage() || isOnWorkspaceConstantsPage()) {
             return;
         }
 
@@ -1750,8 +1756,8 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        // On data sources page or database page, use native browser tab navigation
-        if (isOnDataSourcesPage() || isOnDatabasePage()) {
+        // On data sources page, database page, or workspace constants page, use native browser tab navigation
+        if (isOnDataSourcesPage() || isOnDatabasePage() || isOnWorkspaceConstantsPage()) {
             return;
         }
 
