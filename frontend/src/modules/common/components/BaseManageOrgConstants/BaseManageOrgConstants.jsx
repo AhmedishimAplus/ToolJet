@@ -474,6 +474,11 @@ const BaseManageOrgConstants = ({
   useEffect(() => {
     fetchConstantsAndEnvironments(true);
     updateSidebarNAV(sidebarNavTab);
+
+    // Announce keyboard shortcut on initial load
+    setTimeout(() => {
+      speak('Use Ctrl + left and right arrow keys to switch between pages');
+    }, 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -653,6 +658,24 @@ const BaseManageOrgConstants = ({
                   </Alert>
                 </div>
                 <div className="manage-sso-container h-100">
+                  <div
+                    style={{
+                      padding: '8px 12px',
+                      marginTop: '12px',
+                      fontSize: '12px',
+                      color: darkMode ? '#ffffff' : '#000000',
+                      background: 'var(--surfaces-surface-02)',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-default)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    data-cy="pagination-keyboard-hint"
+                  >
+                    <span>💡</span>
+                    <span>Tip: Use <kbd style={{ padding: '2px 6px', background: 'var(--surfaces-surface-01)', border: '1px solid var(--border-default)', borderRadius: '3px', fontSize: '11px', color: darkMode ? '#ffffff' : '#000000' }}>Ctrl</kbd> + <kbd style={{ padding: '2px 6px', background: 'var(--surfaces-surface-01)', border: '1px solid var(--border-default)', borderRadius: '3px', fontSize: '11px', color: darkMode ? '#ffffff' : '#000000' }}>←</kbd> / <kbd style={{ padding: '2px 6px', background: 'var(--surfaces-surface-01)', border: '1px solid var(--border-default)', borderRadius: '3px', fontSize: '11px', color: darkMode ? '#ffffff' : '#000000' }}>→</kbd> to switch between pages</span>
+                  </div>
                   <div className="d-flex manage-constant-wrapper-card">
                     {(activeTab === Constants.Global && globalCount > 0) ||
                       (activeTab === Constants.Secret && secretCount > 0) ? (
