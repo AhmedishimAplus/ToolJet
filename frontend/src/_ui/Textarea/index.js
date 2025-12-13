@@ -15,9 +15,13 @@ const Textarea = ({ helpText, ...props }) => {
     speak(announcement);
   };
 
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
+
   return (
     <div className="tj-app-input">
-      <textarea {...props} onFocus={handleFocus} onBlur={() => setIsFocused(false)} />
+      <textarea {...props} onFocus={handleFocus} onBlur={handleBlur} />
       <OrgConstantVariablesPreviewBox
         workspaceVariables={workspaceVariables}
         workspaceConstants={workspaceConstants}

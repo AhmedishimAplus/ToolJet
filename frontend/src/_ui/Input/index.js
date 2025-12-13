@@ -48,6 +48,13 @@ const Input = ({ helpText, onBlur, ...props }) => {
     speak(announcement);
   };
 
+  const handleBlur = (event) => {
+    setIsFocused(false);
+    if (onBlur && typeof onBlur === 'function') {
+      onBlur(event);
+    }
+  };
+
   return (
     <div className="tj-app-input">
       <div
@@ -57,10 +64,7 @@ const Input = ({ helpText, onBlur, ...props }) => {
           {...props}
           type={inputType}
           onFocus={handleFocus}
-          onBlur={(event) => {
-            setIsFocused(false);
-            if (onBlur) onBlur(event);
-          }}
+          onBlur={handleBlur}
         />
         {(type === 'password' || encrypted) && (
           <div
