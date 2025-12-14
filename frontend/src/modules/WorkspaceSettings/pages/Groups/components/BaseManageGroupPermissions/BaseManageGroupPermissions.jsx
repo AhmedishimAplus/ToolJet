@@ -49,11 +49,31 @@ class BaseManageGroupPermissions extends React.Component {
       filteredGroup: [],
       groupNameMessage: 'Group name must be unique and max 50 characters',
     };
+    this.groupSearchInputRef = React.createRef();
   }
 
   componentDidMount() {
     this.fetchGroups();
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    // Focus group search input when it becomes visible
+    if (this.state.showGroupSearchBar && !prevState.showGroupSearchBar) {
+      setTimeout(() => {
+        if (this.groupSearchInputRef.current) {
+          this.groupSearchInputRef.current.focus();
+        }
+      }, 0);
+    }
+  }
+
+  speak = (text) => {
+    if ('speechSynthesis' in window && text) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   findCurrentGroupDetails = (data) => {
     let currentUpdatedGroup = data.find((item) => {
@@ -616,6 +636,7 @@ class BaseManageGroupPermissions extends React.Component {
                         value={this.state.newGroupName}
                         data-cy="group-name-input"
                         autoFocus
+                        onFocus={() => this.speak('Enter group name input field')}
                       />
                       <span className="tj-text-xxsm" style={grounNameErrorStyle} data-cy="group-name-info-text">
                         {this.state.groupNameMessage}
@@ -727,7 +748,10 @@ class BaseManageGroupPermissions extends React.Component {
                             <ButtonSolid
                               onClick={(e) => {
                                 e.preventDefault();
-                                this.setState({ newGroupName: null, showNewGroupForm: true, isSaveBtnDisabled: true });
+                                this.speak('Opening add new group menu');
+                                setTimeout(() => {
+                                  this.setState({ newGroupName: null, showNewGroupForm: true, isSaveBtnDisabled: true });
+                                }, 1400);
                               }}
                               size="sm"
                               fill="#889096"
@@ -741,15 +765,25 @@ class BaseManageGroupPermissions extends React.Component {
                         </div>
                       </div>
                     ) : (
-                      <div className="searchbox-custom">
+                      <div
+                        className="searchbox-custom"
+                        onBlur={(e) => {
+                          // Close search box when focus leaves the container
+                          if (!e.currentTarget.contains(e.relatedTarget)) {
+                            this.handleGroupSearchClose();
+                          }
+                        }}
+                      >
                         <SearchBox
+                          ref={this.groupSearchInputRef}
                           dataCy={`query-manager`}
                           width="70px !important"
                           callBack={this.handleGroupSearch}
-                          placeholder={'Search'}
+                          placeholder={'Search groups'}
                           customClass="tj-common-search-input-group"
                           onClearCallback={this.handleGroupSearchClose}
                           autoFocus={true}
+                          clearTextOnBlur={false}
                         />
                       </div>
                     )}

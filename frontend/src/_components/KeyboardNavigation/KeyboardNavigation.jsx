@@ -681,6 +681,12 @@ const KeyboardNavigation = () => {
             document.querySelector('.constant-page-wrapper, .workspace-constant-header') !== null;
     }, []);
 
+    // Check if we're on workspace settings pages (users, groups, etc.)
+    const isOnWorkspaceSettingsPage = useCallback(() => {
+        return window.location.pathname.includes('/workspace-settings') ||
+            document.querySelector('.organization-settings-page, .workspace-settings-page-wrapper') !== null;
+    }, []);
+
     // Check if element is a data source card
     const isDataSourceCard = useCallback((element) => {
         return element && (
@@ -1726,8 +1732,8 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        // On data sources page, database page, or workspace constants page, use native browser tab navigation
-        if (isOnDataSourcesPage() || isOnDatabasePage() || isOnWorkspaceConstantsPage()) {
+        // On data sources page, database page, workspace constants page, or workspace settings page, use native browser tab navigation
+        if (isOnDataSourcesPage() || isOnDatabasePage() || isOnWorkspaceConstantsPage() || isOnWorkspaceSettingsPage()) {
             return;
         }
 
@@ -1756,8 +1762,8 @@ const KeyboardNavigation = () => {
             return;
         }
 
-        // On data sources page, database page, or workspace constants page, use native browser tab navigation
-        if (isOnDataSourcesPage() || isOnDatabasePage() || isOnWorkspaceConstantsPage()) {
+        // On data sources page, database page, workspace constants page, or workspace settings page, use native browser tab navigation
+        if (isOnDataSourcesPage() || isOnDatabasePage() || isOnWorkspaceConstantsPage() || isOnWorkspaceSettingsPage()) {
             return;
         }
 

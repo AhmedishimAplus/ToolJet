@@ -63,19 +63,29 @@ class BaseManageGroupPermissionResources extends React.Component {
       autoRoleChangeMessageType: '',
       updateParam: {},
     };
+    this.searchInputRef = React.createRef();
   }
 
   componentDidMount() {
     if (this.props.groupPermissionId) this.fetchGroupAndResources(this.props.groupPermissionId);
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.props.groupPermissionId && this.props.groupPermissionId !== prevProps.groupPermissionId) {
       this.fetchGroupAndResources(this.props.groupPermissionId);
       this.setState({
         showUserSearchBox: false,
         currentTab: 'users',
       });
+    }
+
+    // Focus search input when it becomes visible
+    if (this.state.showUserSearchBox && !prevState.showUserSearchBox) {
+      setTimeout(() => {
+        if (this.searchInputRef.current) {
+          this.searchInputRef.current.focus();
+        }
+      }, 0);
     }
   }
 
@@ -98,6 +108,14 @@ class BaseManageGroupPermissionResources extends React.Component {
     this.setState({ isLoadingGroup: true });
     this.fetchGroupPermission(groupPermissionId);
     this.fetchUsersInGroup(groupPermissionId);
+  };
+
+  speak = (text) => {
+    if ('speechSynthesis' in window && text) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   userFullName = (user) => {
@@ -591,6 +609,16 @@ class BaseManageGroupPermissionResources extends React.Component {
                   }}
                   className={cx('nav-item nav-link', { active: currentTab === 'users' })}
                   data-cy="users-link"
+                  tabIndex={0}
+                  role="button"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      this.setState({ currentTab: 'users', showUserSearchBox: false });
+                      this.setSelectedUsers([]);
+                    }
+                  }}
+                  onFocus={() => this.speak('Users tab')}
                 >
                   <SolidIcon
                     name="usergroup"
@@ -612,6 +640,16 @@ class BaseManageGroupPermissionResources extends React.Component {
                     'expired-gradient-border': currentTab === 'permissions' && isBasicPlan,
                   })}
                   data-cy="permissions-link"
+                  tabIndex={0}
+                  role="button"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      this.setState({ currentTab: 'permissions', showUserSearchBox: false });
+                      this.setSelectedUsers([]);
+                    }
+                  }}
+                  onFocus={() => this.speak('Permissions tab')}
                 >
                   {isBasicPlan && currentTab === 'permissions' ? (
                     <SolidIcon className="manage-group-tab-icons" name="lockGradient" />
@@ -640,6 +678,16 @@ class BaseManageGroupPermissionResources extends React.Component {
                     'expired-gradient-border': currentTab === 'granularAccess' && isBasicPlan,
                   })}
                   data-cy="granular-access-link"
+                  tabIndex={0}
+                  role="button"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      this.setState({ currentTab: 'granularAccess', showUserSearchBox: false });
+                      this.setSelectedUsers([]);
+                    }
+                  }}
+                  onFocus={() => this.speak('Granular access tab')}
                 >
                   {isBasicPlan && currentTab === 'granularAccess' ? (
                     <SolidIcon className="manage-group-tab-icons" name="granularaccessgrad" />
@@ -719,16 +767,32 @@ class BaseManageGroupPermissionResources extends React.Component {
                     <br />
                     <div>
                       {showUserSearchBox ? (
-                        <div className="searchbox-custom">
-                          <SearchBox
-                            dataCy={`user-group`}
-                            width="600px !important"
-                            callBack={this.handleUserSearchInGroup}
-                            placeholder={'Search'}
-                            customClass="tj-common-search-input-user"
-                            onClearCallback={this.toggleUserTabSearchBox}
-                            autoFocus={true}
-                          />
+                        <div
+                          className="searchbox-custom"
+                          onBlur={(e) => {
+                            // Close search box when focus leaves the container
+                            if (!e.currentTarget.contains(e.relatedTarget)) {
+                              this.toggleUserTabSearchBox();
+                            }
+                          }}
+                        >
+                          <div
+                            role="search"
+                            aria-label="Search users"
+                            onFocus={() => this.speak('Search users by name or email input field')}
+                          >
+                            <SearchBox
+                              ref={this.searchInputRef}
+                              dataCy={`user-group`}
+                              width="600px !important"
+                              callBack={this.handleUserSearchInGroup}
+                              placeholder={'Search users by name or email'}
+                              customClass="tj-common-search-input-user"
+                              onClearCallback={this.toggleUserTabSearchBox}
+                              autoFocus={true}
+                              clearTextOnBlur={false}
+                            />
+                          </div>
                         </div>
                       ) : (
                         <div className="manage-group-table-head">
