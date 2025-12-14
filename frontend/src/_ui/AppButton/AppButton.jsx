@@ -2,8 +2,10 @@ import React, { forwardRef } from 'react';
 import './AppButton.scss';
 import SolidIcon from '../Icon/solidIcons/index';
 import { Spinner } from 'react-bootstrap';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const ButtonBase = forwardRef(function ButtonBase(props, ref) {
+  const { speak } = useScreenReader();
   const mapBaseSize = {
     lg: 'tj-large-btn',
     md: 'tj-medium-btn',
@@ -33,6 +35,33 @@ export const ButtonBase = forwardRef(function ButtonBase(props, ref) {
   const isAnchor = (!!restProps.href || as === 'a') && !disabled;
   const Element = as ? as : isAnchor ? 'a' : 'button';
 
+  // Helper function to extract text content from children
+  const getTextFromChildren = (children) => {
+    if (typeof children === 'string') {
+      return children;
+    }
+    if (typeof children === 'number') {
+      return String(children);
+    }
+    if (React.isValidElement(children) && children.props.children) {
+      return getTextFromChildren(children.props.children);
+    }
+    if (Array.isArray(children)) {
+      return children.map(getTextFromChildren).join(' ');
+    }
+    return '';
+  };
+
+  const handleFocus = (e) => {
+    const buttonText = getTextFromChildren(children) || restProps['aria-label'] || restProps.title || 'button';
+    // Avoid saying "button button" for icon-only buttons
+    const announcement = buttonText.toLowerCase() === 'button' ? buttonText : `${buttonText} button`;
+    speak(announcement);
+    if (restProps.onFocus) {
+      restProps.onFocus(e);
+    }
+  };
+
   return (
     <Element
       {...restProps}
@@ -46,6 +75,7 @@ export const ButtonBase = forwardRef(function ButtonBase(props, ref) {
           { ...restProps.style, ...customStyles })
       }
       type={isAnchor ? undefined : type || 'button'}
+      onFocus={handleFocus}
     >
       {!isLoading && leftIcon && (
         <span className="tj-btn-left-icon">

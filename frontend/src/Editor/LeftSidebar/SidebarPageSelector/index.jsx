@@ -142,6 +142,7 @@ const LeftSidebarPageSelector = ({
                 leftIcon="search"
                 iconWidth="14"
                 variant="tertiary"
+                aria-label="Search pages"
               ></ButtonSolid>
               <ButtonSolid
                 title={`${pinned ? 'Unpin' : 'Pin'}`}

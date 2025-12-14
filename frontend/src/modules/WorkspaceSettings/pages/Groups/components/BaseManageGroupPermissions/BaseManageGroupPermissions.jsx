@@ -186,7 +186,7 @@ class BaseManageGroupPermissions extends React.Component {
     return list;
   };
 
-  fetchGroups = (type = 'admin', callback = () => {}) => {
+  fetchGroups = (type = 'admin', callback = () => { }) => {
     this.setState({
       isLoading: true,
     });
@@ -200,8 +200,8 @@ class BaseManageGroupPermissions extends React.Component {
           type == 'admin'
             ? defaultGroups[0].id
             : type == 'current'
-            ? this.findCurrentGroupDetails(groupPermissions)
-            : groupPermissions.at(-1).id;
+              ? this.findCurrentGroupDetails(groupPermissions)
+              : groupPermissions.at(-1).id;
         this.setState(
           {
             groups: groupPermissions.filter((group) => group.type === 'custom'),
@@ -711,6 +711,7 @@ class BaseManageGroupPermissions extends React.Component {
                               iconWidth="15"
                               fill="#889096"
                               className="create-group-custom"
+                              aria-label="Search groups"
                             />
                           ) : (
                             <div style={{ width: '20px' }}></div>
@@ -734,6 +735,7 @@ class BaseManageGroupPermissions extends React.Component {
                               iconWidth="20"
                               className="create-group-custom"
                               disabled={!isFeatureEnabled}
+                              aria-label="Add new group"
                             />
                           </LicenseTooltip>
                         </div>
@@ -777,12 +779,12 @@ class BaseManageGroupPermissions extends React.Component {
                               permissionGroup.disabled
                                 ? null
                                 : () => {
-                                    this.setState({
-                                      selectedGroupPermissionId: permissionGroup.id,
-                                      selectedGroup: this.humanizeifDefaultGroupName(permissionGroup.name),
-                                      selectedGroupObject: permissionGroup,
-                                    });
-                                  }
+                                  this.setState({
+                                    selectedGroupPermissionId: permissionGroup.id,
+                                    selectedGroup: this.humanizeifDefaultGroupName(permissionGroup.name),
+                                    selectedGroupObject: permissionGroup,
+                                  });
+                                }
                             }
                             disabled={permissionGroup.disabled}
                             toolTipDisabled={permissionGroup.disabled}

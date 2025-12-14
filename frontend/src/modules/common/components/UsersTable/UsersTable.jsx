@@ -13,6 +13,7 @@ import { NoActiveWorkspaceModal } from './components/NoActiveWorkspaceModal';
 import Spinner from 'react-bootstrap/Spinner';
 import { ToolTip } from '@/_components/ToolTip';
 import { fetchEdition } from '../../helpers/utils';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 const UsersTable = ({
   isLoading,
   users,
@@ -34,6 +35,7 @@ const UsersTable = ({
   resetPassword = false,
   wsSettings = false,
 }) => {
+  const { speak } = useScreenReader();
   const [isResetPasswordModalVisible, setIsResetPasswordModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showNoActiveWorkspaceModal, setShowNoActiveWorkspaceModal] = useState(false);
@@ -131,9 +133,8 @@ const UsersTable = ({
                       <td data-name="name-header">
                         <Avatar
                           avatarId={user.avatar_id}
-                          text={`${user.first_name ? user.first_name[0] : ''}${
-                            user.last_name ? user.last_name[0] : ''
-                          }`}
+                          text={`${user.first_name ? user.first_name[0] : ''}${user.last_name ? user.last_name[0] : ''
+                            }`}
                         />
                         <div className="user-detail">
                           <span
@@ -195,12 +196,12 @@ const UsersTable = ({
                             {user.status}
                           </small>
                           {user.status === 'invited' &&
-                          !hideAccountSetupLink &&
-                          user?.invitation_token &&
-                          edition != 'cloud' ? (
+                            !hideAccountSetupLink &&
+                            user?.invitation_token &&
+                            edition != 'cloud' ? (
                             <div className="workspace-clipboard-wrap">
                               <CopyToClipboard text={generateInvitationURL(user)} onCopy={invitationLinkCopyHandler}>
-                                <span>
+                                <span tabIndex="0" onFocus={() => speak('Copy invitation link')}>
                                   <SolidIcon
                                     data-tooltip-id="tooltip-for-copy-invitation-link"
                                     data-tooltip-content="Copy invitation link"
@@ -233,8 +234,8 @@ const UsersTable = ({
                               user.total_organizations > 0
                                 ? () => openOrganizationModal(user)
                                 : () => {
-                                    setShowNoActiveWorkspaceModal(true);
-                                  }
+                                  setShowNoActiveWorkspaceModal(true);
+                                }
                             }
                             data-cy={`${user.name.toLowerCase().replace(/\s+/g, '-')}-user-view-button`}
                           >

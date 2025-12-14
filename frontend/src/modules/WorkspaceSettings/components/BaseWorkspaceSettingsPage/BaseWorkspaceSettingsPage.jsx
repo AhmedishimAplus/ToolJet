@@ -10,7 +10,9 @@ import { ERROR_TYPES } from '@/_helpers/constants';
 import { BreadCrumbContext } from '@/App/App';
 import { checkConditionsForRoute } from '@/_helpers/utils';
 import { OrganizationList } from '@/modules/dashboard/components';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 export default function WorkspaceSettingsPage({ extraLinks, ...props }) {
+  const { speak } = useScreenReader();
   const workspaceSettingsLinks = constructWorkspaceSettingsLinks(extraLinks);
   const admin = authenticationService.currentSessionValue?.admin;
   const [selectedTab, setSelectedTab] = useState(admin ? workspaceSettingsLinks[0].id : 'workspacevariables');
@@ -82,6 +84,7 @@ export default function WorkspaceSettingsPage({ extraLinks, ...props }) {
                         outline: 'none',
                         backgroundColor: 'inherit',
                       }}
+                      onFocus={() => speak(item.name)}
                     >
                       <FolderList
                         className="workspace-settings-nav-items"

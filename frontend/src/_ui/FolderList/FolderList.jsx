@@ -6,6 +6,7 @@ import { ButtonSolid } from '../AppButton/AppButton';
 import Overlay from 'react-bootstrap/Overlay';
 import cx from 'classnames';
 import { Tooltip } from 'react-tooltip'; // Import Tooltip
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 function FolderList({
   overlayFunctionParam,
@@ -31,7 +32,31 @@ function FolderList({
   hovered = false,
   ...restProps
 }) {
+  const { speak } = useScreenReader();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Helper function to extract text content from React elements
+  const getTextFromChildren = (children) => {
+    if (typeof children === 'string') {
+      return children;
+    }
+    if (typeof children === 'number') {
+      return String(children);
+    }
+    if (React.isValidElement(children)) {
+      if (children.props.children) {
+        return getTextFromChildren(children.props.children);
+      }
+      // Try to get text from props
+      if (children.props.text) {
+        return children.props.text;
+      }
+    }
+    if (Array.isArray(children)) {
+      return children.map(getTextFromChildren).filter(Boolean).join(' ');
+    }
+    return '';
+  };
   const [isHoveredInside, setIsHoveredInside] = useState(false);
   const [showGroupOptions, setShowGroupOptions] = useState(false);
   const target = useRef(null);
@@ -83,6 +108,10 @@ function FolderList({
           data-cy={`${dataCy}-list-item`}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onFocus={() => {
+            const text = getTextFromChildren(children) || toolTipText || dataCy || 'item';
+            speak(`${text} button`);
+          }}
           data-tooltip-content={toolTipText}
           data-tooltip-id="button-content"
           data-tooltip-hidden={!toolTipDisabled}

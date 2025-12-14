@@ -15,6 +15,7 @@ import HeaderSkeleton from '@/_ui/FolderSkeleton/HeaderSkeleton';
 import EditRoleErrorModal from '@/modules/common/components/ErrorModal';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 class ManageOrgUsersComponent extends React.Component {
   constructor(props) {

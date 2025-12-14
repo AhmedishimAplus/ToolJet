@@ -742,6 +742,7 @@ class BaseManageGroupPermissionResources extends React.Component {
                             iconWidth="15"
                             fill="#889096"
                             className="search-user-group-btn"
+                            aria-label="Search users"
                           />
                           <p className="tj-text-xsm" data-cy="name-header" style={{ padding: '10px' }}>
                             User name
@@ -783,9 +784,8 @@ class BaseManageGroupPermissionResources extends React.Component {
                                   <Avatar
                                     className="name-avatar"
                                     avatarId={user?.avatarId}
-                                    text={`${user.firstName ? user.firstName[0] : ''}${
-                                      user.lastName ? user.lastName[0] : ''
-                                    }`}
+                                    text={`${user.firstName ? user.firstName[0] : ''}${user.lastName ? user.lastName[0] : ''
+                                      }`}
                                   />
                                   <span>{`${user?.firstName ?? ''} ${user?.lastName ?? ''}`}</span>
                                 </p>

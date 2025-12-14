@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Select from '@/_ui/Select';
 import { debounce } from 'lodash';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const userStatusOptions = [
   { name: 'All', value: '' },
@@ -10,6 +11,7 @@ const userStatusOptions = [
 ];
 
 const UsersFilter = ({ filterList, resetSearch }) => {
+  const { speak } = useScreenReader();
   const [options, setOptions] = useState({ searchText: '', status: '' });
   const [statusVal, setStatusVal] = useState('');
   const [queryVal, setQueryVal] = useState();
@@ -89,6 +91,7 @@ const UsersFilter = ({ filterList, resetSearch }) => {
               }}
               value={options.searchText}
               data-cy="input-field-user-filter-search"
+              onFocus={() => speak(options.searchText ? `Search users input, current value: ${options.searchText}` : 'Search users by name or email input')}
             />
           </div>
         </div>

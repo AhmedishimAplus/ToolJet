@@ -4,6 +4,7 @@ import Popover from 'react-bootstrap/Popover';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { authenticationService } from '@/_services';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export default function UsersActionMenu({
   toggleEditUserDrawer,
@@ -16,6 +17,7 @@ export default function UsersActionMenu({
   onResetPasswordClick,
   resetPassword = false,
 }) {
+  const { speak } = useScreenReader();
   const closeMenu = () => {
     document.body.click();
   };
@@ -84,7 +86,7 @@ export default function UsersActionMenu({
         </Popover>
       }
     >
-      <div className="user-actions-menu-container" data-cy="user-actions-button">
+      <div className="user-actions-menu-container" data-cy="user-actions-button" tabIndex="0" onFocus={() => speak('User actions menu')}>
         <SolidIcon className="actions-menu-icon" name="morevertical" />
       </div>
     </OverlayTrigger>

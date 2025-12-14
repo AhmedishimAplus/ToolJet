@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const Pagination = function Pagination({
   currentPage,
@@ -9,6 +10,7 @@ export const Pagination = function Pagination({
   queryParams = {},
   darkMode,
 }) {
+  const { speak } = useScreenReader();
   const { t } = useTranslation();
   const totalPages = useMemo(() => {
     return Math.floor((count - 1) / itemsPerPage) + 1;
@@ -23,7 +25,7 @@ export const Pagination = function Pagination({
           onClick={() => gotoPage(index)}
           className={`page-item ${currentPage === index ? 'active' : ''}`}
         >
-          <a className="page-link">{index}</a>
+          <a className="page-link" tabIndex="0" onFocus={() => speak(`Page ${index}`)}>{index}</a>
         </li>
       );
     }
@@ -75,7 +77,7 @@ export const Pagination = function Pagination({
       </p>
       <ul className="pagination m-0 ms-auto">
         <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-          <a style={{ cursor: 'pointer' }} className="page-link" onClick={gotoFirstPage}>
+          <a style={{ cursor: 'pointer' }} className="page-link" onClick={gotoFirstPage} tabIndex="0" onFocus={() => speak('First page')}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="icon"
@@ -95,7 +97,7 @@ export const Pagination = function Pagination({
           </a>
         </li>
         <li data-testid="previous-0" className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-          <a data-testid="previous" style={{ cursor: 'pointer' }} className="page-link" onClick={gotoPreviousPage}>
+          <a data-testid="previous" style={{ cursor: 'pointer' }} className="page-link" onClick={gotoPreviousPage} tabIndex="0" onFocus={() => speak('Previous page')}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="icon"
@@ -123,6 +125,8 @@ export const Pagination = function Pagination({
             className="page-link"
             onClick={gotoNextPage}
             data-cy="next-page-link"
+            tabIndex="0"
+            onFocus={() => speak('Next page')}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -142,7 +146,7 @@ export const Pagination = function Pagination({
           </a>
         </li>
         <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-          <a style={{ cursor: 'pointer' }} className="page-link" onClick={gotoLastPage} data-cy="last-page-link">
+          <a style={{ cursor: 'pointer' }} className="page-link" onClick={gotoLastPage} data-cy="last-page-link" tabIndex="0" onFocus={() => speak('Last page')}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="icon"
