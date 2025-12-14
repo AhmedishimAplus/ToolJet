@@ -2,14 +2,20 @@ import React from 'react';
 import { HeaderSection } from '@/_ui/LeftSidebar';
 import _ from 'lodash';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const SidebarDebuggerHeader = ({ darkMode, clearErrorLogs, setPinned, pinned }) => {
+  const { speak } = useScreenReader();
+
   return (
     <HeaderSection darkMode={darkMode}>
       <HeaderSection.PanelHeader title="Debugger">
         <div className="d-flex justify-content-end" style={{ gap: '2px' }}>
           <ButtonSolid
-            onClick={clearErrorLogs}
+            onClick={() => {
+              speak('Logs cleared');
+              clearErrorLogs();
+            }}
             leftIcon="trash"
             variant="tertiary"
             className="tj-text-xsm left-sidebar-header-btn"
@@ -22,7 +28,10 @@ export const SidebarDebuggerHeader = ({ darkMode, clearErrorLogs, setPinned, pin
           </ButtonSolid>
           <ButtonSolid
             title={`${pinned ? 'Unpin' : 'Pin'}`}
-            onClick={() => setPinned(!pinned)}
+            onClick={() => {
+              speak(pinned ? 'Debugger unpinned' : 'Debugger pinned');
+              setPinned(!pinned);
+            }}
             variant="tertiary"
             leftIcon={pinned ? 'unpin' : 'pin'}
             iconWidth="14"

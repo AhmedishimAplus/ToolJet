@@ -3,6 +3,7 @@ import { OverlayTrigger, Popover } from 'react-bootstrap';
 import { useAppVersionStore } from '@/_stores/appVersionStore';
 import { shallow } from 'zustand/shallow';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const GlobalSettings = ({ darkMode, showHideViewerNavigationControls, isViewerNavigationDisabled }) => {
   const { isVersionReleased, enableReleasedVersionPopupState, isEditorFreezed } = useAppVersionStore(
@@ -51,6 +52,8 @@ export const GlobalSettings = ({ darkMode, showHideViewerNavigationControls, isV
 };
 
 const Toggle = ({ onChange, value = true }) => {
+  const { speak } = useScreenReader();
+
   return (
     <div className="form-check form-switch">
       <input
@@ -59,6 +62,7 @@ const Toggle = ({ onChange, value = true }) => {
         type="checkbox"
         onClick={(e) => {
           e.stopPropagation();
+          speak(`Page menu ${value ? 'enabled' : 'disabled'}`);
           onChange();
         }}
         checked={value}

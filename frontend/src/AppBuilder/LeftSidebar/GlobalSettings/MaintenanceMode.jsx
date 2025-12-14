@@ -4,8 +4,10 @@ import SwitchComponent from '@/components/ui/Switch/Index';
 import { shallow } from 'zustand/shallow';
 import { Confirm } from '@/Editor/Viewer/Confirm';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const MaintenanceMode = ({ darkMode }) => {
+  const { speak } = useScreenReader();
   const { moduleId } = useModuleContext();
   const [showConfirmation, setConfirmationShow] = useState(false);
   const { isMaintenanceOn, toggleAppMaintenance } = useStore(
@@ -35,7 +37,10 @@ const MaintenanceMode = ({ darkMode }) => {
           label="Maintenance mode"
           size="default"
           checked={isMaintenanceOn}
-          onCheckedChange={() => setConfirmationShow(true)}
+          onCheckedChange={() => {
+            speak(`Maintenance mode ${isMaintenanceOn ? 'will be turned off' : 'will be turned on'}`);
+            setConfirmationShow(true);
+          }}
           data-cy={`toggle-maintenance-mode`}
           className="tw-w-full"
         />

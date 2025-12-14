@@ -13,6 +13,7 @@ import { DefaultCopyIcon } from '../../DefaultCopyIcon';
 import { copyToClipboard, extractComponentName, formatPathForCopy } from '../../utils';
 import WidgetIcon from '@/../assets/images/icons/widgets';
 import { generateCypressDataCy } from '@/modules/common/helpers/cypressHelpers';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const renderNodeIcons = (node, iconsList, darkMode) => {
   const icon = iconsList.filter((icon) => icon?.iconName === node)[0];
@@ -31,7 +32,21 @@ const renderNodeIcons = (node, iconsList, darkMode) => {
 };
 
 const Row = ({ label, value, level = 1, absolutePath, iconsList, darkMode }) => {
+  const { speak } = useScreenReader();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const getValueAsText = () => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return value.toString();
+    if (typeof value === 'boolean') return value.toString();
+    if (value === null) return 'null';
+    if (typeof value === 'undefined') return 'undefined';
+    if (Array.isArray(value)) return `Array with ${value.length} items`;
+    if (typeof value === 'object') return `Object with ${Object.keys(value).length} properties`;
+    if (typeof value === 'function') return 'function';
+    return '';
+  };
+
   const Node = () => {
     if (typeof value === 'string') {
       return <StringNode value={value} />;
@@ -56,7 +71,22 @@ const Row = ({ label, value, level = 1, absolutePath, iconsList, darkMode }) => 
   return (
     <div style={{ marginLeft: `${level === 1 ? '0px' : '22px'}` }}>
       <div className="json-viewer-row-container">
-        <div className="json-viewer-row" onClick={() => setIsExpanded((prev) => !prev)}>
+        <div
+          className="json-viewer-row"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          tabIndex={0}
+          role="button"
+          aria-expanded={isArray || isObject ? isExpanded : undefined}
+          aria-label={`${label}: ${getValueAsText()}`}
+          onFocus={() => speak(`${label}: ${getValueAsText()}`)}
+          onMouseEnter={() => speak(`${label}: ${getValueAsText()}`)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsExpanded((prev) => !prev);
+            }
+          }}
+        >
           <div className="json-viewer-expand-icon">
             {(isArray || isObject) &&
               (isExpanded ? (
@@ -98,6 +128,20 @@ const Row = ({ label, value, level = 1, absolutePath, iconsList, darkMode }) => 
                 onClick={() => {
                   const formattedPath = formatPathForCopy(absolutePath);
                   copyToClipboard(formattedPath, false);
+                  speak('Path copied');
+                }}
+                onFocus={() => speak('Copy path')}
+                onMouseEnter={() => speak('Copy path')}
+                tabIndex={0}
+                role="button"
+                aria-label="Copy path"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const formattedPath = formatPathForCopy(absolutePath);
+                    copyToClipboard(formattedPath, false);
+                    speak('Path copied');
+                  }
                 }}
                 className="copy-to-clipboard json-viewer-action-icon"
               >
@@ -108,6 +152,19 @@ const Row = ({ label, value, level = 1, absolutePath, iconsList, darkMode }) => 
               <span
                 onClick={() => {
                   copyToClipboard(value);
+                  speak('Value copied');
+                }}
+                onFocus={() => speak('Copy value')}
+                onMouseEnter={() => speak('Copy value')}
+                tabIndex={0}
+                role="button"
+                aria-label="Copy value"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    copyToClipboard(value);
+                    speak('Value copied');
+                  }
                 }}
                 className="json-viewer-action-icon"
               >

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import useAppDarkMode from '@/_hooks/useAppDarkMode';
 import useStore from '@/AppBuilder/_stores/store';
 import { shallow } from 'zustand/shallow';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const APP_MODES = [
   { label: 'Auto', value: 'auto' },
@@ -13,6 +14,7 @@ export const APP_MODES = [
 ];
 
 const AppModeToggle = ({ darkMode }) => {
+  const { speak } = useScreenReader();
   const { onAppModeChange, appMode } = useAppDarkMode();
   const { t } = useTranslation();
 
@@ -28,6 +30,7 @@ const AppModeToggle = ({ darkMode }) => {
             if (value === 'auto') {
               exposedTheme = darkMode ? 'dark' : 'light';
             }
+            speak(`App mode changed to ${value}`);
             onAppModeChange({ appMode: value });
             setResolvedGlobals('theme', { name: exposedTheme });
           }}

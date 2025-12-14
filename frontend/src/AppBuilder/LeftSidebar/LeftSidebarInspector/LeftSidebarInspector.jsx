@@ -10,10 +10,12 @@ import useIconList from './useIconList';
 import { Button as ButtonComponent } from '@/components/ui/Button/Button';
 import { formatInspectorDataMisc, formatInspectorQueryData } from './utils';
 import ErrorBoundary from '@/_ui/ErrorBoundary';
+import { useScreenReader } from '@/modules/common/hooks';
 
 import './styles.scss';
 
 const LeftSidebarInspector = ({ darkMode, pinned, setPinned, moduleId, appType }) => {
+  const { speak } = useScreenReader();
   const exposedComponentsVariables = useStore((state) => state.getAllExposedValues().components, shallow);
   const exposedQueries = useStore((state) => state.getAllExposedValues().queries || {}, shallow);
   const exposedVariables = useStore((state) => state.getAllExposedValues().variables || {}, shallow);
@@ -160,7 +162,12 @@ const LeftSidebarInspector = ({ darkMode, pinned, setPinned, moduleId, appType }
             <ButtonComponent
               iconOnly
               leadingIcon={pinned ? 'unpin' : 'pin'}
-              onClick={() => setPinned(!pinned)}
+              onClick={() => {
+                speak(pinned ? 'Unpinned' : 'Pinned');
+                setPinned(!pinned);
+              }}
+              onFocus={() => speak(pinned ? 'Unpin button' : 'Pin button')}
+              onMouseEnter={() => speak(pinned ? 'Unpin button' : 'Pin button')}
               variant="ghost"
               fill="var(--icon-strong,#6A727C)"
               size="medium"

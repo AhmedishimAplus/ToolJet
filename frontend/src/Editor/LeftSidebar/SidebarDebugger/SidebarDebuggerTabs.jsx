@@ -4,6 +4,7 @@ import Tabs from 'react-bootstrap/Tabs';
 import Logs from './Logs';
 import { useTranslation } from 'react-i18next';
 import cx from 'classnames';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const DebuggerTabContent = ({ logs, darkMode, tabName }) => {
   const { t } = useTranslation();
@@ -31,6 +32,8 @@ const DebuggerTabContent = ({ logs, darkMode, tabName }) => {
 };
 
 const SidebarDebuggerTabs = ({ darkMode, errors, allLog }) => {
+  const { speak } = useScreenReader();
+
   return (
     <Tabs
       defaultActiveKey="allLog"
@@ -38,6 +41,13 @@ const SidebarDebuggerTabs = ({ darkMode, errors, allLog }) => {
       className={cx('sidebar-debugger', {
         'dark-theme': darkMode,
       })}
+      onSelect={(key) => {
+        if (key === 'allLog') {
+          speak(`All Log tab selected, ${allLog.length} logs`);
+        } else if (key === 'errors') {
+          speak(`Errors tab selected, ${errors.length} errors`);
+        }
+      }}
       justify
     >
       <Tab eventKey="allLog" title="All Log">

@@ -9,9 +9,11 @@ import useStore from '@/AppBuilder/_stores/store';
 import { useTranslation } from 'react-i18next';
 import { shallow } from 'zustand/shallow';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
+import { useScreenReader } from '@/modules/common/hooks';
 // import { useStore } from '@/store';
 
 const SlugInput = () => {
+  const { speak } = useScreenReader();
   const { moduleId } = useModuleContext();
   const {
     slug: oldSlug,
@@ -66,6 +68,7 @@ const SlugInput = () => {
           setSlugUpdatedState(true);
           replaceEditorURL(value, currentPage?.handle);
           setApp({ ...app, slug: value });
+          speak(`Slug updated to ${value}. Link updated successfully`);
         })
         .catch(({ error }) => {
           setSlug({
@@ -74,6 +77,7 @@ const SlugInput = () => {
           });
           setSlugProgress(false);
           setSlugUpdatedState(false);
+          speak(`Error updating slug: ${error}`);
         });
     } else {
       setSlugProgress(false);

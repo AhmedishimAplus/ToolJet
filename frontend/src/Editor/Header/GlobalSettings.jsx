@@ -20,6 +20,7 @@ import AppModeToggle from './AppModeToggle';
 import { Button } from '@/components/ui/Button/Button';
 import SwitchComponent from '@/components/ui/Switch/Index';
 import InputComponent from '@/components/ui/Input/Index';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const GlobalSettings = ({
   globalSettings,
@@ -28,6 +29,7 @@ export const GlobalSettings = ({
   toggleAppMaintenance,
   isMaintenanceOn,
 }) => {
+  const { speak } = useScreenReader();
   const realState = useCurrentState();
   const { t } = useTranslation();
 
@@ -101,6 +103,7 @@ export const GlobalSettings = ({
             slug: value,
             app: app,
           });
+          speak(`Slug updated to ${value}. Link updated successfully`);
         })
         .catch(({ error }) => {
           setSlug({
@@ -109,6 +112,7 @@ export const GlobalSettings = ({
           });
           setSlugProgress(false);
           setSlugUpdatedState(false);
+          speak(`Error updating slug: ${error}`);
         });
     } else {
       setSlugProgress(false);
@@ -227,7 +231,10 @@ export const GlobalSettings = ({
                   label="Hide header for launched apps"
                   size="default"
                   checked={hideHeader}
-                  onCheckedChange={(e) => globalSettingsChanged({ hideHeader: e })}
+                  onCheckedChange={(e) => {
+                    speak(`Hide header ${e ? 'enabled' : 'disabled'}`);
+                    globalSettingsChanged({ hideHeader: e });
+                  }}
                   data-cy={`toggle-hide-header-for-launched-apps`}
                   className="tw-w-full"
                 />
@@ -238,7 +245,10 @@ export const GlobalSettings = ({
                   label="Maintenance mode"
                   size="default"
                   checked={isMaintenanceOn}
-                  onCheckedChange={() => setConfirmationShow(true)}
+                  onCheckedChange={() => {
+                    speak(`Maintenance mode ${isMaintenanceOn ? 'will be turned off' : 'will be turned on'}`);
+                    setConfirmationShow(true);
+                  }}
                   data-cy={`toggle-maintenance-mode`}
                   className="tw-w-full"
                 />
@@ -257,7 +267,10 @@ export const GlobalSettings = ({
                       placeholder={'0'}
                       onChange={(e) => {
                         const width = e.target.value;
-                        if (!Number.isNaN(width) && width >= 0) globalSettingsChanged({ canvasMaxWidth: width });
+                        if (!Number.isNaN(width) && width >= 0) {
+                          globalSettingsChanged({ canvasMaxWidth: width });
+                          speak(`Canvas max width changed to ${width}`);
+                        }
                       }}
                       value={canvasMaxWidth}
                     />
@@ -267,6 +280,7 @@ export const GlobalSettings = ({
                       aria-label="Select canvas width type"
                       onChange={(event) => {
                         const newCanvasMaxWidthType = event.currentTarget.value;
+                        speak(`Canvas width type changed to ${newCanvasMaxWidthType}`);
                         const options = {
                           canvasMaxWidthType: newCanvasMaxWidthType,
                         };

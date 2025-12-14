@@ -10,9 +10,11 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { DefaultCopyIcon } from './DefaultCopyIcon';
 import { generateCypressDataCy } from '@/modules/common/helpers/cypressHelpers';
 import { formatPathForCopy } from './utils';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const TreeViewHeader = (props) => {
   const { path, backFn, darkMode, data, nodeSpecificActions, type, generalActions } = props;
+  const { speak } = useScreenReader();
   const getResolvedValue = useStore((state) => state.getResolvedValue, shallow);
   const [showMenu, setShowMenu] = useState(false);
   const pathArray = path.split('.');
@@ -54,7 +56,20 @@ export const TreeViewHeader = (props) => {
             onClick={(event) => {
               event.stopPropagation();
               copyPath();
+              speak('Path copied');
               closeMenu();
+            }}
+            onFocus={() => speak('Copy path')}
+            onMouseEnter={() => speak('Copy path')}
+            tabIndex={0}
+            role="menuitem"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                copyPath();
+                speak('Path copied');
+                closeMenu();
+              }
             }}
             className="option"
             data-cy="inspector-copy-path"
@@ -67,7 +82,20 @@ export const TreeViewHeader = (props) => {
             onClick={(event) => {
               event.stopPropagation();
               copyValue();
+              speak('Value copied');
               closeMenu();
+            }}
+            onFocus={() => speak('Copy value')}
+            onMouseEnter={() => speak('Copy value')}
+            tabIndex={0}
+            role="menuitem"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                copyValue();
+                speak('Value copied');
+                closeMenu();
+              }
             }}
             className="option"
             data-cy="inspector-copy-value"
@@ -112,7 +140,25 @@ export const TreeViewHeader = (props) => {
       {/* <div className="json-viewer-back-btn" onClick={backFn}>
         <ArrowLeft tailOpacity="1" fill={'var(--slate12)'} width={'18'} />
       </div> */}
-      <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={backFn}>
+      <div
+        style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+        onClick={() => {
+          speak('Back to inspector');
+          backFn();
+        }}
+        onFocus={() => speak('Back to inspector')}
+        onMouseEnter={() => speak('Back to inspector')}
+        tabIndex={0}
+        role="button"
+        aria-label="Back to inspector"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            speak('Back to inspector');
+            backFn();
+          }
+        }}
+      >
         <span style={{ color: 'var(--slate11)' }}>{parentNode.charAt(0).toUpperCase() + parentNode.slice(1)}</span>
 
         {pathArray.length > 1 &&
@@ -143,7 +189,21 @@ export const TreeViewHeader = (props) => {
         <div
           onClick={(event) => {
             event.stopPropagation();
+            speak(showMenu ? 'Menu closed' : 'Menu opened');
             setShowMenu((prev) => !prev);
+          }}
+          onFocus={() => speak('More options')}
+          onMouseEnter={() => speak('More options')}
+          tabIndex={0}
+          role="button"
+          aria-label="More options"
+          aria-expanded={showMenu}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              speak(showMenu ? 'Menu closed' : 'Menu opened');
+              setShowMenu((prev) => !prev);
+            }
           }}
           className="copy-menu-options-icon json-viewer-options-btn"
           style={{

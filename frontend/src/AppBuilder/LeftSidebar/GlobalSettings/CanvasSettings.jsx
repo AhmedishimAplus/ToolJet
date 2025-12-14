@@ -14,8 +14,10 @@ import { ColorSwatches } from '@/modules/Appbuilder/components';
 import { shallow } from 'zustand/shallow';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
 import { getCssVarValue } from '@/Editor/Components/utils';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const CanvasSettings = ({ darkMode }) => {
+  const { speak } = useScreenReader();
   const { moduleId } = useModuleContext();
   const { globalSettings, globalSettingsChanged, resolveOthers, getCanvasBackgroundColor } = useStore(
     (state) => ({
@@ -86,7 +88,10 @@ const CanvasSettings = ({ darkMode }) => {
               placeholder={'0'}
               onChange={(e) => {
                 const width = e.target.value;
-                if (!Number.isNaN(width) && width >= 0) globalSettingsChanged({ canvasMaxWidth: width });
+                if (!Number.isNaN(width) && width >= 0) {
+                  globalSettingsChanged({ canvasMaxWidth: width });
+                  speak(`Canvas max width changed to ${width}`);
+                }
               }}
               value={canvasMaxWidth}
             />
@@ -96,6 +101,7 @@ const CanvasSettings = ({ darkMode }) => {
               aria-label="Select canvas width type"
               onChange={(event) => {
                 const newCanvasMaxWidthType = event.currentTarget.value;
+                speak(`Canvas width type changed to ${newCanvasMaxWidthType}`);
                 const options = {
                   canvasMaxWidthType: newCanvasMaxWidthType,
                 };

@@ -5,6 +5,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import { useTranslation } from 'react-i18next';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
 import useRouter from '@/_hooks/use-router';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const LeftSidebarItem = forwardRef(
   (
@@ -24,6 +25,7 @@ export const LeftSidebarItem = forwardRef(
     ref
   ) => {
     const { t } = useTranslation();
+    const { speak } = useScreenReader();
     const router = useRouter();
     let displayIcon = icon;
     if (icon == 'page') displayIcon = 'file01';
@@ -32,16 +34,29 @@ export const LeftSidebarItem = forwardRef(
         {...rest}
         className={className}
         onClick={(e) => {
+          if (tip) {
+            speak(`${tip} opened`);
+          }
           computePosthogEvent(text, router.query.id);
           onClick && onClick(e);
         }}
+        onFocus={() => {
+          if (tip) {
+            speak(tip);
+          }
+        }}
+        onMouseEnter={() => {
+          if (tip) {
+            speak(tip);
+          }
+        }}
+        tabIndex={0}
         ref={ref}
       >
         {icon && (
           <div
-            className={`sidebar-svg-icon  position-relative ${
-              selectedSidebarItem === icon && selectedSidebarItem != 'comments' && 'sidebar-item'
-            }`}
+            className={`sidebar-svg-icon  position-relative ${selectedSidebarItem === icon && selectedSidebarItem != 'comments' && 'sidebar-item'
+              }`}
             data-cy={`left-sidebar-${icon.toLowerCase()}-button`}
           >
             <SolidIcon

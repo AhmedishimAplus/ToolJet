@@ -11,6 +11,7 @@ import useCallbackActions from './useCallbackActions';
 import useStore from '@/AppBuilder/_stores/store';
 import { Button as ButtonComponent } from '@/components/ui/Button/Button';
 import { shallow } from 'zustand/shallow';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const renderNodeIcons = (node, iconsList, darkMode) => {
   const icon = iconsList.filter((icon) => icon?.iconName === node && !icon?.isInfoIcon)[0];
@@ -54,6 +55,7 @@ export const Node = (props) => {
     data,
   } = props;
 
+  const { speak } = useScreenReader();
   const [actionClicked, setActionClicked] = useState(false);
   const setSelectedNodes = useStore((state) => state.setSelectedNodes, shallow);
   const callbackActions = useCallbackActions() || [];
@@ -66,6 +68,20 @@ export const Node = (props) => {
     const { element } = node || {};
     const { metadata } = element || {};
     const { path, actualPath } = metadata || {};
+    const { name, children } = element || {};
+
+    // Announce expansion
+    if (level === 1) {
+      speak(`Expanding ${name}`);
+      // Check if empty after expansion
+      if (children && children.length > 0) {
+        const firstChild = children[0];
+        if (firstChild.metadata?.noData) {
+          speak(`No ${name.toLowerCase()} found`);
+        }
+      }
+    }
+
     setSelectedNodes(actualPath || path);
   };
 
@@ -111,6 +127,8 @@ export const Node = (props) => {
         role: 'button',
         'aria-expanded': isExpanded,
         'aria-label': `${element.name}, ${isExpanded ? 'expanded' : 'collapsed'}`,
+        onFocus: () => speak(`${element.name} section`),
+        onMouseEnter: () => speak(`${element.name} section`),
         onKeyDown: (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -148,6 +166,8 @@ export const Node = (props) => {
             ? `${element.name}, ${isExpanded ? 'expanded' : 'collapsed'}`
             : `${element.name}, ${type || 'item'}`,
           ...(isBranch && { 'aria-expanded': isExpanded }),
+          onFocus: () => speak(element.name),
+          onMouseEnter: () => speak(element.name),
           onKeyDown: (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();

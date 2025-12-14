@@ -13,6 +13,7 @@ import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { useEditorStore } from '@/_stores/editorStore';
 import DataSourceIcon from '@/Editor/QueryManager/Components/DataSourceIcon';
 import { useQueryPanelActions } from '@/_stores/queryPanelStore';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const staticDataSources = [
   { kind: 'tooljetdb', id: 'null', name: 'Tooljet Database' },
@@ -31,6 +32,7 @@ export const LeftSidebarInspector = ({
   setPinned,
   pinned,
 }) => {
+  const { speak } = useScreenReader();
   const dataSources = useGlobalDataSources();
   const sampleDataSource = useSampleDataSource();
   const { setSelectedQuery } = useQueryPanelActions();
@@ -115,9 +117,8 @@ export const LeftSidebarInspector = ({
     if (!_.isEmpty(component) && component.name === key) {
       return {
         iconName: key,
-        iconPath: `assets/images/icons/widgets/${
-          component.component.toLowerCase() === 'radiobutton' ? 'radio-button' : component.component.toLowerCase()
-        }.svg`,
+        iconPath: `assets/images/icons/widgets/${component.component.toLowerCase() === 'radiobutton' ? 'radio-button' : component.component.toLowerCase()
+          }.svg`,
         className: 'component-icon',
       };
     }
@@ -293,7 +294,10 @@ export const LeftSidebarInspector = ({
           <div className="d-flex justify-content-end">
             <ButtonSolid
               title={`${pinned ? 'Unpin' : 'Pin'}`}
-              onClick={() => setPinned(!pinned)}
+              onClick={() => {
+                speak(pinned ? 'Inspector unpinned' : 'Inspector pinned');
+                setPinned(!pinned);
+              }}
               darkMode={darkMode}
               styles={{ width: '28px', padding: 0 }}
               data-cy={`left-sidebar-inspector`}
