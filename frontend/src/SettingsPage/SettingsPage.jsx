@@ -6,9 +6,11 @@ import Layout from '@/_ui/Layout';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { BreadCrumbContext } from '@/App/App';
 import { decodeEntities } from '@/_helpers/utils';
+import { useScreenReader } from '@/modules/common/hooks';
 
 function SettingsPage(props) {
   const currentSession = authenticationService.currentSessionValue;
+  const { speak } = useScreenReader();
   const email = currentSession?.current_user.email;
   const [fullName, setFullName] = React.useState(
     joinNames(currentSession?.current_user.first_name, currentSession?.current_user.last_name)
@@ -189,6 +191,8 @@ function SettingsPage(props) {
                           placeholder={'Enter full name'}
                           value={decodeEntities(fullName)}
                           onChange={(event) => setFullName(event.target.value)}
+                          onFocus={() => speak('Name input field')}
+                          onMouseEnter={() => speak('Name input field')}
                           autoComplete="off"
                           data-cy="name-input-field"
                         />
@@ -208,6 +212,8 @@ function SettingsPage(props) {
                           value={email}
                           readOnly
                           disabled
+                          onFocus={() => speak('Email address input field, read only')}
+                          onMouseEnter={() => speak('Email address input field, read only')}
                           data-cy="email-input"
                           autoComplete="off"
                         />
@@ -231,6 +237,8 @@ function SettingsPage(props) {
                           accept="image/*"
                           type="file"
                           className="form-control"
+                          onFocus={() => speak('Avatar file upload field')}
+                          onMouseEnter={() => speak('Avatar file upload field')}
                           data-cy="avatar-upload-field"
                         />
                       </div>
@@ -264,6 +272,8 @@ function SettingsPage(props) {
                           placeholder={t('header.profileSettingPage.enterCurrentPassword', 'Enter current password')}
                           value={currentpassword}
                           onChange={(event) => setCurrentPassword(event.target.value)}
+                          onFocus={() => speak('Current password input field')}
+                          onMouseEnter={() => speak('Current password input field')}
                           data-cy="current-password-input"
                         />
                       </div>
@@ -281,6 +291,8 @@ function SettingsPage(props) {
                           value={newPassword}
                           onChange={(event) => handlePasswordInput(event.target.value)}
                           onKeyPress={newPasswordKeyPressHandler}
+                          onFocus={() => speak('New password input field')}
+                          onMouseEnter={() => speak('New password input field')}
                           data-cy="new-password-input"
                         />
                         <small style={{ color: !validPassword ? 'red' : undefined }} data-cy="password-helper-text">
@@ -303,6 +315,8 @@ function SettingsPage(props) {
                         ref={focusRef}
                         onChange={(event) => handleConfirmPasswordInput(event.target.value)}
                         onKeyPress={confirmPasswordKeyPressHandler}
+                        onFocus={() => speak('Confirm new password input field')}
+                        onMouseEnter={() => speak('Confirm new password input field')}
                         data-cy="confirm-password-input"
                       />
                     </div>
