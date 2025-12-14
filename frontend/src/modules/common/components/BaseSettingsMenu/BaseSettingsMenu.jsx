@@ -11,6 +11,7 @@ import { useAppDataStore } from '@/_stores/appDataStore';
 import { shallow } from 'zustand/shallow';
 import { checkIfToolJetCloud } from '@/_helpers/utils';
 import { fetchEdition } from '@/modules/common/helpers/utils';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 function BaseSettingsMenu({
   darkMode,
@@ -22,6 +23,7 @@ function BaseSettingsMenu({
     hideMarketPlaceMenuItem: false,
   },
 }) {
+  const { speak } = useScreenReader();
   const edition = fetchEdition();
   const [showOverlay, setShowOverlay] = useState(false);
   const overlayTriggerRef = useRef(null);
@@ -179,6 +181,7 @@ function BaseSettingsMenu({
         role="button"
         aria-label="Open settings menu"
         aria-expanded={showOverlay}
+        onFocus={() => speak('Settings button')}
       >
         <div className="d-xl-block">
           <SolidIcon name="settings" fill={showOverlay ? '#3E63DD' : 'var(--slate8)'} width={28} />

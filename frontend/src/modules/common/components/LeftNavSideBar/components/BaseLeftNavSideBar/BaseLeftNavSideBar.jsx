@@ -5,6 +5,7 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { getPrivateRoute } from '@/_helpers/routes';
 import { Link } from 'react-router-dom';
 import { SettingsMenu } from '@/modules/dashboard/components';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const BaseLeftNavSideBar = ({
   checkForUnsavedChanges,
@@ -18,6 +19,8 @@ const BaseLeftNavSideBar = ({
   canCreateVariableOrConstant,
   featureAccess,
 }) => {
+  const { speak } = useScreenReader();
+
   return (
     <div>
       <ul className="sidebar-inner nav nav-vertical">
@@ -33,6 +36,7 @@ const BaseLeftNavSideBar = ({
               tabIndex="0"
               role="button"
               aria-label="Navigate to Apps"
+              onFocus={() => speak('Apps button')}
             >
               <SolidIcon
                 name="apps"
@@ -57,6 +61,7 @@ const BaseLeftNavSideBar = ({
                 tabIndex="0"
                 role="button"
                 aria-label="Navigate to Workflows"
+                onFocus={() => speak('Workflows button')}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -91,6 +96,7 @@ const BaseLeftNavSideBar = ({
                 tabIndex="0"
                 role="button"
                 aria-label="Navigate to ToolJet Database"
+                onFocus={() => speak('ToolJet Database button')}
               >
                 <SolidIcon
                   name="table"
@@ -118,6 +124,7 @@ const BaseLeftNavSideBar = ({
                 tabIndex="0"
                 role="button"
                 aria-label="Navigate to Data sources"
+                onFocus={() => speak('Data sources button')}
               >
                 <SolidIcon
                   name="datasource"
@@ -139,6 +146,7 @@ const BaseLeftNavSideBar = ({
                 tabIndex="0"
                 role="button"
                 aria-label="Navigate to Workspace constants"
+                onFocus={() => speak('Workspace constants button')}
               >
                 <SolidIcon
                   name="workspaceconstants"
@@ -161,6 +169,7 @@ const BaseLeftNavSideBar = ({
               tabIndex="0"
               role="button"
               aria-label="Toggle dark mode"
+              onFocus={() => speak(darkMode ? 'Toggle light mode button' : 'Toggle dark mode button')}
             >
               <SolidIcon name={darkMode ? 'lightmode' : 'darkmode'} fill="var(--slate8)" />
             </Link>

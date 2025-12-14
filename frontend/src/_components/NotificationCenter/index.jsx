@@ -7,8 +7,10 @@ import { useTranslation } from 'react-i18next';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import { ToolTip } from '@/_components/ToolTip';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const NotificationCenter = ({ darkMode }) => {
+  const { speak } = useScreenReader();
   const [loading, setLoading] = React.useState(false);
   const [isRead, setIsRead] = React.useState(false);
   const [commentNotifications, setCommentNotifications] = React.useState([]);
@@ -113,6 +115,7 @@ export const NotificationCenter = ({ darkMode }) => {
             tabIndex="0"
             role="button"
             aria-label="Open notifications"
+            onFocus={() => speak('Notifications button')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
