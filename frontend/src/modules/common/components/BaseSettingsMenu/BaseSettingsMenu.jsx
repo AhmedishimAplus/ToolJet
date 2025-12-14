@@ -96,6 +96,7 @@ function BaseSettingsMenu({
             className="dropdown-item tj-text-xsm"
             data-cy="marketplace-option"
             tabIndex={-1}
+            onFocus={() => speak('Marketplace')}
           >
             <span>Marketplace</span>
           </Link>
@@ -124,6 +125,7 @@ function BaseSettingsMenu({
             className="dropdown-item tj-text-xsm"
             data-cy="workspace-settings"
             tabIndex={-1}
+            onFocus={() => speak('Workspace settings')}
           >
             <span>Workspace settings</span>
           </Link>
@@ -139,6 +141,7 @@ function BaseSettingsMenu({
           className="dropdown-item tj-text-xsm"
           data-cy="profile-settings"
           tabIndex={-1}
+          onFocus={() => speak('Profile settings')}
         >
           <span>Profile settings</span>
         </Link>
@@ -158,6 +161,7 @@ function BaseSettingsMenu({
           className="dropdown-item text-danger tj-text-xsm"
           data-cy="logout-link"
           tabIndex={-1}
+          onFocus={() => speak('Logout')}
         >
           <span>{t('header.logout', 'Logout')}</span>
         </Link>
