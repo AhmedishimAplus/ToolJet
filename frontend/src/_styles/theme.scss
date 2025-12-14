@@ -8883,6 +8883,11 @@ tbody {
     padding: 8px;
     height: 36px;
     min-width: 84px !important;
+    color: var(--text-default, #1B1F24);
+
+    span {
+      color: var(--text-default, #1B1F24);
+    }
   }
 
   svg {
@@ -8892,6 +8897,16 @@ tbody {
   a {
     span {
       margin-left: 4px;
+    }
+  }
+
+  &.dark-theme {
+    .dropdown-item {
+      color: var(--text-default, #ECEDEE);
+
+      span {
+        color: var(--text-default, #ECEDEE);
+      }
     }
   }
 }
