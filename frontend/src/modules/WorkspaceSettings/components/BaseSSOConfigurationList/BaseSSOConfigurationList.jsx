@@ -33,6 +33,14 @@ class BaseSSOConfigurationList extends React.Component {
     this.setState({ showDropdown: show });
   };
 
+  speak = (text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   initializeOptionStates = (ssoOptions) => {
     const initialState = ssoOptions.reduce((acc, option) => {
       return {
@@ -76,6 +84,12 @@ class BaseSSOConfigurationList extends React.Component {
             );
             const enabledSSOCount = this.getCountOfEnabledSSO();
             this.setState({ inheritedInstanceSSO: enabledSSOCount });
+
+            // Announce state change
+            if (newSettings?.enabled !== undefined) {
+              const ssoName = ssoType.charAt(0).toUpperCase() + ssoType.slice(1);
+              this.speak(`${ssoName} ${newSettings.enabled ? 'enabled' : 'disabled'}`);
+            }
           } catch (error) {
             toast.error('Error while updating SSO configuration', { position: 'top-center' });
           }
@@ -138,6 +152,8 @@ class BaseSSOConfigurationList extends React.Component {
   toggleDefaultSSO = async () => {
     try {
       const currentDefaultSSO = !this.state.defaultSSO;
+      const edition = fetchEdition();
+      const ssoDisplayText = edition === 'cloud' ? 'Default SSO' : 'Instance SSO';
       await organizationService.updateInheritSSO({ inheritSSO: currentDefaultSSO });
       this.setState(
         {
@@ -148,6 +164,7 @@ class BaseSSOConfigurationList extends React.Component {
           this.props.updateSSOOptions(this.state.ssoOptions, this.state.instanceSSO);
           await this.props.onUpdateAnySSOEnabled(this.checkIfAnySSOEnabled());
           this.props.handleAutomaticSSOLoginChange(this.state.instanceSSO, this.state.ssoOptions, currentDefaultSSO);
+          this.speak(`${ssoDisplayText} ${currentDefaultSSO ? 'enabled' : 'disabled'}`);
           toast.success('Updated default sso settings');
         }
       );
@@ -346,6 +363,18 @@ class BaseSSOConfigurationList extends React.Component {
               checked={isEnabled}
               onChange={isFeatureAvailable ? () => this.toggleSSOOption(key) : (e) => e.preventDefault()}
               data-cy={`${name.toLowerCase().replace(/\s+/g, '-')}-toggle`}
+              onFocus={() => {
+                if (isFeatureAvailable) {
+                  const currentState = isEnabled ? 'enabled' : 'disabled';
+                  this.speak(`${name} toggle, currently ${currentState}`);
+                }
+              }}
+              onMouseEnter={() => {
+                if (isFeatureAvailable) {
+                  const currentState = isEnabled ? 'enabled' : 'disabled';
+                  this.speak(`${name} toggle, currently ${currentState}`);
+                }
+              }}
             />
             <span className="slider round"></span>
           </label>
@@ -428,12 +457,36 @@ class BaseSSOConfigurationList extends React.Component {
             </Dropdown.Menu>
           </Dropdown>
 
-          <label className="switch" style={{ marginLeft: '95px' }} data-cy="instance-sso-toggle">
+          <label
+            className="switch"
+            style={{ marginLeft: '95px' }}
+            data-cy="instance-sso-toggle"
+            tabIndex={0}
+            onFocus={() => {
+              const edition = fetchEdition();
+              const ssoDisplayText = edition === 'cloud' ? 'Default SSO' : 'Instance SSO';
+              const currentState = defaultSSO ? 'enabled' : 'disabled';
+              this.speak(`${ssoDisplayText} toggle, currently ${currentState}`);
+            }}
+            onMouseEnter={() => {
+              const edition = fetchEdition();
+              const ssoDisplayText = edition === 'cloud' ? 'Default SSO' : 'Instance SSO';
+              const currentState = defaultSSO ? 'enabled' : 'disabled';
+              this.speak(`${ssoDisplayText} toggle, currently ${currentState}`);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleDefaultSSO();
+              }
+            }}
+          >
             <input
               type="checkbox"
               checked={defaultSSO}
               onChange={this.toggleDefaultSSO}
               aria-label="Enable default SSO for this workspace"
+              tabIndex={-1}
             />
             <span className="slider round"></span>
           </label>

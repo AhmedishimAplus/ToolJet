@@ -43,6 +43,14 @@ class OrganizationLogin extends React.Component {
     this.setState({ isLoading: false });
   }
 
+  speak = (text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   updateDefaultSSO = (newDefaultSSO) => {
     this.setState({ defaultSSO: newDefaultSSO });
   };
@@ -426,6 +434,13 @@ class OrganizationLogin extends React.Component {
       () => {
         this.checkForChanges();
 
+        // Announce state changes
+        if (field === 'enableSignUp') {
+          this.speak(`Enable signup ${newValue ? 'enabled' : 'disabled'}`);
+        } else if (field === 'passwordLoginEnabled') {
+          this.speak(`Password login ${newValue ? 'enabled' : 'disabled'}`);
+        }
+
         if (field === 'passwordLoginEnabled' && !newValue) {
           this.setState({ showDisablingPasswordConfirmation: true });
         }
@@ -474,8 +489,8 @@ class OrganizationLogin extends React.Component {
                 )}
                 <span
                   className={`tj-text-xsm ${window.public_config?.ENABLE_WORKSPACE_LOGIN_CONFIGURATION === 'true'
-                      ? 'enabled-tag'
-                      : 'inherited-tag'
+                    ? 'enabled-tag'
+                    : 'inherited-tag'
                     }`}
                   data-cy="workspace-login-status-label"
                 >
@@ -511,6 +526,8 @@ class OrganizationLogin extends React.Component {
                           name="domain"
                           value={options.domain || ''}
                           onChange={(e) => this.handleInputChange('domain', e)}
+                          onFocus={() => this.speak('Allowed domains input')}
+                          onMouseEnter={() => this.speak('Allowed domains input')}
                           data-cy="allowed-domains"
                         />
                       </div>
@@ -529,6 +546,20 @@ class OrganizationLogin extends React.Component {
                         <div
                           className="d-flex justify-content-between form-control align-items-center"
                           style={{ backgroundColor: '#F1F3F5', color: '#889096', overflowX: 'auto' }}
+                          tabIndex={0}
+                          onFocus={() => {
+                            const loginUrl = `${window.public_config?.TOOLJET_HOST}${window.public_config?.SUB_PATH ? window.public_config?.SUB_PATH : '/'}login/${authenticationService?.currentSessionValue?.current_organization_slug || authenticationService?.currentSessionValue?.current_organization_id}`;
+                            this.speak(`Login URL ${loginUrl} press enter or space to copy to your clipboard`);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              this.speak('Copying URL');
+                              this.copyFunction('login-url');
+                            }
+                          }}
+                          role="button"
+                          aria-label="Login URL, press Enter to copy to clipboard"
                         >
                           <p
                             id="login-url"
@@ -565,6 +596,14 @@ class OrganizationLogin extends React.Component {
                             onChange={() => this.handleCheckboxChange('enableSignUp')}
                             checked={options?.enableSignUp === true}
                             data-cy="enable-sign-up-toggle"
+                            onFocus={() => {
+                              const currentState = options?.enableSignUp ? 'enabled' : 'disabled';
+                              this.speak(`Enable signup toggle, currently ${currentState}`);
+                            }}
+                            onMouseEnter={() => {
+                              const currentState = options?.enableSignUp ? 'enabled' : 'disabled';
+                              this.speak(`Enable signup toggle, currently ${currentState}`);
+                            }}
                           />
                           <label className="form-check-label bold-text" data-cy="enable-sign-up-label">
                             {'Enable signup'}
@@ -597,6 +636,18 @@ class OrganizationLogin extends React.Component {
                                 data-cy="password-enable-toggle"
                                 checked={options?.passwordLoginEnabled === true}
                                 disabled={isBasicPlan && !isCommunity ? true : !isAnySSOEnabled}
+                                onFocus={() => {
+                                  if (!((isBasicPlan && !isCommunity) || !isAnySSOEnabled)) {
+                                    const currentState = options?.passwordLoginEnabled ? 'enabled' : 'disabled';
+                                    this.speak(`Password login toggle, currently ${currentState}`);
+                                  }
+                                }}
+                                onMouseEnter={() => {
+                                  if (!((isBasicPlan && !isCommunity) || !isAnySSOEnabled)) {
+                                    const currentState = options?.passwordLoginEnabled ? 'enabled' : 'disabled';
+                                    this.speak(`Password login toggle, currently ${currentState}`);
+                                  }
+                                }}
                               />
                               <label className="form-check-label bold-text" data-cy="label-password-login">
                                 Password login
