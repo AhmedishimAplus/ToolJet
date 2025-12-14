@@ -30,13 +30,15 @@ export const QueryPanel = ({ darkMode }) => {
     }
   );
   const queryPaneRef = useRef(null);
+  const dragHandleRef = useRef(null);
   const [height, setHeight] = useState(
     queryManagerPreferences.current?.queryPanelHeight >= 95
       ? 50
       : queryManagerPreferences.current?.queryPanelHeight ?? 70
   );
-  const [isTopOfQueryPanel, setTopOfQueryPanel] = useState(false);
   const [windowSize, isWindowResizing] = useWindowResize();
+  const rafIdRef = useRef(null);
+  const isNearDragArea = useRef(false);
 
   useEffect(() => {
     const queryPanelStoreListner = useStore.subscribe(({ queryPanel: { selectedQuery } }, prevState) => {
@@ -80,12 +82,12 @@ export const QueryPanel = ({ darkMode }) => {
 
   const onMouseDown = useCallback(
     (e) => {
-      if (isTopOfQueryPanel) {
+      if (isNearDragArea.current) {
         e.preventDefault();
         setIsDraggingQueryPane(true);
       }
     },
-    [isTopOfQueryPanel]
+    []
   );
 
   const onMouseUp = useCallback((e) => {
@@ -105,26 +107,55 @@ export const QueryPanel = ({ darkMode }) => {
 
   const onMouseMove = useCallback(
     (e) => {
-      if (queryPaneRef.current) {
+      if (!queryPaneRef.current || !dragHandleRef.current) return;
+
+      // Only process if dragging or if we're near the query panel
+      if (!isDraggingQueryPane) {
         const componentTop = Math.round(queryPaneRef.current.getBoundingClientRect().top);
         const clientY = e.clientY;
 
-        const withinDraggableArea = clientY >= componentTop && clientY <= componentTop + 5;
-        if (withinDraggableArea !== isTopOfQueryPanel) {
-          setTopOfQueryPanel(withinDraggableArea);
+        // Only check if we're within reasonable distance (50px) of the panel top
+        if (Math.abs(clientY - componentTop) > 50) {
+          if (isNearDragArea.current) {
+            isNearDragArea.current = false;
+            dragHandleRef.current.style.cursor = 'default';
+          }
+          return;
         }
 
-        if (isDraggingQueryPane) {
-          const newHeight = Math.min(Math.max((clientY / window.innerHeight) * 100, 4.5), 94);
-          setIsQueryPaneExpanded(newHeight <= 94);
-          setHeight(newHeight);
+        const withinDraggableArea = clientY >= componentTop && clientY <= componentTop + 10;
+        if (withinDraggableArea !== isNearDragArea.current) {
+          isNearDragArea.current = withinDraggableArea;
+          dragHandleRef.current.style.cursor = withinDraggableArea ? 'row-resize' : 'default';
         }
+        return;
       }
+
+      // Handle dragging
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+
+      rafIdRef.current = requestAnimationFrame(() => {
+        const clientY = e.clientY;
+        const newHeight = Math.min(Math.max((clientY / window.innerHeight) * 100, 4.5), 94);
+        setIsQueryPaneExpanded(newHeight <= 94);
+        setHeight(newHeight);
+      });
     },
-    [isDraggingQueryPane, isTopOfQueryPanel, setIsQueryPaneExpanded]
+    [isDraggingQueryPane, setIsQueryPaneExpanded]
   );
 
   useEventListener('mousemove', onMouseMove);
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
 
   useEventListener(
     'mouseup',
@@ -149,13 +180,14 @@ export const QueryPanel = ({ darkMode }) => {
   return (
     <div className={cx({ 'dark-theme theme-dark': darkMode })}>
       <div
-        className={`query-pane ${isQueryPaneExpanded ? 'expanded' : 'collapsed'}`}
+        className={`query-pane query-pane-header ${isQueryPaneExpanded ? 'expanded' : 'collapsed'}`}
         style={{
           height: 40,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           zIndex: 12,
+          cursor: 'default',
         }}
       >
         <div
@@ -184,12 +216,12 @@ export const QueryPanel = ({ darkMode }) => {
       <div
         ref={queryPaneRef}
         onMouseDown={onMouseDown}
-        className="query-pane"
+        className="query-pane query-pane-content"
         id="query-manager"
         style={{
           height: `calc(100% - ${isQueryPaneExpanded ? height : 100}%)`,
           maxHeight: '93.5%',
-          cursor: isDraggingQueryPane || isTopOfQueryPanel ? 'row-resize' : 'default',
+          willChange: isDraggingQueryPane ? 'transform' : 'auto',
           ...(!isQueryPaneExpanded && {
             border: 'none',
           }),
@@ -198,6 +230,18 @@ export const QueryPanel = ({ darkMode }) => {
           }),
         }}
       >
+        <div
+          ref={dragHandleRef}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '10px',
+            cursor: isDraggingQueryPane ? 'row-resize' : 'default',
+            zIndex: 13,
+          }}
+        />
         {isQueryPaneExpanded && (
           <QueryKeyHooks isExpanded={isQueryPaneExpanded}>
             <MemoizedQueryDataPane darkMode={darkMode} />
