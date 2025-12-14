@@ -1,13 +1,15 @@
 import { getWorkspaceId } from '@/_helpers/utils';
 import urlJoin from 'url-join';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Select, { components } from 'react-select';
 import SolidIcon from '@/_ui/Icon/solidIcons/index';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export function UserGroupsSelect(props) {
   const workspaceId = getWorkspaceId();
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
   //Will be used when workspace routing settings have been merged
   const Menu = useCallback(({ children, ...rest }) => {
     return (
@@ -18,8 +20,7 @@ export function UserGroupsSelect(props) {
             onClick={() =>
               window.open(
                 urlJoin(
-                  `${window.public_config?.TOOLJET_HOST}${
-                    window.public_config?.SUB_PATH ? window.public_config?.SUB_PATH : ''
+                  `${window.public_config?.TOOLJET_HOST}${window.public_config?.SUB_PATH ? window.public_config?.SUB_PATH : ''
                   }`,
                   `/${workspaceId}/workspace-settings/groups`
                 )
@@ -192,6 +193,44 @@ export function UserGroupsSelect(props) {
     }),
   };
 
+  // Announce current value when dropdown is focused
+  const handleFocus = () => {
+    const currentValues = props.value || [];
+    if (currentValues.length > 0) {
+      const roleGroup = currentValues.find((v) => v.groupType === 'default');
+      const customGroups = currentValues.filter((v) => v.groupType === 'custom');
+
+      let announcement = 'User groups dropdown';
+      if (roleGroup) {
+        announcement += `, current role: ${roleGroup.name}`;
+      }
+      if (customGroups.length > 0) {
+        const customGroupNames = customGroups.map((g) => g.name).join(', ');
+        announcement += `, custom groups: ${customGroupNames}`;
+      }
+      speak(announcement);
+    } else {
+      speak('User groups dropdown, no groups selected');
+    }
+  };
+
+  // Announce selected value when changed
+  const handleChange = (newValue, actionMeta) => {
+    if (props.onChange) {
+      props.onChange(newValue, actionMeta);
+    }
+
+    if (actionMeta.action === 'select-option') {
+      const selectedOption = actionMeta.option;
+      const groupType = selectedOption.groupType === 'default' ? 'role' : 'custom group';
+      speak(`${selectedOption.name} ${groupType} selected`);
+    } else if (actionMeta.action === 'remove-value') {
+      const removedOption = actionMeta.removedValue;
+      const groupType = removedOption.groupType === 'default' ? 'role' : 'custom group';
+      speak(`${removedOption.name} ${groupType} removed`);
+    }
+  };
+
   return (
     <Select
       isMulti
@@ -204,6 +243,8 @@ export function UserGroupsSelect(props) {
       formatGroupLabel={formatGroupLabel}
       components={{ Option: InputOption, MultiValue, MultiValueRemove, IndicatorSeparator: null }}
       {...props}
+      onChange={handleChange}
+      onFocus={handleFocus}
       styles={selectStyles}
       placeholder="Select user groups and role .."
       noOptionsMessage={() => 'No groups found'}
