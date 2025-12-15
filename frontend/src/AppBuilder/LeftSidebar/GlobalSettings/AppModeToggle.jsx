@@ -36,9 +36,13 @@ const AppModeToggle = ({ darkMode }) => {
           }}
           defaultValue={appMode}
         >
-          {APP_MODES.map((appMode) => (
-            <ToggleGroupItem key={appMode.value} value={appMode.value}>
-              {appMode.label}
+          {APP_MODES.map((appModeItem) => (
+            <ToggleGroupItem
+              key={appModeItem.value}
+              value={appModeItem.value}
+              onFocus={() => speak(`App mode: ${appModeItem.label}${appMode === appModeItem.value ? ', selected' : ''}`)}
+            >
+              {appModeItem.label}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

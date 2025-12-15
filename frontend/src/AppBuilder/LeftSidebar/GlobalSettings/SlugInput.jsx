@@ -108,6 +108,7 @@ const SlugInput = () => {
               e.persist();
               delayedSlugChange(e.target.value, 'slug');
             }}
+            onFocus={(e) => speak(`Unique app slug, current value: ${e.target.value}`)}
             data-cy="app-slug-input-field"
             defaultValue={slug?.value || oldSlug || ''}
           />

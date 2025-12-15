@@ -6,6 +6,7 @@ import classNames from 'classnames';
 import { computeColor } from '@/_helpers/utils';
 import { Tooltip } from 'react-bootstrap';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const BaseColorSwatches = ({
   value,
@@ -22,7 +23,9 @@ const BaseColorSwatches = ({
   CustomOptionList = () => { },
   SwatchesToggle = () => { },
   onReset,
+  onFocus,
 }) => {
+  const { speak } = useScreenReader();
   value = component == 'Button' ? computeColor(styleDefinition, value, meta) : value;
   const [showPicker, setShowPicker] = useState(false);
   const popoverRef = useRef(null);
@@ -141,8 +144,31 @@ const BaseColorSwatches = ({
             e.preventDefault();
             setShowPicker(true);
           }
+        }} onFocus={() => {
+          const displayValue = colorMap?.[value]
+            ? colorMap[value]
+              .split('/')
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join('/')
+            : null;
+          const announcement = displayValue
+            ? `current value ${value} ${displayValue}`
+            : `current value ${value}`;
+          speak(announcement);
+          onFocus?.();
         }}
-        tabIndex={0}
+        onMouseEnter={() => {
+          const displayValue = colorMap?.[value]
+            ? colorMap[value]
+              .split('/')
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join('/')
+            : null;
+          const announcement = displayValue
+            ? `current value ${value} ${displayValue}`
+            : `current value ${value}`;
+          speak(announcement);
+        }} tabIndex={0}
         role="button"
         aria-label="Open color picker"
         aria-expanded={showPicker}

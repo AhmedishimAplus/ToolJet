@@ -41,6 +41,7 @@ const MaintenanceMode = ({ darkMode }) => {
             speak(`Maintenance mode ${isMaintenanceOn ? 'will be turned off' : 'will be turned on'}`);
             setConfirmationShow(true);
           }}
+          onFocus={() => speak(`Maintenance mode, currently ${isMaintenanceOn ? 'on' : 'off'}`)}
           data-cy={`toggle-maintenance-mode`}
           className="tw-w-full"
         />

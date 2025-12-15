@@ -93,6 +93,7 @@ const CanvasSettings = ({ darkMode }) => {
                   speak(`Canvas max width changed to ${width}`);
                 }
               }}
+              onFocus={(e) => speak(`Max width of canvas, current value: ${e.target.value} ${canvasMaxWidthType || 'px'}`)}
               value={canvasMaxWidth}
             />
             <select
@@ -113,6 +114,7 @@ const CanvasSettings = ({ darkMode }) => {
                 }
                 globalSettingsChanged(options);
               }}
+              onFocus={(e) => speak(`Canvas width type, current value: ${e.target.value}`)}
             >
               <option value="%" selected={canvasMaxWidthType === '%'}>
                 %
@@ -160,7 +162,9 @@ const CanvasSettings = ({ darkMode }) => {
                 };
                 globalSettingsChanged(options);
                 resolveOthers('canvas', true, { canvasBackgroundColor: color });
+                speak(`Canvas background color changed to ${color}`);
               }}
+              onFocus={() => speak(`Canvas background, current value: ${canvasBackgroundColor}`)}
             />
           )}
           <div className={`${!forceCodeBox && 'hinter-canvas-input'} `}>

@@ -5,8 +5,10 @@ import useStore from '@/AppBuilder/_stores/store';
 import { shallow } from 'zustand/shallow';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
 import cx from 'classnames';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const AppExport = ({ darkMode }) => {
+  const { speak } = useScreenReader();
   const { moduleId } = useModuleContext();
   const { app } = useStore(
     (state) => ({
@@ -38,9 +40,12 @@ const AppExport = ({ darkMode }) => {
           variant="tertiary"
           className={cx('app-export-btn')}
           onClick={() => {
+            speak('Export app modal opened');
             setIsExportingApp(true);
             document.getElementById('maintenance-app-modal').click();
           }}
+          onFocus={() => speak('Export app')}
+          onMouseEnter={() => speak('Export app')}
           data-cy="button-user-status-change"
         >
           Export app
