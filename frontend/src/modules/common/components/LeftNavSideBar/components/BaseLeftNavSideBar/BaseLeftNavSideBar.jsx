@@ -6,6 +6,7 @@ import { getPrivateRoute } from '@/_helpers/routes';
 import { Link } from 'react-router-dom';
 import { SettingsMenu } from '@/modules/dashboard/components';
 import useScreenReader from '@/modules/common/hooks/useScreenReader';
+import KeyboardShortcutsHint from '@/modules/common/components/KeyboardShortcutsHint';
 
 const BaseLeftNavSideBar = ({
   checkForUnsavedChanges,
@@ -162,18 +163,30 @@ const BaseLeftNavSideBar = ({
         <li className="tj-leftsidebar-icon-items-bottom text-center">
           <NotificationCenter darkMode={darkMode} />
           <ToolTip delay={{ show: 0, hide: 0 }} message="Mode" placement="right">
-            <Link
+            <div
               className="cursor-pointer tj-leftsidebar-icon-items"
-              onClick={() => switchDarkMode(!darkMode)}
+              onClick={() => {
+                switchDarkMode(!darkMode);
+                speak(darkMode ? 'Switched to light mode' : 'Switched to dark mode');
+              }}
               data-cy="mode-switch-button"
               tabIndex="0"
               role="button"
               aria-label="Toggle dark mode"
               onFocus={() => speak(darkMode ? 'Toggle light mode button' : 'Toggle dark mode button')}
+              onMouseEnter={() => speak('Theme toggle')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  switchDarkMode(!darkMode);
+                  speak(darkMode ? 'Switched to light mode' : 'Switched to dark mode');
+                }
+              }}
             >
               <SolidIcon name={darkMode ? 'lightmode' : 'darkmode'} fill="var(--slate8)" />
-            </Link>
+            </div>
           </ToolTip>
+          <KeyboardShortcutsHint darkMode={darkMode} />
           <SettingsMenu
             featureAccess={featureAccess}
             darkMode={darkMode}

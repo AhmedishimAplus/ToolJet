@@ -1,0 +1,101 @@
+.keyboard-shortcuts-hint-container {
+    position: relative;
+}
+
+.keyboard-shortcuts-menu {
+    position: fixed;
+    left: 60px;
+    bottom: 60px;
+    width: 400px;
+    background-color: var(--surfaces-surface-01, #fff);
+    border: 1px solid var(--borders-default, #E4E7EB);
+    border-radius: 8px;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 500px;
+    overflow-y: auto;
+
+    &.dark-theme {
+        background-color: var(--surfaces-surface-01, #1F2937);
+        border-color: var(--borders-default, #374151);
+        box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.shortcuts-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--borders-default, #E4E7EB);
+
+    .dark-theme & {
+        border-bottom-color: var(--borders-default, #374151);
+    }
+}
+
+.shortcuts-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary, #11181C);
+
+    .dark-theme & {
+        color: var(--text-primary, #F9FAFB);
+    }
+}
+
+.shortcuts-list {
+    padding: 8px;
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: default;
+    transition: background-color 0.2s;
+    gap: 16px;
+
+    &:hover,
+    &:focus {
+        background-color: var(--interactive-overlays-fill-hover, #F1F5F9);
+        outline: none;
+    }
+
+    .dark-theme &:hover,
+    .dark-theme &:focus {
+        background-color: var(--interactive-overlays-fill-hover, #374151);
+    }
+}
+
+.shortcut-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    padding: 4px 8px;
+    background-color: var(--surfaces-surface-02, #F8FAFC);
+    border: 1px solid var(--borders-default, #E4E7EB);
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary, #11181C);
+    white-space: nowrap;
+
+    .dark-theme & {
+        background-color: var(--surfaces-surface-02, #111827);
+        border-color: var(--borders-default, #4B5563);
+        color: var(--text-primary, #F9FAFB);
+    }
+}
+
+.shortcut-description {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-secondary, #687076);
+    text-align: left;
+
+    .dark-theme & {
+        color: var(--text-secondary, #D1D5DB);
+    }
+}

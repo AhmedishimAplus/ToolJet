@@ -19,6 +19,7 @@ import { useDataSources } from '@/_stores/dataSourcesStore';
 import { shallow } from 'zustand/shallow';
 import useDebugger from './SidebarDebugger/useDebugger';
 import { GlobalSettings } from '../Header/GlobalSettings';
+import KeyboardShortcutsHint from '@/modules/common/components/KeyboardShortcutsHint';
 import cx from 'classnames';
 import { deepClone } from '@/_helpers/utilities/utils.helpers';
 
@@ -313,6 +314,7 @@ export const LeftSidebar = forwardRef((props, ref) => {
               ref={setSideBarBtnRefs('comments')}
             />
           </div>
+          <KeyboardShortcutsHint darkMode={darkMode} />
           <DarkModeToggle switchDarkMode={switchDarkMode} darkMode={darkMode} tooltipPlacement="right" />
         </div>
       </div>

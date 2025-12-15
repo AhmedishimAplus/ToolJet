@@ -1,1 +1,1 @@
-export { default } from './KeyboardNavigation';
+export { default } from './KeyboardNavigation.jsx';
