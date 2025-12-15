@@ -8,9 +8,11 @@ import cx from 'classnames';
 import { DefaultCopyIcon } from './DefaultCopyIcon';
 import { generateCypressDataCy } from '@/modules/common/helpers/cypressHelpers';
 import { formatPathForCopy } from './utils';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const HiddenOptions = (props) => {
   const { nodeSpecificFilteredActions, generalActionsFiltered, darkMode, setActionClicked, data } = props;
+  const { speak } = useScreenReader();
   const getResolvedValue = useStore((state) => state.getResolvedValue, shallow);
   const [showMenu, setShowMenu] = useState(false);
   const closeMenu = () => {
@@ -62,7 +64,21 @@ export const HiddenOptions = (props) => {
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onClick={(event) => {
                   event.stopPropagation();
+                  speak(`${name}`);
                   dispatchAction(data);
+                }}
+                onFocus={() => speak(name)}
+                onMouseEnter={() => speak(name)}
+                tabIndex={0}
+                role="button"
+                aria-label={name}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    speak(`${name}`);
+                    dispatchAction(data);
+                  }
                 }}
               >
                 <SolidIcon name={iconName} fill="var(--icon-strong)" width={width} height={height} />
@@ -96,7 +112,20 @@ export const HiddenOptions = (props) => {
                   onClick={(event) => {
                     event.stopPropagation();
                     copyPath();
+                    speak('Path copied');
                     closeMenu();
+                  }}
+                  onFocus={() => speak('Copy path')}
+                  onMouseEnter={() => speak('Copy path')}
+                  tabIndex={0}
+                  role="menuitem"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      copyPath();
+                      speak('Path copied');
+                      closeMenu();
+                    }
                   }}
                   className="option"
                   data-cy="inspector-copy-path"
@@ -109,7 +138,20 @@ export const HiddenOptions = (props) => {
                   onClick={(event) => {
                     event.stopPropagation();
                     copyValue();
+                    speak('Value copied');
                     closeMenu();
+                  }}
+                  onFocus={() => speak('Copy value')}
+                  onMouseEnter={() => speak('Copy value')}
+                  tabIndex={0}
+                  role="menuitem"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      copyValue();
+                      speak('Value copied');
+                      closeMenu();
+                    }
                   }}
                   className="option"
                   data-cy="inspector-copy-value"
@@ -133,7 +175,22 @@ export const HiddenOptions = (props) => {
             <span
               onClick={(event) => {
                 event.stopPropagation();
+                speak(showMenu ? 'Copy menu closed' : 'Copy menu opened');
                 setShowMenu((prev) => !prev);
+              }}
+              onFocus={() => speak('Copy options')}
+              onMouseEnter={() => speak('Copy options')}
+              tabIndex={0}
+              role="button"
+              aria-label="Copy options"
+              aria-expanded={showMenu}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  speak(showMenu ? 'Copy menu closed' : 'Copy menu opened');
+                  setShowMenu((prev) => !prev);
+                }
               }}
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
