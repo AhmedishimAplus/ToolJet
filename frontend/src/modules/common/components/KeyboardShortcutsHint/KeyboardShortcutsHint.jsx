@@ -11,13 +11,20 @@ const KeyboardShortcutsHint = ({ darkMode }) => {
     const { speak } = useScreenReader();
 
     const shortcuts = [
-        { key: 'Ctrl + I', description: 'Toggle Inspector/Debugger/Settings' },
-        { key: 'Ctrl + E', description: 'Expand/Shrink sidebar panels' },
-        { key: '↑ / ↓', description: 'Navigate through items' },
+        { key: 'Ctrl + I', description: 'Opening inspector' },
+        { key: '← / →', description: 'Navigate through items' },
         { key: 'Enter', description: 'Select/Expand item' },
         { key: 'Escape', description: 'Close panels or exit selection' },
         { key: 'Tab', description: 'Move focus to next element' },
         { key: 'Shift + Tab', description: 'Move focus to previous element' },
+        { key: '= + Arrow keys', description: 'Expanding component' },
+        { key: '- + Arrow keys', description: 'Shrinking component' },
+        { key: 'Backspace', description: 'Deleting selected component' },
+        { key: 'Ctrl + C', description: 'Copy component' },
+        { key: 'Ctrl + V', description: 'Pasting component' },
+        { key: 'Ctrl + Z', description: 'Undo last action' },
+        { key: 'Ctrl + Y', description: 'Redo last action' },
+        { key: 'Ctrl + Arrow keys', description: 'Move canvas scroll bar' },
     ];
 
     useEffect(() => {
@@ -32,14 +39,23 @@ const KeyboardShortcutsHint = ({ darkMode }) => {
             }
         };
 
+        const handleEscapeKey = (event) => {
+            if (event.key === 'Escape' && showMenu) {
+                setShowMenu(false);
+                speak('Keyboard shortcuts menu closed');
+            }
+        };
+
         if (showMenu) {
             document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscapeKey);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [showMenu]);
+    }, [showMenu, speak]);
 
     const handleToggle = () => {
         const newState = !showMenu;
