@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const CustomToggleSwitch = ({
   isChecked,
@@ -11,6 +12,8 @@ export const CustomToggleSwitch = ({
   disabled = false,
   subLabel = '',
 }) => {
+  const { speak } = useScreenReader();
+
   const switchToggle = (
     <label className="switch">
       <input
@@ -23,7 +26,10 @@ export const CustomToggleSwitch = ({
           } else {
             toggleSwitchFunction(action);
           }
+          const newState = !isChecked;
+          speak(`${label || action} toggle, ${newState ? 'enabled' : 'disabled'}`);
         }}
+        onFocus={() => speak(`${label || action} toggle, currently ${isChecked ? 'enabled' : 'disabled'}`)}
         data-cy={`${dataCy}-toggle-switch`}
         disabled={disabled}
       />

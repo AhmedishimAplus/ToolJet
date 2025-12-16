@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useRef, useEffect, useCallback } from 'react';
 import RenameIcon from '../Icons/RenameIcon';
 import cx from 'classnames';
+import { useScreenReader } from '@/modules/common/hooks';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { DATA_SOURCE_TYPE } from '@/_helpers/constants';
@@ -114,27 +115,12 @@ export const QueryManagerHeader = forwardRef(({ darkMode, setActiveTab, activeTa
           />
         )}
         {selectedQuery && (
-          <div className="d-flex" style={{ marginBottom: '-15px', gap: '3px' }}>
-            {tabs.map(
-              (tab) =>
-                (tab.condition === undefined || tab.condition) && (
-                  <p
-                    key={tab.id}
-                    data-cy={`query-tab-${tab.label.toLowerCase()}`}
-                    className="m-0 d-flex align-items-center h-100"
-                    onClick={() => setActiveTab(tab.id)}
-                    style={{
-                      borderBottom: activeTab === tab.id ? '2px solid #3E63DD' : '',
-                      cursor: 'pointer',
-                      padding: '0px 8px 6px 8px',
-                      color: activeTab === tab.id ? 'var(--text-default)' : 'var(--text-placeholder)',
-                    }}
-                  >
-                    {tab.label}
-                  </p>
-                )
-            )}
-          </div>
+          <QueryTabsWithScreenReader
+            tabs={tabs}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            darkMode={darkMode}
+          />
         )}
       </div>
       <div className="query-header-buttons">
@@ -249,6 +235,7 @@ const NameInput = ({ onInput, value, darkMode, isDiabled, selectedQuery }) => {
 };
 
 const RunButton = ({ buttonLoadingState }) => {
+  const { speak } = useScreenReader();
   const selectedQuery = useStore((state) => state.queryPanel.selectedQuery);
   const runQuery = useStore((state) => state.queryPanel.runQuery);
   const isInDraft = selectedQuery?.status === 'draft';
@@ -264,7 +251,11 @@ const RunButton = ({ buttonLoadingState }) => {
         <ButtonComponent
           size="medium"
           variant="secondary"
-          onClick={() => runQuery(selectedQuery?.id, selectedQuery?.name, undefined, 'edit', {}, true, undefined, true)}
+          onClick={() => {
+            runQuery(selectedQuery?.id, selectedQuery?.name, undefined, 'edit', {}, true, undefined, true);
+            speak('Running query');
+          }}
+          onFocus={() => speak('Run query button')}
           leadingIcon="play01"
           disabled={isInDraft}
           isLoading={isLoading}
@@ -280,6 +271,7 @@ const RunButton = ({ buttonLoadingState }) => {
 };
 
 const PreviewButton = ({ buttonLoadingState, onClick }) => {
+  const { speak } = useScreenReader();
   const selectedQuery = useStore((state) => state.queryPanel.selectedQuery);
   const selectedDataSource = useStore((state) => state.queryPanel.selectedDataSource);
   const hasPermissions =
@@ -298,7 +290,11 @@ const PreviewButton = ({ buttonLoadingState, onClick }) => {
       <ButtonComponent
         size="medium"
         variant="outline"
-        onClick={onClick}
+        onClick={() => {
+          onClick();
+          speak('Previewing query');
+        }}
+        onFocus={() => speak('Preview query button')}
         // className="!tw-w-[100px]"
         disabled={!hasPermissions}
         isLoading={isPreviewQueryLoading}
@@ -307,5 +303,49 @@ const PreviewButton = ({ buttonLoadingState, onClick }) => {
         Preview
       </ButtonComponent>
     </ToolTip>
+  );
+};
+
+const QueryTabsWithScreenReader = ({ tabs, activeTab, setActiveTab, darkMode }) => {
+  const { speak } = useScreenReader();
+
+  return (
+    <div className="d-flex" style={{ marginBottom: '-15px', gap: '3px' }}>
+      {tabs.map(
+        (tab) =>
+          (tab.condition === undefined || tab.condition) && (
+            <p
+              key={tab.id}
+              data-cy={`query-tab-${tab.label.toLowerCase()}`}
+              className="m-0 d-flex align-items-center h-100"
+              onClick={() => {
+                setActiveTab(tab.id);
+                speak(`${tab.label} tab selected`);
+              }}
+              onFocus={() => speak(`${tab.label} tab${activeTab === tab.id ? ', selected' : ''}`)}
+              onMouseEnter={() => speak(`${tab.label} tab`)}
+              tabIndex={0}
+              role="tab"
+              aria-label={tab.label}
+              aria-selected={activeTab === tab.id}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTab(tab.id);
+                  speak(`${tab.label} tab selected`);
+                }
+              }}
+              style={{
+                borderBottom: activeTab === tab.id ? '2px solid #3E63DD' : '',
+                cursor: 'pointer',
+                padding: '0px 8px 6px 8px',
+                color: activeTab === tab.id ? 'var(--text-default)' : 'var(--text-placeholder)',
+              }}
+            >
+              {tab.label}
+            </p>
+          )
+      )}
+    </div>
   );
 };

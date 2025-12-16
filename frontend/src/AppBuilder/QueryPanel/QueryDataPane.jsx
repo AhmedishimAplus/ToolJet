@@ -20,6 +20,7 @@ import AppPermissionsModal from '@/modules/Appbuilder/components/AppPermissionsM
 import { shallow } from 'zustand/shallow';
 import { appPermissionService } from '@/_services';
 import QueryCardMenu from './QueryCardMenu';
+import { useScreenReader } from '@/modules/common/hooks';
 
 export const QueryDataPane = ({ darkMode }) => {
   const { t } = useTranslation();
@@ -251,6 +252,7 @@ const EmptyDataSource = () => (
 );
 
 const AddDataSourceButton = ({ darkMode, disabled: _disabled }) => {
+  const { speak } = useScreenReader();
   const [showMenu, setShowMenu] = useShowPopover(false, '#query-add-ds-popover', '#query-add-ds-popover-btn');
   const selectRef = useRef();
   const shouldFreeze = useStore((state) => state.getShouldFreeze());
@@ -299,7 +301,9 @@ const AddDataSourceButton = ({ darkMode, disabled: _disabled }) => {
               return;
             }
             setShowMenu((show) => !show);
+            speak('Add data source menu opened');
           }}
+          onFocus={() => speak('Add data source button')}
           style={{ height: '28px', width: '28px', padding: '0px' }}
           data-cy={`show-ds-popover-button`}
           aria-label="Add data source"

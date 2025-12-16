@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tooltip } from 'react-tooltip';
 import { ToolTip } from '@/_components/ToolTip';
 import { updateQuerySuggestions } from '@/_helpers/appUtils';
+import { useScreenReader } from '@/modules/common/hooks';
 // import { Confirm } from '../Viewer/Confirm';
 import { toast } from 'react-hot-toast';
 import { shallow } from 'zustand/shallow';
@@ -95,6 +96,8 @@ export const QueryCard = ({ dataQuery, darkMode = false, localDs }) => {
     return null;
   };
 
+  const { speak } = useScreenReader();
+
   return (
     <>
       <div
@@ -113,9 +116,25 @@ export const QueryCard = ({ dataQuery, darkMode = false, localDs }) => {
           setTimeout(() => {
             setSelectedQuery(dataQuery?.id);
             setPreviewData(null);
+            speak(`${decodeEntities(dataQuery.name)} query selected`);
           }, 0);
         }}
+        onFocus={() => speak(`${decodeEntities(dataQuery.name)} query${isQuerySelected ? ', selected' : ''}`)}
+        onMouseEnter={() => !isQuerySelected && speak(`${decodeEntities(dataQuery.name)} query`)}
+        tabIndex={0}
         role="button"
+        aria-label={`${decodeEntities(dataQuery.name)} query`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (isQuerySelected) return;
+            setTimeout(() => {
+              setSelectedQuery(dataQuery?.id);
+              setPreviewData(null);
+              speak(`${decodeEntities(dataQuery.name)} query selected`);
+            }, 0);
+          }
+        }}
       >
         <div className="col-auto query-icon d-flex">
           <DataSourceIcon source={dataQuery} height={16} />
@@ -163,11 +182,15 @@ export const QueryCard = ({ dataQuery, darkMode = false, localDs }) => {
             </div>
           )}
         </div>
-        {!shouldFreeze && <div className={`col-auto query-rename-delete-btn ${isQuerySelected ? 'd-flex' : 'd-none'}`}>
+        {!shouldFreeze && <div className="col-auto query-rename-delete-btn d-flex">
           <ButtonComponent
             iconOnly
             leadingIcon="morevertical01"
-            onClick={(e) => toggleQueryHandlerMenu(true, `query-handler-menu-${dataQuery?.id}`)}
+            onClick={(e) => {
+              toggleQueryHandlerMenu(true, `query-handler-menu-${dataQuery?.id}`);
+              speak('Query options menu opened');
+            }}
+            onFocus={() => speak('Query options button')}
             size="small"
             variant="outline"
             className=""
