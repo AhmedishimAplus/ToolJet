@@ -1,6 +1,13 @@
 import React from 'react';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-export const Input = ({ value, onChange, cyLabel, meta }) => {
+export const Input = ({ value, onChange, cyLabel, meta, paramLabel }) => {
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    const label = paramLabel || 'input';
+    speak(`${label} text input, current value: ${value || 'empty'}`);
+  };
   return (
     <div className="form-text">
       <input
@@ -15,6 +22,7 @@ export const Input = ({ value, onChange, cyLabel, meta }) => {
         onChange={(e) => {
           onChange(e.target.value);
         }}
+        onFocus={handleFocus}
       />
       <label for="labelId" className="static-value tj-text-xsm">
         {meta.staticText?.length > 0 ? meta.staticText : meta.staticText?.length == 0 ? '' : 'px'}

@@ -71,13 +71,12 @@ const selectCustomStyles = (width) => {
   };
 };
 
-export const Select = ({ value, onChange, meta, width = '144px' }) => {
+export const Select = ({ value, onChange, meta, width = '144px', paramLabel }) => {
   return (
     <div
       className="row fx-container"
-      data-cy={`dropdown-${
-        meta?.displayName ? String(meta?.displayName).toLowerCase().replace(/\s+/g, '-') : 'common'
-      }`}
+      data-cy={`dropdown-${meta?.displayName ? String(meta?.displayName).toLowerCase().replace(/\s+/g, '-') : 'common'
+        }`}
     >
       <div className="field" onClick={(e) => e.stopPropagation()}>
         <SelectComponent
@@ -94,6 +93,7 @@ export const Select = ({ value, onChange, meta, width = '144px' }) => {
             IndicatorSeparator: () => null,
             Option,
           }}
+          label={paramLabel || meta?.displayName || 'dropdown'}
         />
       </div>
     </div>

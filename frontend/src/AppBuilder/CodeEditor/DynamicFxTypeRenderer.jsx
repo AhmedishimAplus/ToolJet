@@ -46,9 +46,9 @@ const AllElements = {
   Query,
 };
 
-export const DynamicFxTypeRenderer = ({ paramType, ...restProps }) => {
+export const DynamicFxTypeRenderer = ({ paramType, paramLabel, ...restProps }) => {
   const componentType = FxParamTypeMapping[paramType];
   const DynamicComponent = AllElements[componentType];
 
-  return <DynamicComponent {...restProps} />;
+  return <DynamicComponent {...restProps} paramLabel={paramLabel} />;
 };

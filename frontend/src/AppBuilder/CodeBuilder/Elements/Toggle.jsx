@@ -1,6 +1,20 @@
 import React from 'react';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-export const Toggle = ({ value, onChange, cyLabel, meta }) => {
+export const Toggle = ({ value, onChange, cyLabel, meta, paramLabel }) => {
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    const label = paramLabel || meta?.toggleLabel || 'toggle';
+    speak(`${label} toggle, currently ${value ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleChange = () => {
+    const newValue = !value;
+    onChange(`{{${newValue}}}`);
+    const label = paramLabel || meta?.toggleLabel || 'toggle';
+    speak(`${label} toggle, ${newValue ? 'enabled' : 'disabled'}`);
+  };
   return (
     <div className="row fx-container">
       <div className="col d-flex align-items-center">
@@ -20,7 +34,8 @@ export const Toggle = ({ value, onChange, cyLabel, meta }) => {
             <input
               className="form-check-input"
               type="checkbox"
-              onClick={() => onChange(`{{${!value}}}`)}
+              onClick={handleChange}
+              onFocus={handleFocus}
               checked={value}
               data-cy={`${cyLabel}-toggle-button`}
             />
