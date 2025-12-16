@@ -5,6 +5,7 @@ import { ConfigHandle } from './ConfigHandle/ConfigHandle';
 import cx from 'classnames';
 import RenderWidget from './RenderWidget';
 import { NO_OF_GRIDS } from './appCanvasConstants';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const WidgetWrapper = memo(
   ({
@@ -82,6 +83,11 @@ const WidgetWrapper = memo(
 
           const { resizeComponentWithKeyboard } = useStore.getState();
           resizeComponentWithKeyboard(e.key, resizeModifier === 'expand');
+
+          // Announce resize action
+          const action = resizeModifier === 'expand' ? 'Expanding' : 'Shrinking';
+          const direction = e.key.replace('Arrow', '').toLowerCase();
+          speak(`${action} ${componentName || 'component'} ${direction}`);
         }
       };
 
@@ -102,7 +108,7 @@ const WidgetWrapper = memo(
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
       };
-    }, [isWidgetActive, readOnly, resizeModifier]);
+    }, [isWidgetActive, readOnly, resizeModifier, componentName, speak]);
 
     const visibility = useStore((state) => {
       const component = state.getResolvedComponent(id, subContainerIndex, moduleId);
@@ -133,6 +139,7 @@ const WidgetWrapper = memo(
     };
 
     const isModuleContainer = componentType === 'ModuleContainer';
+    const { speak } = useScreenReader();
 
     const handleKeyDown = (e) => {
       // Handle Enter key for selection
@@ -141,6 +148,20 @@ const WidgetWrapper = memo(
         e.stopPropagation();
         // Select the component when Enter is pressed
         setSelectedComponents([id]);
+        speak(`${componentName || 'Component'} ${componentType} selected`);
+      }
+      // Handle Escape to deselect
+      if (e.key === 'Escape' && !readOnly && !isModuleContainer && isWidgetActive) {
+        e.preventDefault();
+        e.stopPropagation();
+        setSelectedComponents([]);
+        speak('Component deselected');
+      }
+    };
+
+    const handleFocusAnnouncement = () => {
+      if (!readOnly && !isModuleContainer) {
+        speak(`${componentName || 'Component'} ${componentType}`);
       }
     };
 
@@ -182,6 +203,7 @@ const WidgetWrapper = memo(
           onFocus={() => {
             if (isDragging || isModuleContainer || readOnly) return;
             setHoveredComponentForGrid(id);
+            handleFocusAnnouncement();
             // Update State Inspector to show this component when inspect tab is active
             if (selectedSidebarItem === 'inspect' && componentName) {
               setSelectedNodePath(`components.${componentName}`);

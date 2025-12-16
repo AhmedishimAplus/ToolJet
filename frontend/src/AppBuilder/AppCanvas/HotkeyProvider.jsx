@@ -5,6 +5,7 @@ import { pasteComponents, copyComponents } from './appCanvasUtils';
 import useKeyHooks from '@/_hooks/useKeyHooks';
 import { shallow } from 'zustand/shallow';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }) => {
   const { isModuleEditor } = useModuleContext();
@@ -24,9 +25,16 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
   const setSelectedSidebarItem = useStore((state) => state.setSelectedSidebarItem, shallow);
   const toggleLeftSidebar = useStore((state) => state.toggleLeftSidebar, shallow);
   const selectedSidebarItem = useStore((state) => state.selectedSidebarItem, shallow);
+  const { speak } = useScreenReader();
 
-  useHotkeys('meta+z, control+z', handleUndo, { enabled: mode === 'edit' });
-  useHotkeys('meta+shift+z, control+shift+z', handleRedo, { enabled: mode === 'edit' });
+  useHotkeys('meta+z, control+z', () => {
+    handleUndo();
+    speak('Undo');
+  }, { enabled: mode === 'edit' });
+  useHotkeys('meta+shift+z, control+shift+z', () => {
+    handleRedo();
+    speak('Redo');
+  }, { enabled: mode === 'edit' });
 
   // Ctrl+I to open State Inspector
   useHotkeys(
@@ -45,6 +53,7 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
       try {
         const cliptext = await navigator.clipboard.readText();
         pasteComponents(focusedParentId, JSON.parse(cliptext));
+        speak('Components pasted');
       } catch (err) {
         console.log(err);
       }
@@ -61,8 +70,11 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
       return;
     }
 
-    clearSelectedComponents();
     const selectedComponents = getSelectedComponents();
+    clearSelectedComponents();
+    if (selectedComponents.length > 0) {
+      speak('Selection cleared');
+    }
     if (selectedComponents.length > 1) {
       selectedComponents.forEach((componentId) => {
         const widgets = document.getElementsByClassName(`widget-${componentId}`)?.[0];
@@ -75,6 +87,8 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
     const selectedComponents = getSelectedComponents();
     if (selectedComponents.length > 0) {
       setWidgetDeleteConfirmation(true);
+      const count = selectedComponents.length;
+      speak(`Deleting ${count} ${count === 1 ? 'component' : 'components'}`);
     }
   };
 
@@ -114,18 +128,26 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
         break;
       case 'KeyD':
         copyComponents({ isCloning: true }); // Clone/Duplicate operation
+        const cloneCount = getSelectedComponents().length;
+        speak(`${cloneCount} ${cloneCount === 1 ? 'component' : 'components'} cloned`);
         break;
       case 'KeyC':
         copyComponents({ isCut: false }); // Copy operation
+        const copyCount = getSelectedComponents().length;
+        speak(`${copyCount} ${copyCount === 1 ? 'component' : 'components'} copied`);
         break;
       case 'KeyX':
         copyComponents({ isCut: true }); // Cut operation
+        const cutCount = getSelectedComponents().length;
+        speak(`${cutCount} ${cutCount === 1 ? 'component' : 'components'} cut`);
         break;
       case 'KeyV':
         paste(); // Paste operation
         break;
       case 'KeyA':
         handleSelectAll();
+        const allCount = containerChildrenMapping?.[focusedParentId || 'canvas']?.length || 0;
+        speak(`${allCount} ${allCount === 1 ? 'component' : 'components'} selected`);
         break;
       default:
         moveComponentPosition(key, currentLayout);

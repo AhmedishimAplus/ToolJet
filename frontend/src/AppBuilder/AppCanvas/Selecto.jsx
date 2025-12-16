@@ -6,6 +6,7 @@ import { RIGHT_SIDE_BAR_TAB } from '@/AppBuilder/RightSideBar/rightSidebarConsta
 import { shallow } from 'zustand/shallow';
 import { findHighestLevelofSelection } from './Grid/gridUtils';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const EditorSelecto = () => {
   const { moduleId } = useModuleContext();
@@ -14,6 +15,7 @@ export const EditorSelecto = () => {
   const getSelectedComponents = useStore((state) => state.getSelectedComponents, shallow);
   const getComponentDefinition = useStore((state) => state.getComponentDefinition);
   const canvasStartId = useRef(null);
+  const { speak } = useScreenReader();
 
   const filterSelectedComponentsByHighestLevel = (selectedIds) => {
     const highestLevelComponents = findHighestLevelofSelection(
@@ -78,9 +80,16 @@ export const EditorSelecto = () => {
           ? [...getSelectedComponents().filter((id) => !allSelectedIds.includes(id)), ...allSelectedIds]
           : allSelectedIds;
 
-        setSelectedComponents(
-          !isCanvasSelectStartEndSame ? newSelection : filterSelectedComponentsByHighestLevel(newSelection)
-        );
+        const finalSelection = !isCanvasSelectStartEndSame ? newSelection : filterSelectedComponentsByHighestLevel(newSelection);
+        setSelectedComponents(finalSelection);
+
+        // Announce selection
+        if (finalSelection.length === 1) {
+          const component = getComponentDefinition(finalSelection[0], moduleId);
+          speak(`${component?.component?.name || 'Component'} ${component?.component?.component} selected`);
+        } else if (finalSelection.length > 1) {
+          speak(`${finalSelection.length} components selected`);
+        }
       }
       canvasStartId.current = null;
     },
