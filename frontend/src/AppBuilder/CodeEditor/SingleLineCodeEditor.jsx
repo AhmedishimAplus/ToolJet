@@ -34,8 +34,10 @@ import { CodeHinterContext } from '../CodeBuilder/CodeHinterContext';
 import { createReferencesLookup } from '@/_stores/utils';
 import { useQueryPanelKeyHooks } from './useQueryPanelKeyHooks';
 import Icon from '@/_ui/Icon/solidIcons/index';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const SingleLineCodeEditor = ({ componentName, fieldMeta = {}, componentId, ...restProps }) => {
+  const { speak } = useScreenReader();
   const { moduleId } = useModuleContext();
   const { initialValue, onChange, enablePreview = true, portalProps, paramName, fieldLabel } = restProps;
   const { validation = {} } = fieldMeta;
@@ -413,6 +415,12 @@ const EditorInput = ({
     setTimeout(() => {
       setFocus(true);
     }, 50);
+
+    // Screen reader announcement
+    if (speak && (fieldLabel || paramName)) {
+      const label = fieldLabel || paramName;
+      speak(`${label} code`);
+    }
   };
 
   const handleEditorWrapperKeyDown = (event) => {

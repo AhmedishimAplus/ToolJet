@@ -49,6 +49,7 @@ import AppPermissionsModal from '@/modules/Appbuilder/components/AppPermissionsM
 import { appPermissionService } from '@/_services';
 import { Chat } from './Components/Chat.jsx';
 import { ModuleContainerInspector, ModuleViewerInspector, ModuleEditorBanner } from '@/modules/Modules/components';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const INSPECTOR_HEADER_OPTIONS = [
   {
@@ -168,6 +169,12 @@ export const Inspector = ({
 
   const [showHeaderActionsMenu, setShowHeaderActionsMenu] = useState(false);
   const isRevampedComponent = NEW_REVAMPED_COMPONENTS.includes(component.component.component);
+  const { speak } = useScreenReader();
+
+  const handleTabSelect = (tabKey) => {
+    const tabName = tabKey === 'properties' ? 'Properties' : 'Styles';
+    speak(`${tabName} tab selected`);
+  };
   const menuButtonRef = useRef(null);
   const menuItemsRef = useRef([]);
 
@@ -587,7 +594,7 @@ export const Inspector = ({
   };
 
   const renderTabs = () => (
-    <Tabs defaultActiveKey={'properties'} id="inspector" hidden={isModuleContainer}>
+    <Tabs defaultActiveKey={'properties'} id="inspector" hidden={isModuleContainer} onSelect={handleTabSelect}>
       <Tab eventKey="properties" title="Properties">
         {propertiesTab}
       </Tab>
