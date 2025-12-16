@@ -37,7 +37,7 @@ import Icon from '@/_ui/Icon/solidIcons/index';
 
 const SingleLineCodeEditor = ({ componentName, fieldMeta = {}, componentId, ...restProps }) => {
   const { moduleId } = useModuleContext();
-  const { initialValue, onChange, enablePreview = true, portalProps, paramName } = restProps;
+  const { initialValue, onChange, enablePreview = true, portalProps, paramName, fieldLabel } = restProps;
   const { validation = {} } = fieldMeta;
   const [showPreview, setShowPreview] = useState(false);
   const [isFocused, setIsFocused] = useState(false);

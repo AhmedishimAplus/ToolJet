@@ -450,6 +450,23 @@ export const EventManager = ({
     });
 
     handleYmapEventUpdates();
+
+    // Automatically focus on the newly created event handler
+    setTimeout(() => {
+      setFocusedEventIndex(eventIndex);
+      lastFocusedEventIndex.current = eventIndex;
+
+      // Focus the first select input in the popover
+      setTimeout(() => {
+        const popover = document.getElementById('popover-basic');
+        if (popover) {
+          const firstSelect = popover.querySelector('[data-cy="event-selection"] input');
+          if (firstSelect) {
+            firstSelect.focus();
+          }
+        }
+      }, 100);
+    }, 100);
   }
 
   //following two are functions responsible for on change and value for the control specific actions
@@ -460,8 +477,8 @@ export const EventManager = ({
     const newParams =
       params.length > 0
         ? params.map((paramOfParamList) => {
-            return paramOfParamList.handle === param.handle ? newParam : paramOfParamList;
-          })
+          return paramOfParamList.handle === param.handle ? newParam : paramOfParamList;
+        })
         : [newParam];
 
     return handlerChanged(index, 'componentSpecificActionParams', newParams);
@@ -521,6 +538,37 @@ export const EventManager = ({
           onClick={(e) => {
             e.stopPropagation();
           }}
+          onKeyDown={(e) => {
+            // Trap Tab navigation within the popover
+            if (e.key === 'Tab') {
+              const popover = e.currentTarget;
+              const focusableElements = popover.querySelectorAll(
+                'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+              );
+              const focusableArray = Array.from(focusableElements);
+              const firstElement = focusableArray[0];
+              const lastElement = focusableArray[focusableArray.length - 1];
+
+              if (e.shiftKey) {
+                // Shift+Tab: moving backwards
+                if (document.activeElement === firstElement) {
+                  e.preventDefault();
+                  lastElement?.focus();
+                }
+              } else {
+                // Tab: moving forwards
+                if (document.activeElement === lastElement) {
+                  e.preventDefault();
+                  firstElement?.focus();
+                }
+              }
+            }
+
+            // Close popover on Escape
+            if (e.key === 'Escape') {
+              setFocusedEventIndex(null);
+            }
+          }}
         >
           <div className="row">
             <div className="col-3 p-2">
@@ -575,6 +623,7 @@ export const EventManager = ({
                 usePortalEditor={false}
                 component={component}
                 cyLabel={`run-only-if`}
+                fieldLabel="Run Only If"
               />
             </div>
           </div>
@@ -599,6 +648,7 @@ export const EventManager = ({
                       onChange={(value) => handlerChanged(index, 'message', value)}
                       usePortalEditor={false}
                       component={component}
+                      fieldLabel="Message"
                     />
                   </div>
                 </div>
@@ -632,6 +682,7 @@ export const EventManager = ({
                   onChange={(value) => handlerChanged(index, 'url', value)}
                   usePortalEditor={false}
                   component={component}
+                  fieldLabel="URL"
                 />
                 <div className="d-flex align-items-center justify-content-between mt-3">
                   <label className="form-label mt-1">Open in</label>
@@ -1013,9 +1064,9 @@ export const EventManager = ({
                   (getAction(event?.componentId, event?.componentSpecificActionHandle)?.params ?? []).map((param) => {
                     let optionsList = param.isDynamicOpiton
                       ? get({ ...components[event?.componentId] }, param.optionsGetter, []).map((tab) => ({
-                          name: tab.title,
-                          value: tab.id,
-                        }))
+                        name: tab.title,
+                        value: tab.id,
+                      }))
                       : param.options;
 
                     return (
@@ -1042,9 +1093,8 @@ export const EventManager = ({
                           </div>
                         ) : (
                           <div
-                            className={`${
-                              param?.type ? '' : 'fx-container-eventmanager-code'
-                            } col-9 fx-container-eventmanager ${param.type == 'select' && 'component-action-select'}`}
+                            className={`${param?.type ? '' : 'fx-container-eventmanager-code'
+                              } col-9 fx-container-eventmanager ${param.type == 'select' && 'component-action-select'}`}
                             data-cy="action-options-text-input-field"
                           >
                             <CodeHinter
@@ -1183,6 +1233,17 @@ export const EventManager = ({
                             if (showing) {
                               setFocusedEventIndex(index);
                               lastFocusedEventIndex.current = index;
+
+                              // Focus the first select input in the popover
+                              setTimeout(() => {
+                                const popover = document.getElementById('popover-basic');
+                                if (popover) {
+                                  const firstSelect = popover.querySelector('[data-cy="event-selection"] input');
+                                  if (firstSelect) {
+                                    firstSelect.focus();
+                                  }
+                                }
+                              }, 100);
                             } else {
                               setFocusedEventIndex(null);
                             }

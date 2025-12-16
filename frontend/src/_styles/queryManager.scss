@@ -1300,11 +1300,18 @@ $border-radius: 4px;
       color: var(--slate12) !important;
     }
 
+    .codehinter-default-input {
+      box-shadow: none !important;
+      border: 1px solid transparent !important;
+      background-color: transparent;
+      transition: all 0.15s ease-in-out;
+    }
+
     .codehinter-default-input:focus-within,
     .query-manager-input-elem>input:focus {
       box-shadow: 0px 0px 0px 2px #C6D4F9 !important;
       border: 1px solid var(--indigo9) !important;
-      background-color: #F8FAFF;
+      background-color: #F8FAFF !important;
 
     }
 
