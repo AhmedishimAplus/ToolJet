@@ -78,7 +78,7 @@ input[placeholder*="search"]:focus:not([disabled]):not(.input-mode-active) {
 }
 
 /* Fallback: ANY focused element that's not in input mode should have an outline */
-*:focus:not(.input-mode-active):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content) {
+*:focus:not(.input-mode-active):not(.modal):not(.modal-backdrop):not(.modal-dialog):not(.modal-content):not(.code-editor-navigation-wrapper) {
     outline: 2px solid #3E63DD !important;
     outline-offset: 2px !important;
     border-radius: 4px !important;

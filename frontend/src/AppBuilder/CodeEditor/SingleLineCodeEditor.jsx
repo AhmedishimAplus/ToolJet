@@ -39,7 +39,7 @@ import useScreenReader from '@/modules/common/hooks/useScreenReader';
 const SingleLineCodeEditor = ({ componentName, fieldMeta = {}, componentId, ...restProps }) => {
   const { speak } = useScreenReader();
   const { moduleId } = useModuleContext();
-  const { initialValue, onChange, enablePreview = true, portalProps, paramName, fieldLabel } = restProps;
+  const { initialValue, onChange, enablePreview = true, portalProps, paramName, paramLabel, fieldLabel } = restProps;
   const { validation = {} } = fieldMeta;
   const [showPreview, setShowPreview] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -353,6 +353,11 @@ const EditorInput = ({
         // Exit edit mode on Escape
         if (isEditMode) {
           setIsEditMode(false);
+          // Announce exiting edit mode
+          const label = fieldLabel || paramLabel || paramName;
+          if (speak && label) {
+            speak(`Exiting ${label}`);
+          }
           view.contentDOM.blur();
           // Focus the wrapper to show focus outline
           if (editorWrapperRef.current) {
@@ -417,9 +422,9 @@ const EditorInput = ({
     }, 50);
 
     // Screen reader announcement
-    if (speak && (fieldLabel || paramName)) {
-      const label = fieldLabel || paramName;
-      speak(`${label} code`);
+    const label = fieldLabel || paramLabel || paramName;
+    if (speak && label) {
+      speak(`${label} code, press Enter to edit, press Escape to exit`);
     }
   };
 
@@ -428,6 +433,11 @@ const EditorInput = ({
     if (event.key === 'Enter' && !isEditMode) {
       event.preventDefault();
       setIsEditMode(true);
+      // Announce entering edit mode
+      const label = fieldLabel || paramLabel || paramName;
+      if (speak && label) {
+        speak(`Entering ${label}`);
+      }
       // Focus the CodeMirror editor
       if (codeMirrorView) {
         codeMirrorView.focus();
