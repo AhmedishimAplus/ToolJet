@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const MIN_TABLE_ROW_HEIGHT_CONDENSED = 39;
 const MIN_TABLE_ROW_HEIGHT_DEFAULT = 45;
 
-const TableRowHeightInput = ({ value, onChange, cyLabel, staticText, styleDefinition }) => {
+const TableRowHeightInput = ({ value, onChange, cyLabel, staticText, styleDefinition, paramLabel }) => {
   const [inputValue, setInputValue] = useState(value);
+  const { speak } = useScreenReader();
   const minValue =
     styleDefinition.cellSize?.value === 'condensed' ? MIN_TABLE_ROW_HEIGHT_CONDENSED : MIN_TABLE_ROW_HEIGHT_DEFAULT;
 
@@ -12,6 +14,11 @@ const TableRowHeightInput = ({ value, onChange, cyLabel, staticText, styleDefini
     setInputValue(value < minValue ? minValue : value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, styleDefinition.cellSize?.value]);
+
+  const handleFocus = () => {
+    const label = paramLabel || 'Row height';
+    speak(`${label} input, current value: ${inputValue} pixels`);
+  };
 
   const handleBlur = () => {
     const newValue = Math.max(inputValue, minValue);
@@ -36,6 +43,7 @@ const TableRowHeightInput = ({ value, onChange, cyLabel, staticText, styleDefini
         min={minValue}
         onChange={handleChange}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         autoComplete="off"
       />
       <label htmlFor="labelId" className="static-value tj-text-xsm">

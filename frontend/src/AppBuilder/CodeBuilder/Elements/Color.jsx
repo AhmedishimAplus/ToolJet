@@ -4,6 +4,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import classNames from 'classnames';
 import { computeColor } from '@/_helpers/utils';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const Color = ({
   value,
@@ -17,11 +18,13 @@ export const Color = ({
   component,
   styleDefinition,
   componentType = 'color',
-  CustomOptionList = () => {},
-  SwatchesToggle = () => {},
+  CustomOptionList = () => { },
+  SwatchesToggle = () => { },
+  paramLabel,
 }) => {
   value = component == 'Button' ? computeColor(styleDefinition, value, meta) : value;
   const [showPicker, setShowPicker] = useState(false);
+  const { speak } = useScreenReader();
   const darkMode = localStorage.getItem('darkMode') === 'true';
   const colorPickerPosition = meta?.colorPickerPosition ?? '';
   const coverStyles = {
@@ -90,11 +93,20 @@ export const Color = ({
       </>
     );
   };
+  const handleFocus = () => {
+    const label = paramLabel || 'Color';
+    speak(`${label} color picker, current value: ${value}`);
+  };
+
   const ColorPickerInputBox = () => {
     return (
       <div
         className="row mx-0 color-picker-input d-flex"
         onClick={() => setShowPicker(true)}
+        onFocus={handleFocus}
+        tabIndex={0}
+        role="button"
+        aria-label={`${paramLabel || 'Color'} picker, current value: ${value}`}
         data-cy={`${String(cyLabel)}-picker`}
         style={outerStyles}
       >

@@ -3,10 +3,12 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import Slider from 'rc-slider';
 import { Color } from './Color';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-export const BoxShadow = ({ value, onChange, cyLabel }) => {
+export const BoxShadow = ({ value, onChange, cyLabel, paramLabel }) => {
   const defaultValue = { X: 0, Y: 0, Blur: 0, Spread: 0, Color: '#00000040' };
   const [showPicker, setShowPicker] = useState(false);
+  const { speak } = useScreenReader();
 
   const popoverLabelstyle = {
     display: 'flex',
@@ -173,6 +175,13 @@ export const BoxShadow = ({ value, onChange, cyLabel }) => {
               className="row mx-0 color-picker-input d-flex align-items-center"
               style={outerStyles}
               data-cy={`${cyLabel}-picker`}
+              tabIndex={0}
+              role="button"
+              aria-label={`${paramLabel || 'Box shadow'} picker`}
+              onFocus={() => {
+                const label = paramLabel || 'Box shadow';
+                speak(`${label} picker, current value: X ${boxShadow.X}, Y ${boxShadow.Y}, Blur ${boxShadow.Blur}, Spread ${boxShadow.Spread}`);
+              }}
             >
               <div
                 className="color-icon"

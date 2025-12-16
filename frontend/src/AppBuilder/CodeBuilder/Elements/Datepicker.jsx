@@ -4,9 +4,17 @@ import CustomDatePickerHeader from './CustomDatePickerHeader';
 import cx from 'classnames';
 import moment from 'moment';
 import { getDate } from './utils';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-export const Datepicker = ({ value, onChange, meta }) => {
+export const Datepicker = ({ value, onChange, meta, paramLabel }) => {
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    const label = paramLabel || meta?.label || 'Date';
+    speak(`${label} date picker, current value: ${value || 'not set'}`);
+  };
+
   return (
     <div
       data-cy={meta.dataCy}
@@ -19,6 +27,7 @@ export const Datepicker = ({ value, onChange, meta }) => {
         onChange={(date) => {
           const val = moment(date).format('DD/MM/YYYY');
           onChange(val === 'Invalid date' ? '' : val);
+          speak(`Date set to ${val === 'Invalid date' ? 'empty' : val}`);
         }}
         dateFormat="dd/MM/yyyy"
         showTimeSelectOnly={meta.showOnlyTime}
@@ -35,6 +44,7 @@ export const Datepicker = ({ value, onChange, meta }) => {
           },
         ]}
         popperPlacement="bottom-start"
+        onFocus={handleFocus}
       />
     </div>
   );

@@ -1,6 +1,14 @@
 import React from 'react';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-export const NumberInput = ({ value, onChange, cyLabel, meta }) => {
+export const NumberInput = ({ value, onChange, cyLabel, meta, paramLabel }) => {
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    const label = paramLabel || 'number';
+    speak(`${label} input, current value: ${value || 'empty'}`);
+  };
+
   return (
     <div className="form-text tj-number-input-element">
       <input
@@ -14,6 +22,7 @@ export const NumberInput = ({ value, onChange, cyLabel, meta }) => {
         onChange={(e) => {
           onChange(e.target.value);
         }}
+        onFocus={handleFocus}
         autoComplete="off"
       />
       <label for="labelId" className="static-value tj-text-xsm">

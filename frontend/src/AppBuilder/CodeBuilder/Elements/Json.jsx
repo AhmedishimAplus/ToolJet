@@ -1,8 +1,10 @@
 import React from 'react';
 import CodeMirror from '@uiw/react-codemirror';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 // import 'codemirror/theme/duotone-light.css';
 
-export const Json = ({ value, onChange }) => {
+export const Json = ({ value, onChange, paramLabel }) => {
+  const { speak } = useScreenReader();
   const jsonValue = value
     ? value
     : `[{
@@ -11,8 +13,13 @@ export const Json = ({ value, onChange }) => {
         "email": "hanson@example.com"
       }]`;
 
+  const handleFocus = () => {
+    const label = paramLabel || 'JSON';
+    speak(`${label} editor`);
+  };
+
   return (
-    <div className="field mb-2">
+    <div className="field mb-2" onFocus={handleFocus}>
       <CodeMirror
         height="300px"
         fontSize="2"

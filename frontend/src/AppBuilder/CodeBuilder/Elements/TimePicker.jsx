@@ -3,10 +3,17 @@ import { getDate } from './utils';
 import moment from 'moment';
 import ReactDatePicker from 'react-datepicker';
 import cx from 'classnames';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-export const TimePicker = ({ value, onChange, meta }) => {
+export const TimePicker = ({ value, onChange, meta, paramLabel }) => {
   const darkMode = localStorage.getItem('darkMode') === 'true';
   const headers = ['Hours', 'Minutes'];
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    const label = paramLabel || meta?.label || 'Time';
+    speak(`${label} time picker, current value: ${value || 'not set'}`);
+  };
 
   const onTimeChange = (time, type) => {
     let date = moment(value, 'HH:mm');
@@ -37,12 +44,14 @@ export const TimePicker = ({ value, onChange, meta }) => {
           } else {
             onChange(time);
           }
+          speak(`Time set to ${time === 'Invalid date' ? 'empty' : time}`);
         }}
         dateFormat="HH:mm"
         showTimeInput={true}
         showTimeSelectOnly={true}
         className={cx({ '.react-datepicker-time-component theme-dark dark-theme': darkMode })}
         placeholderText={meta?.placeholder ?? ''}
+        onFocus={handleFocus}
         popperClassName={cx('tj-table-datepicker custom-inspector-validation-time-picker-popper', {
           'theme-dark dark-theme': darkMode,
         })}

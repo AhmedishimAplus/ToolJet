@@ -3,6 +3,7 @@ import SelectComponent from '@/_ui/Select';
 import { components } from 'react-select';
 import Check from '@/_ui/Icon/solidIcons/Check';
 import useStore from '@/AppBuilder/_stores/store';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const Option = (props) => {
   return (
@@ -52,8 +53,9 @@ const selectCustomStyles = {
   }),
 };
 
-export const Query = ({ value, onChange, meta }) => {
+export const Query = ({ value, onChange, meta, paramLabel }) => {
   const dataQueries = useStore((state) => state.dataQuery.getCurrentModuleQueries('canvas'));
+  const { speak } = useScreenReader();
   const options = dataQueries
     .filter((query) => !(meta?.skipKinds ?? []).includes(query.kind))
     .map((query) => ({ name: query.name, value: query.id }));
@@ -62,9 +64,18 @@ export const Query = ({ value, onChange, meta }) => {
     (value) => {
       console.log('value--- ', value, options);
       onChange(value);
+      const selectedOption = options.find(opt => opt.value === value);
+      const label = paramLabel || 'Query';
+      speak(`${label} set to ${selectedOption?.name || value}`);
     },
-    [onChange, options]
+    [onChange, options, paramLabel, speak]
   );
+
+  const handleFocus = () => {
+    const label = paramLabel || 'Query';
+    const selectedOption = options.find(opt => opt.value === value);
+    speak(`${label} dropdown, current value: ${selectedOption?.name || value || 'none selected'}`);
+  };
 
   // const cleanedValue = useMemo(() => {
   //   if (initialValue) {
@@ -89,6 +100,8 @@ export const Query = ({ value, onChange, meta }) => {
           styles={selectCustomStyles}
           useCustomStyles={true}
           classNamePrefix="inspector-select"
+          label={paramLabel}
+          onFocus={handleFocus}
           components={{
             IndicatorSeparator: () => null,
             Option,

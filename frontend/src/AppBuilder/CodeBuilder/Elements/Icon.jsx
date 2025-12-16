@@ -6,6 +6,7 @@ import { SearchBox } from '@/_components/SearchBox';
 import * as Icons from '@tabler/icons-react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { Visibility } from './Visibility';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const Icon = ({
   value,
@@ -14,11 +15,18 @@ export const Icon = ({
   styleDefinition,
   component,
   isVisibilityEnabled = true,
+  paramLabel,
 }) => {
   const [searchText, setSearchText] = useState('');
   const [showPopOver, setPopOverVisibility] = useState(false);
   const iconList = useRef(Object.keys(Icons));
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    const label = paramLabel || 'Icon';
+    speak(`${label} picker, current icon: ${value || 'none selected'}`);
+  };
 
   const searchIcon = (text) => {
     if (searchText === text) return;
@@ -99,7 +107,7 @@ export const Icon = ({
                 rootClose={true}
                 overlay={eventPopover()}
               >
-                <div className="d-flex align-items-center" role="button">
+                <div className="d-flex align-items-center" role="button" tabIndex={0} onFocus={handleFocus}>
                   <div className="" style={{ marginRight: '2px' }}>
                     <IconElement
                       data-cy={`icon-on-side-panel`}

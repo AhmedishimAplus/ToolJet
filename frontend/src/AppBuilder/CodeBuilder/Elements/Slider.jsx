@@ -4,9 +4,11 @@ import CustomInput from '@/_ui/CustomInput';
 import * as Slider from '@radix-ui/react-slider';
 import './Slider.scss';
 import { debounce } from 'lodash';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-function Slider1({ value, onChange, component, styleDefinition }) {
+function Slider1({ value, onChange, component, styleDefinition, paramLabel }) {
   const [sliderValue, setSliderValue] = useState(value ? value : 33); // Initial value of the slider
+  const { speak } = useScreenReader();
   const isDisabled =
     styleDefinition?.auto?.value === '{{false}}' ? false : styleDefinition?.auto?.value === '{{true}}' ? true : false;
   useEffect(() => {
@@ -30,6 +32,11 @@ function Slider1({ value, onChange, component, styleDefinition }) {
     debouncedOnChange(inputValue);
   };
 
+  const handleFocus = () => {
+    const label = paramLabel || 'slider';
+    speak(`${label} slider, current value: ${sliderValue} percent`);
+  };
+
   return (
     <div className="d-flex flex-column " style={{ width: '142px', marginBottom: '16px', position: 'relative' }}>
       <CustomInput
@@ -38,6 +45,7 @@ function Slider1({ value, onChange, component, styleDefinition }) {
         staticText="% of the field"
         onInputChange={onInputChange}
         dataCy="width"
+        onFocus={handleFocus}
       />
       <div style={{ position: 'absolute', top: '34px' }}>
         <Slider.Root
@@ -50,8 +58,11 @@ function Slider1({ value, onChange, component, styleDefinition }) {
           onValueChange={handleSliderChange}
           onValueCommit={(value) => {
             onChange(`{{${value}}}`);
+            const label = paramLabel || 'slider';
+            speak(`${label} set to ${value} percent`);
           }}
           disabled={isDisabled}
+          onFocus={handleFocus}
         >
           <Slider.Track className="SliderTrack">
             <Slider.Range className="SliderRange" />

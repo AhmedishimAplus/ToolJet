@@ -6,9 +6,11 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { LabeledDivider } from '@/AppBuilder/RightSideBar/Inspector/Components/Form/_components';
 import cx from 'classnames';
 import './styles.scss';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const DropdownMenu = (props) => {
-  const { value, onChange, forceCodeBox } = props;
+  const { value, onChange, forceCodeBox, paramLabel } = props;
+  const { speak } = useScreenReader();
 
   const dataQueries = useStore((state) => state.dataQuery.queries.modules.canvas, shallow);
 
@@ -87,6 +89,11 @@ export const DropdownMenu = (props) => {
     }
   };
 
+  const handleFocus = () => {
+    const label = paramLabel || 'Data source';
+    speak(`${label} dropdown, current value: ${selectedSource?.label || 'none selected'}`);
+  };
+
   const renderCheckIcon = ({ id }) => {
     if (value === id) {
       return <SolidIcon name="check" width="16" height="16" fill="#4368E3" viewBox="0 0 16 16" />;
@@ -101,6 +108,7 @@ export const DropdownMenu = (props) => {
         {/* Dropdown trigger div */}
         <button
           onClick={toggleDropdown}
+          onFocus={handleFocus}
           className={cx(
             'tw-flex tw-items-center tw-justify-between tw-w-full tw-px-4 tw-py-2 tw-text-left tw-bg-white dropdown-menu-trigger',
             {

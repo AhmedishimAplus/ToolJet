@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
-export const Number = ({ value, onChange, cyLabel }) => {
+export const Number = ({ value, onChange, cyLabel, paramLabel }) => {
   const [number, setNumber] = useState(value ? value : 0);
+  const { speak } = useScreenReader();
+
+  const handleFocus = () => {
+    const label = paramLabel || 'number';
+    speak(`${label} number input, current value: ${number}`);
+  };
 
   useEffect(() => {
     setNumber(value);
@@ -20,6 +27,7 @@ export const Number = ({ value, onChange, cyLabel }) => {
           }}
           value={number}
           data-cy={`${String(cyLabel)}-input-field`}
+          onFocus={handleFocus}
         />
       </div>
     </>
