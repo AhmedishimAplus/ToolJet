@@ -34,6 +34,7 @@ import { shallow } from 'zustand/shallow';
 import { ToolTip as InspectorTooltip } from '../Inspector/Elements/Components/ToolTip';
 import AppPermissionsModal from '@/modules/Appbuilder/components/AppPermissionsModal';
 import { appPermissionService } from '@/_services';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const PageSettings = () => {
   const pageSettings = useStore((state) => state.pageSettings);
@@ -251,6 +252,7 @@ const RenderStyles = React.memo(({ pagesMeta, renderCustomStyles }) => {
 export const AppHeaderMenu = ({ darkMode, pageSettings, pageSettingChanged, licenseValid }) => {
   const { moduleId } = useModuleContext();
   const [appName] = useStore((state) => [state.appStore.modules[moduleId].app.appName], shallow);
+  const { speak } = useScreenReader();
 
   const { definition: { properties = {} } = {} } = pageSettings ?? {};
   const { hideHeader, name, hideLogo } = properties ?? {};
@@ -294,6 +296,10 @@ export const AppHeaderMenu = ({ darkMode, pageSettings, pageSettingChanged, lice
     }
   };
 
+  const handleTitleFocus = () => {
+    speak(`Title text input, current value: ${_name}`);
+  };
+
   return (
     <>
       <div className="section-header pb-2">
@@ -313,7 +319,12 @@ export const AppHeaderMenu = ({ darkMode, pageSettings, pageSettingChanged, lice
             checked={licenseValid ? !hideHeader : true}
             disabled={!licenseValid}
             onChange={(e) => {
-              pageSettingChanged({ hideHeader: !e.target.checked }, 'properties');
+              const newValue = e.target.checked;
+              pageSettingChanged({ hideHeader: !newValue }, 'properties');
+              speak(`Show app header toggle, ${newValue ? 'enabled' : 'disabled'}`);
+            }}
+            onFocus={() => {
+              speak(`Show app header toggle, currently ${licenseValid ? (!hideHeader ? 'enabled' : 'disabled') : 'enabled'}`);
             }}
           />
         </label>
@@ -332,7 +343,12 @@ export const AppHeaderMenu = ({ darkMode, pageSettings, pageSettingChanged, lice
             checked={licenseValid ? !hideLogo : true}
             disabled={!licenseValid}
             onChange={(e) => {
-              pageSettingChanged({ hideLogo: !e.target.checked }, 'properties');
+              const newValue = e.target.checked;
+              pageSettingChanged({ hideLogo: !newValue }, 'properties');
+              speak(`Show logo toggle, ${newValue ? 'enabled' : 'disabled'}`);
+            }}
+            onFocus={() => {
+              speak(`Show logo toggle, currently ${licenseValid ? (!hideLogo ? 'enabled' : 'disabled') : 'enabled'}`);
             }}
           />
         </label>
@@ -344,6 +360,7 @@ export const AppHeaderMenu = ({ darkMode, pageSettings, pageSettingChanged, lice
             type="text"
             onBlur={handleNameBlur}
             onChange={handleNameChange}
+            onFocus={handleTitleFocus}
             className={`form-control ${error ? 'is-invalid' : ''}`}
             value={_name}
             maxLength={32}
@@ -360,6 +377,7 @@ export const AppHeaderMenu = ({ darkMode, pageSettings, pageSettingChanged, lice
 };
 
 const NavigationMenu = ({ moduleId, darkMode, pageSettings, pageSettingChanged }) => {
+  const { speak } = useScreenReader();
   const { definition: { properties = {} } = {} } = pageSettings ?? {};
   const { disableMenu, position, style, collapsable } = properties ?? {};
   const isPagesSidebarHidden = useStore((state) => state.getPagesSidebarVisibility(moduleId), shallow);
@@ -430,6 +448,7 @@ const NavigationMenu = ({ moduleId, darkMode, pageSettings, pageSettingChanged }
                 useMenuPortal={false}
                 width={'168px'}
                 className={`${darkMode ? 'select-search-dark' : 'select-search'}`}
+                label="Navigation style"
               />
             </div>
           </div>
@@ -500,6 +519,7 @@ const Devices = ({ darkMode, pageSettingChanged, pageSettings }) => {
 };
 
 const ShowNavigationMenu = ({ moduleId, disableMenu, darkMode, updatePageVisibility, page, isHomePage }) => {
+  const { speak } = useScreenReader();
   const [forceCodeBox, setForceCodeBox] = useState(disableMenu?.fxActive);
   const pageSettingChanged = useStore((state) => state.pageSettingChanged);
   const isPagesSidebarHidden = useStore((state) => state.getPagesSidebarVisibility(moduleId), shallow);
@@ -511,9 +531,8 @@ const ShowNavigationMenu = ({ moduleId, disableMenu, darkMode, updatePageVisibil
         <div className={`field`}>
           <InspectorTooltip
             label={'Hide navigation menu'}
-            labelClass={`tj-text-xsm color-slate12 ${forceCodeBox ? 'mb-2' : 'mb-0'} ${
-              darkMode && 'color-whitish-darkmode'
-            }`}
+            labelClass={`tj-text-xsm color-slate12 ${forceCodeBox ? 'mb-2' : 'mb-0'} ${darkMode && 'color-whitish-darkmode'
+              }`}
           />
         </div>
         <div className={`flex-grow-1`}>
@@ -548,16 +567,21 @@ const ShowNavigationMenu = ({ moduleId, disableMenu, darkMode, updatePageVisibil
                   checked={isPagesSidebarHidden}
                   disabled={isHomePage}
                   onChange={(e) => {
+                    const newValue = e.target.checked;
                     pageSettingChanged(
                       {
                         disableMenu: {
-                          value: `{{${e.target.checked}}}`,
+                          value: `{{${newValue}}}`,
                           fxActive: forceCodeBox,
                         },
                       },
                       'properties'
                     );
-                    resolveOthers('canvas', true, { isPagesSidebarHidden: `{{${e.target.checked}}}` });
+                    resolveOthers('canvas', true, { isPagesSidebarHidden: `{{${newValue}}}` });
+                    speak(`Hide navigation menu toggle, ${newValue ? 'enabled' : 'disabled'}`);
+                  }}
+                  onFocus={() => {
+                    speak(`Hide navigation menu toggle, currently ${isPagesSidebarHidden ? 'enabled' : 'disabled'}`);
                   }}
                 />
               </div>

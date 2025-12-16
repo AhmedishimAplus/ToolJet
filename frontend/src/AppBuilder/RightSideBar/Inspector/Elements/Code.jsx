@@ -77,6 +77,7 @@ export const Code = ({
         validationFn={validationFn}
         cyLabel=""
         setCodeEditorView={setCodeEditorView}
+        fieldLabel={displayName}
       />
     </div>
   );

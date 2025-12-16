@@ -9,6 +9,7 @@ import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
 import { noop } from 'lodash';
 import { useGridStore } from '@/_stores/gridStore';
 import { useCanvasDropHandler } from '@/AppBuilder/AppCanvas/useCanvasDropHandler';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const DragLayer = ({ index, component, isModuleTab = false, disabled = false }) => {
   const [isRightSidebarOpen, toggleRightSidebar] = useStore(
@@ -20,6 +21,7 @@ export const DragLayer = ({ index, component, isModuleTab = false, disabled = fa
   const setShowModuleBorder = useStore((state) => state.setShowModuleBorder, shallow) || noop;
   const { handleDrop } = useCanvasDropHandler() || noop;
   const dragRef = useRef(null);
+  const { speak } = useScreenReader();
 
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
@@ -46,6 +48,11 @@ export const DragLayer = ({ index, component, isModuleTab = false, disabled = fa
       setShowModuleBorder(true);
     }
   }, [isDragging, setShowModuleBorder, isModuleEditor, toggleRightSidebar]);
+
+  const handleFocus = () => {
+    if (disabled) return;
+    speak(`${component.displayName} component card, press Enter or Space to add to canvas`);
+  };
 
   const handleKeyDown = (e) => {
     if (disabled) return;
@@ -81,6 +88,7 @@ export const DragLayer = ({ index, component, isModuleTab = false, disabled = fa
         role="button"
         aria-label={`Add ${component.displayName} component to canvas`}
         onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
       >
         {isModuleTab ? <ModuleWidgetBox module={component} /> : <WidgetBox index={index} component={component} />}
       </div>
