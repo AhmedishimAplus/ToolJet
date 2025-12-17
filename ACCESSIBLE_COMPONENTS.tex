@@ -1,0 +1,472 @@
+\subsubsection{Introduction to Accessible Component Libraries}
+
+Modern web applications require not only accessible user interfaces for end-users but also accessible authoring tools that enable developers to create accessible applications efficiently. The Authoring Tool Accessibility Guidelines (ATAG) 2.0 \cite{ATAG20} emphasizes that authoring tools themselves must be accessible and should facilitate the production of accessible content. The ToolJet platform, as a low-code application builder, serves as an authoring tool where users construct applications by composing various components on a canvas. To align with ATAG 2.0 requirements and WCAG 2.2 \cite{WCAG22} compliance objectives, the platform needed a component library that provides built-in accessibility features without requiring extensive manual configuration from developers. The integration of pre-built accessible component libraries becomes essential, as they provide standardized, tested, and WCAG-compliant interface elements that can be used consistently throughout the application, ensuring that applications created within ToolJet inherit accessibility best practices by default.
+
+\subsubsection{Chakra UI Selection Rationale}
+
+After evaluating multiple React component libraries including Material-UI, Ant Design, and Chakra UI, the decision was made to integrate Chakra UI \cite{chakraui} as the accessible component library for ToolJet's accessible widget collection. This selection was based on several key factors that aligned with both ATAG 2.0 requirements and WCAG 2.2 \cite{WCAG22} compliance objectives.
+
+Chakra UI was specifically designed with accessibility as a foundational principle rather than an afterthought. According to the Chakra UI documentation \cite{chakraui}, all components are built with proper semantic HTML elements and include comprehensive ARIA attributes automatically. This means that developers using Chakra UI components inherit accessibility features without needing to manually configure ARIA roles, states, or properties for each component instance. This automatic inclusion of accessibility features directly supports ATAG 2.0 Guideline A.3.1, which requires that authoring tool user interfaces follow applicable accessibility guidelines.
+
+The library provides built-in keyboard navigation patterns that conform to WAI-ARIA Authoring Practices. Each component implements the expected keyboard interactions for its respective role, such as Tab navigation, Enter/Space activation for buttons, and arrow key navigation for composite widgets. This comprehensive keyboard support addresses WCAG 2.2 \cite{WCAG22} Success Criterion 2.1.1 (Keyboard), ensuring that all functionality is available through keyboard interfaces without requiring specific timings for individual keystrokes.
+
+Chakra UI's focus management system automatically handles focus states and provides visible focus indicators that meet WCAG 2.2 \cite{WCAG22} Success Criterion 2.4.7 (Focus Visible). The library applies focus styles that are clearly distinguishable and maintain adequate color contrast ratios. Additionally, the focus management system includes programmatic focus control APIs that enable developers to manage focus flow logically through custom interactions.
+
+The component library integrates seamlessly with screen reader technologies by providing appropriate labels, descriptions, and state announcements. Components automatically expose their current state to assistive technologies through ARIA live regions and state attributes. For example, a button in a loading state will announce its busy state to screen readers, and form inputs will associate labels with their corresponding controls using proper ARIA relationships.
+
+Color contrast compliance is another critical advantage of Chakra UI. The library's default theme includes color schemes that meet WCAG 2.2 \cite{WCAG22} Level AA contrast requirements. The theming system allows customization while maintaining accessibility through built-in contrast checking tools. This ensures that visual designs remain accessible even when developers customize component appearances.
+
+From a developer experience perspective, Chakra UI provides a composable component architecture that aligns well with React's component model. The library's API design emphasizes clarity and simplicity, making it straightforward to use accessible components correctly. This ease of use is crucial for ATAG 2.0 Part B requirements, as it lowers the barrier for developers to create accessible content.
+
+The library's documentation \cite{chakraui} includes comprehensive accessibility information for each component, explaining the ARIA patterns implemented, keyboard interactions supported, and best practices for usage. This documentation supports ATAG 2.0 Guideline A.4.2, which requires that authoring tool documentation promote accessible authoring practices.
+
+\subsubsection{Accessible Component Implementation}
+
+Three accessible components were implemented as part of the initial Chakra UI integration: AccessibleButton, AccessibleInput, and AccessibleSwitch. Each component serves as a bridge between Chakra UI's accessible components and ToolJet's widget system, providing both accessibility features and integration with ToolJet's event handling and state management mechanisms.
+
+The AccessibleButton component wraps Chakra UI's Button component and extends it with ToolJet-specific functionality. The implementation demonstrates how accessible properties are integrated into the ToolJet widget system:
+
+\begin{lstlisting}[language=JavaScript, caption=AccessibleButton Component Implementation]
+import React from 'react';
+import { Button } from '@chakra-ui/react';
+
+export const AccessibleButton = ({
+    height,
+    properties,
+    styles,
+    fireEvent,
+    setExposedVariable,
+    darkMode,
+    dataCy,
+}) => {
+    const { text, ariaLabel, loadingState, 
+            visibility, disabledState } = properties;
+    const { variant = 'solid', 
+            colorScheme = 'blue', 
+            size = 'md' } = styles;
+
+    const handleClick = () => {
+        fireEvent('onClick');
+    };
+
+    if (!visibility) return null;
+
+    return (
+        <Button
+            onClick={handleClick}
+            variant={variant}
+            colorScheme={colorScheme}
+            size={size}
+            isLoading={loadingState}
+            isDisabled={disabledState}
+            aria-label={ariaLabel || text}
+            data-cy={dataCy}
+            width="100%"
+            height={`${height}px`}
+        >
+            {text}
+        </Button>
+    );
+};
+\end{lstlisting}
+
+The AccessibleButton component exposes several accessibility-related properties to the ToolJet interface. The \texttt{ariaLabel} property allows developers to provide custom ARIA labels that override the button's visible text when necessary for screen reader users. This supports WCAG 2.2 \cite{WCAG22} Success Criterion 1.3.1 (Info and Relationships) by enabling proper labeling of buttons whose visual text may not fully convey their purpose to screen reader users.
+
+The component integrates with ToolJet's event system through the \texttt{fireEvent} function, which triggers configured actions when the button is clicked. The \texttt{isLoading} and \texttt{isDisabled} states are passed directly to Chakra UI's Button component, which automatically handles the appropriate ARIA attributes (\texttt{aria-busy} for loading states and \texttt{aria-disabled} for disabled states) and visual styling.
+
+The AccessibleInput component provides an accessible text input field with state management and event handling:
+
+\begin{lstlisting}[language=JavaScript, caption=AccessibleInput Component Implementation]
+import React, { useState, useEffect } from 'react';
+import { Input } from '@chakra-ui/react';
+
+export const AccessibleInput = ({
+    height,
+    properties,
+    styles,
+    fireEvent,
+    setExposedVariable,
+    darkMode,
+    dataCy,
+}) => {
+    const { value, placeholder, ariaLabel, 
+            visibility, disabledState, 
+            readOnly } = properties;
+    const { variant = 'outline', 
+            size = 'md' } = styles;
+
+    const [inputValue, setInputValue] = 
+        useState(value || '');
+
+    useEffect(() => {
+        setInputValue(value || '');
+    }, [value]);
+
+    useEffect(() => {
+        setExposedVariable('value', inputValue);
+    }, [inputValue, setExposedVariable]);
+
+    const handleChange = (e) => {
+        const newValue = e.target.value;
+        setInputValue(newValue);
+        setExposedVariable('value', newValue);
+        fireEvent('onChange');
+    };
+
+    const handleFocus = () => {
+        fireEvent('onFocus');
+    };
+
+    const handleBlur = () => {
+        fireEvent('onBlur');
+    };
+
+    if (!visibility) return null;
+
+    return (
+        <Input
+            value={inputValue}
+            onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            variant={variant}
+            size={size}
+            isDisabled={disabledState}
+            isReadOnly={readOnly}
+            aria-label={ariaLabel || placeholder}
+            data-cy={dataCy}
+            width="100%"
+            height={`${height}px`}
+        />
+    );
+};
+\end{lstlisting}
+
+The AccessibleInput component demonstrates several key accessibility patterns. The component uses React hooks to manage internal state while synchronizing with ToolJet's exposed variable system through \texttt{setExposedVariable}. This bidirectional data flow enables both programmatic control of input values and reactive updates based on user interactions.
+
+The component provides multiple event hooks (\texttt{onChange}, \texttt{onFocus}, \texttt{onBlur}) that enable developers to implement accessible form validation patterns. These events can be used to provide real-time feedback to users, which supports WCAG 2.2 \cite{WCAG22} Success Criterion 3.3.1 (Error Identification) when combined with appropriate error handling logic.
+
+The \texttt{aria-label} attribute is set to either the custom \texttt{ariaLabel} property or falls back to the \texttt{placeholder} text. While placeholder text alone is not sufficient for accessibility, providing it as a fallback ARIA label ensures that the input always has an accessible name even if developers do not explicitly configure the \texttt{ariaLabel} property.
+
+The AccessibleSwitch component implements a toggle switch using Chakra UI's Switch and FormControl components:
+
+\begin{lstlisting}[language=JavaScript, caption=AccessibleSwitch Component Implementation]
+import React, { useState, useEffect } from 'react';
+import { Switch, FormControl, 
+         FormLabel } from '@chakra-ui/react';
+
+export const AccessibleSwitch = ({
+    height,
+    properties,
+    styles,
+    fireEvent,
+    setExposedVariable,
+    darkMode,
+    dataCy,
+}) => {
+    const { label, checked, ariaLabel, 
+            visibility, disabledState } = properties;
+    const { colorScheme = 'blue', 
+            size = 'md' } = styles;
+
+    const [isChecked, setIsChecked] = 
+        useState(checked || false);
+
+    useEffect(() => {
+        setIsChecked(checked || false);
+    }, [checked]);
+
+    useEffect(() => {
+        setExposedVariable('value', isChecked);
+    }, [isChecked, setExposedVariable]);
+
+    const handleChange = (e) => {
+        const newValue = e.target.checked;
+        setIsChecked(newValue);
+        setExposedVariable('value', newValue);
+        fireEvent('onChange');
+    };
+
+    if (!visibility) return null;
+
+    return (
+        <FormControl display="flex" 
+                     alignItems="center" 
+                     height={`${height}px`}>
+            <Switch
+                id={`switch-${dataCy}`}
+                isChecked={isChecked}
+                onChange={handleChange}
+                colorScheme={colorScheme}
+                size={size}
+                isDisabled={disabledState}
+                aria-label={ariaLabel || label}
+                data-cy={dataCy}
+            />
+            {label && (
+                <FormLabel htmlFor={`switch-${dataCy}`} 
+                           mb="0" ml="2">
+                    {label}
+                </FormLabel>
+            )}
+        </FormControl>
+    );
+};
+\end{lstlisting}
+
+The AccessibleSwitch component demonstrates proper use of Chakra UI's FormControl component, which provides semantic grouping of form elements and their labels. The FormLabel component is explicitly associated with the Switch through the \texttt{htmlFor} attribute, ensuring that clicking the label toggles the switch. This association is also conveyed to assistive technologies through proper ARIA relationships.
+
+The switch component properly manages boolean state and exposes it through ToolJet's variable system. The \texttt{onChange} event is fired whenever the switch state changes, enabling developers to trigger actions based on toggle interactions.
+
+All three components implement conditional rendering based on the \texttt{visibility} property, returning \texttt{null} when visibility is false. This approach removes the components from the DOM entirely rather than hiding them with CSS, which ensures that hidden components are not exposed to assistive technologies and do not create confusion for screen reader users.
+
+\subsubsection{Integration Architecture}
+
+The integration of Chakra UI components into ToolJet required both frontend component implementation and backend widget configuration. The architecture ensures that accessible components function seamlessly within ToolJet's existing widget system while maintaining their accessibility features.
+
+On the frontend, the initial implementation placed a ChakraProvider wrapper around each individual component. However, this approach caused conflicts when multiple Chakra UI components were rendered simultaneously, resulting in infinite loading states and application hangs. The issue was resolved by moving the ChakraProvider to the Container level, wrapping the entire component canvas:
+
+\begin{lstlisting}[language=JavaScript, caption=ChakraProvider Integration at Container Level]
+import { ChakraProvider } from '@chakra-ui/react';
+
+export const Container = ({ 
+    showComments, 
+    handleAddThread, 
+    /* ...other props */ 
+}) => {
+    return (
+        <ChakraProvider resetCSS={false}>
+            <ContainerWrapper
+                showComments={showComments}
+                handleAddThread={handleAddThread}
+                /* ...other props */
+            >
+                {/* All components render here */}
+            </ContainerWrapper>
+        </ChakraProvider>
+    );
+};
+\end{lstlisting}
+
+This architectural decision provides several benefits. A single ChakraProvider instance ensures consistent theming across all Chakra UI components on the canvas. The shared provider context eliminates initialization conflicts and improves performance by avoiding multiple theme computations. The \texttt{resetCSS={false}} configuration prevents Chakra UI from overriding ToolJet's existing global styles, maintaining visual consistency with the platform's design system.
+
+The backend integration required creating widget configuration files for each accessible component. These configuration files define the properties, events, styles, and default values that appear in ToolJet's component inspector. The server-side configuration ensures that the platform can validate, serialize, and deserialize components correctly when saving and loading applications.
+
+\begin{lstlisting}[language=JavaScript, caption=Server-Side Widget Configuration Structure]
+export const accessibleButtonConfig = {
+    name: 'AccessibleButton',
+    displayName: 'Accessible Button',
+    description: 'Chakra UI button with built-in 
+                  accessibility features',
+    component: 'AccessibleButton',
+    defaultSize: {
+        width: 5,
+        height: 40,
+    },
+    properties: {
+        text: {
+            type: 'code',
+            displayName: 'Label',
+            validation: { 
+                schema: { type: 'string' } 
+            },
+        },
+        ariaLabel: {
+            type: 'code',
+            displayName: 'ARIA Label',
+            validation: { 
+                schema: { type: 'string' } 
+            },
+            section: 'additionalActions',
+        },
+        // ...additional properties
+    },
+    events: {
+        onClick: { displayName: 'On click' },
+    },
+    styles: {
+        variant: {
+            type: 'switch',
+            displayName: 'Variant',
+            options: [
+                { displayName: 'Solid', value: 'solid' },
+                { displayName: 'Outline', value: 'outline' },
+                { displayName: 'Ghost', value: 'ghost' },
+            ],
+        },
+        // ...additional styles
+    },
+    definition: {
+        properties: {
+            text: { value: 'Button' },
+            ariaLabel: { value: '' },
+            visibility: { value: '{{true}}' },
+            disabledState: { value: '{{false}}' },
+        },
+        // ...default values
+    },
+};
+\end{lstlisting}
+
+The widget configuration structure separates concerns into distinct categories. Properties define the data and state that can be configured for the component. Events specify the actions that can be triggered by user interactions. Styles control the visual appearance options exposed to developers. The definition section provides default values that are used when a component is first added to the canvas.
+
+The \texttt{ariaLabel} property is categorized under the \texttt{additionalActions} section, placing it alongside other advanced configuration options. This organization helps guide developers toward essential properties first while making accessibility options discoverable without overwhelming the primary interface.
+
+Each widget configuration is registered in the server's widget configuration index, which maps component names to their configurations. This registration enables the backend to recognize and process the accessible components when applications are saved, loaded, or exported.
+
+The integration also required creating visual indicators to distinguish accessible components from standard components. Each accessible component includes a green accessibility badge (●) in the component menu, signaling to developers that these components have enhanced accessibility features. This visual distinction supports ATAG 2.0 Guideline B.2.1 by ensuring the availability of features that support the production of accessible content.
+
+\subsubsection{Widget Configuration and Property Management}
+
+The widget configuration system plays a crucial role in making accessible components both functional and user-friendly within the ToolJet authoring environment. Each accessible component requires comprehensive configuration on both the frontend and backend to ensure proper integration with ToolJet's drag-and-drop interface, property inspector, and event system.
+
+Frontend widget configurations are defined in the AppBuilder's WidgetManager, which manages the catalog of available components and their metadata. The configuration specifies how the component appears in the component palette, what properties are exposed in the inspector panel, and how the component responds to runtime interactions:
+
+\begin{lstlisting}[language=JavaScript, caption=Frontend Widget Configuration]
+export const accessibleButtonConfig = {
+    name: 'AccessibleButton',
+    displayName: 'Accessible Button',
+    description: 'Chakra UI button with built-in 
+                  accessibility features',
+    defaultSize: { width: 145, height: 40 },
+    component: 'AccessibleButton',
+    properties: {
+        text: { 
+            type: 'code', 
+            displayName: 'Label',
+            validation: { 
+                schema: { type: 'string' }
+            }
+        },
+        ariaLabel: { 
+            type: 'code', 
+            displayName: 'ARIA Label',
+            validation: { 
+                schema: { type: 'string' }
+            }
+        },
+        loadingState: { 
+            type: 'toggle', 
+            displayName: 'Loading state'
+        },
+        visibility: { 
+            type: 'toggle', 
+            displayName: 'Visibility'
+        },
+        disabledState: { 
+            type: 'toggle', 
+            displayName: 'Disable'
+        },
+    },
+    events: ['onClick'],
+    styles: {
+        variant: { 
+            type: 'select', 
+            options: ['solid', 'outline', 'ghost']
+        },
+        colorScheme: { 
+            type: 'select', 
+            options: ['blue', 'green', 'red', 'gray']
+        },
+        size: { 
+            type: 'select', 
+            options: ['sm', 'md', 'lg']
+        },
+    },
+};
+\end{lstlisting}
+
+The property type system determines how each property is rendered in the inspector panel. The \texttt{code} type enables JavaScript expressions, allowing developers to bind properties to dynamic values or application state. The \texttt{toggle} type provides boolean switches for binary states. This type system ensures that developers can configure components through an intuitive interface while maintaining the flexibility to use expressions for dynamic behavior.
+
+Validation schemas are attached to properties to ensure type safety and prevent runtime errors. When a developer enters a value for a property, the validation schema checks that the value conforms to the expected type. For string properties like \texttt{text} and \texttt{ariaLabel}, the schema ensures that the provided value can be coerced to a string, even when using JavaScript expressions.
+
+The backend widget configurations mirror the frontend structure but serve a different purpose. Server-side configurations are used when applications are saved to the database, loaded from storage, or exported for deployment. The backend validates that all component properties conform to their schemas and handles version migrations when component APIs change over time.
+
+Property management also involves handling default values sensibly to maintain accessibility even when developers do not explicitly configure accessibility properties. For example, the \texttt{ariaLabel} property defaults to an empty string but falls back to the button's visible text when not specified. This fallback behavior ensures that the button always has an accessible name, satisfying WCAG 2.2 \cite{WCAG22} Success Criterion 4.1.2 (Name, Role, Value).
+
+\subsubsection{Event System Integration}
+
+The accessible components integrate with ToolJet's event system to enable interactive behaviors while maintaining accessibility. The event system allows developers to configure actions that execute when specific component events occur, such as button clicks, input changes, or switch toggles.
+
+Each accessible component implements event handlers that call the \texttt{fireEvent} function provided by the ToolJet runtime. This function triggers any actions configured in the component inspector, such as running queries, navigating to pages, or updating application state:
+
+\begin{lstlisting}[language=JavaScript, caption=Event Handler Implementation]
+const handleClick = () => {
+    fireEvent('onClick');
+};
+
+const handleChange = (e) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    setExposedVariable('value', newValue);
+    fireEvent('onChange');
+};
+\end{lstlisting}
+
+The event handlers maintain a clear separation between the component's internal state management and the triggering of external actions. The component first updates its internal state (if applicable), then updates any exposed variables through \texttt{setExposedVariable}, and finally fires the event. This sequencing ensures that any actions triggered by the event have access to the updated state through ToolJet's variable system.
+
+The exposed variable system enables bidirectional data flow between components and the broader application. When a component's state changes through user interaction, the new value is exposed through a named variable that other components can reference. For example, when an AccessibleInput component's value changes, the new value is exposed as \texttt{components.inputName.value}, enabling other components to react to the input value dynamically.
+
+\subsubsection{State Management and Synchronization}
+
+Proper state management is critical for maintaining accessibility features while integrating with ToolJet's reactive architecture. Each accessible component implements state synchronization patterns that ensure consistency between the component's internal state, ToolJet's exposed variables, and the property values configured in the inspector.
+
+The components use React's \texttt{useState} hook to manage internal state that drives the component's visual appearance and behavior. This internal state is synchronized with external property values through \texttt{useEffect} hooks that respond to property changes:
+
+\begin{lstlisting}[language=JavaScript, caption=State Synchronization Pattern]
+const [inputValue, setInputValue] = useState(value || '');
+const [isVisible, setIsVisible] = useState(visibility);
+
+useEffect(() => {
+    setInputValue(value || '');
+}, [value]);
+
+useEffect(() => {
+    if (visibility !== undefined) {
+        setIsVisible(visibility);
+    }
+}, [visibility]);
+
+useEffect(() => {
+    if (setExposedVariable) {
+        setExposedVariable('value', inputValue);
+    }
+}, [inputValue, setExposedVariable]);
+\end{lstlisting}
+
+This synchronization pattern ensures that when a property is updated through ToolJet's expression system (for example, when a variable binding changes), the component's internal state updates accordingly and the visual representation reflects the new value. The pattern also handles cases where properties may be undefined during initial render, providing default values to prevent runtime errors.
+
+The visibility management demonstrates defensive programming practices that enhance reliability. The component checks whether the \texttt{visibility} property is defined before updating the internal visibility state, and returns \texttt{null} (removing the component from the DOM) when visibility is false. This approach ensures that hidden components are completely removed from the accessibility tree, preventing screen readers from announcing or navigating to invisible elements.
+
+\subsubsection{Component Registration and Discovery}
+
+For accessible components to be usable within ToolJet, they must be registered in the component system and made discoverable to developers through the component palette. The registration process involves multiple integration points across the frontend and backend architectures.
+
+On the frontend, components are registered in the \texttt{AllComponents} export within the editor helpers module. This export serves as the central registry that maps component names to their implementation modules. The accessible components are added to this registry alongside native ToolJet components:
+
+\begin{lstlisting}[language=JavaScript, caption=Component Registration in Frontend]
+import { AccessibleButton } from 
+    './Components/AccessibleButton';
+import { AccessibleInput } from 
+    './Components/AccessibleInput';
+import { AccessibleSwitch } from 
+    './Components/AccessibleSwitch';
+
+export const AllComponents = {
+    // ...existing components
+    AccessibleButton,
+    AccessibleInput,
+    AccessibleSwitch,
+};
+\end{lstlisting}
+
+The component palette requires icon definitions for each component. Custom SVG icons were created for the accessible components, incorporating a green accessibility indicator (●) to visually distinguish them from standard components. These icons are registered in the icon registry, which maps component names to their icon components.
+
+The backend registration occurs in the widget configuration index, where each component's configuration object is exported and made available to the server's component validation and serialization systems. This dual registration (frontend for rendering, backend for persistence) ensures that components function correctly throughout their lifecycle, from initial placement on the canvas to saving, loading, and runtime execution.
+
+\subsubsection{Accessibility Benefits and ATAG 2.0 Compliance}
+
+The integration of Chakra UI accessible components addresses multiple ATAG 2.0 \cite{ATAG20} guidelines and WCAG 2.2 \cite{WCAG22} success criteria. For ATAG 2.0 Part A (Make the authoring tool user interface accessible), the components contribute to making ToolJet's interface usable by developers with disabilities through keyboard navigation, screen reader support, and proper focus management. The visual identification through green accessibility badges supports Guideline A.2.2, helping developers identify components with enhanced accessibility features. For ATAG 2.0 Part B (Support the production of accessible content), the components embody Guideline B.1.1 by automatically including ARIA attributes, keyboard interactions, and focus management, enabling developers to create accessible applications without extensive accessibility expertise.
+
+From a WCAG 2.2 \cite{WCAG22} perspective, the accessible components help applications meet multiple success criteria including Success Criterion 2.1.1 (Keyboard), Success Criterion 2.4.7 (Focus Visible), Success Criterion 4.1.2 (Name, Role, Value), and Success Criterion 1.4.3 (Contrast Minimum). By leveraging Chakra UI's expertise in accessibility patterns and WCAG 2.2 \cite{WCAG22} compliance, ToolJet provides developers with reliable, tested components that produce accessible interfaces by default. This approach aligns with the principle that accessibility should be the path of least resistance, integrated into the standard development workflow rather than requiring additional effort or specialized knowledge.

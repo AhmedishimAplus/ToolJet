@@ -1,0 +1,784 @@
+% Keyboard Navigation Implementation
+
+This document presents the technical implementation of keyboard navigation features developed to enhance accessibility within the application's editor and app builder environments. The implementation enables comprehensive keyboard-based interaction with UI components, ensuring compliance with WCAG 2.1 Level AA accessibility standards.
+
+\subsubsection{Component Accessibility}
+
+\textbf{Making Components Focusable with Enter Key Support}
+
+The implementation ensures that interactive components within the dynamic properties panel receive proper keyboard focus and respond to Enter key activation, mirroring mouse click functionality.
+
+\textbf{Button Component}
+
+The Button component integrates native HTML focus attributes and keyboard event handlers to enable tab navigation and Enter key activation.
+
+\begin{lstlisting}[caption=Button Component Focusability Implementation, label=lst:button-focus]
+// File: frontend/src/Editor/Components/Button.jsx
+
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    if (canClick) {
+      fireEvent('onClick');
+    }
+  }
+};
+
+return (
+  <button
+    className={cx(`btn btn-${type}`)}
+    style={computedStyles}
+    onClick={() => canClick && fireEvent('onClick')}
+    onKeyDown={handleKeyDown}
+    disabled={disable}
+    data-cy={dataCy}
+    tabIndex={disable ? -1 : 0}
+    role="button"
+    aria-label={label}
+  >
+    {loading && <Loader style={{ '--loader-color': computedLoaderColor }} />}
+    {!loading && label}
+  </button>
+);
+\end{lstlisting}
+
+The implementation utilizes \texttt{tabIndex=\{0\}} to include the button in the sequential keyboard navigation order, while \texttt{tabIndex=\{-1\}} removes disabled buttons from the tab sequence. The \texttt{onKeyDown} handler captures both Enter and Space key presses, preventing default browser behavior and invoking the onClick event handler.
+
+\textbf{Toggle Component}
+
+Toggle switches implement keyboard accessibility through native checkbox inputs with visual customization, maintaining semantic HTML structure while supporting assistive technologies.
+
+\begin{lstlisting}[caption=Toggle Component with Keyboard Support, label=lst:toggle-focus]
+// File: frontend/src/Editor/Components/ToggleV2.jsx
+
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    handleToggleChange();
+  }
+};
+
+return (
+  <div 
+    className="d-flex" 
+    onClick={handleToggleChange}
+    onKeyDown={handleKeyDown}
+    tabIndex={disabledState ? -1 : 0}
+    role="switch"
+    aria-checked={on}
+    aria-disabled={disabledState}
+  >
+    <input
+      type="checkbox"
+      checked={on}
+      disabled={disabledState}
+      className="form-check-input"
+      onChange={handleToggleChange}
+      aria-label="Toggle switch"
+    />
+    <span style={sliderStyle}>
+      <span style={circleStyle}></span>
+    </span>
+  </div>
+);
+\end{lstlisting}
+
+The toggle component employs the \texttt{role="switch"} ARIA attribute to communicate its purpose to assistive technologies, while maintaining keyboard operability through both native checkbox functionality and custom event handlers.
+
+\textbf{Dropdown Component}
+
+Dropdown menus leverage React-Select's built-in accessibility features while extending keyboard navigation capabilities for seamless integration with the application's navigation system.
+
+\begin{lstlisting}[caption=Dropdown Component Accessibility Configuration, label=lst:dropdown-focus]
+// File: frontend/src/Editor/Components/DropdownV2/DropdownV2.jsx
+
+const customStyles = {
+  control: (base) => ({
+    ...base,
+    tabIndex: disabledState ? -1 : 0,
+    cursor: disabledState ? 'not-allowed' : 'pointer',
+  }),
+};
+
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' && !isMenuOpen) {
+    e.preventDefault();
+    setIsMenuOpen(true);
+  }
+};
+
+return (
+  <Select
+    options={sortedOptions}
+    value={currentValue}
+    onChange={handleChange}
+    onMenuOpen={() => setIsMenuOpen(true)}
+    onMenuClose={() => setIsMenuOpen(false)}
+    styles={customStyles}
+    isDisabled={disabledState}
+    isSearchable={showSearchInput}
+    isClearable={showClearBtn}
+    onKeyDown={handleKeyDown}
+    aria-label={label || 'Select dropdown'}
+    components={{
+      DropdownIndicator: CustomDropdownIndicator,
+      ClearIndicator: CustomClearIndicator,
+    }}
+  />
+);
+\end{lstlisting}
+
+React-Select provides inherent keyboard support for arrow key navigation, Enter to select, and Escape to close, which is preserved while adding custom handlers for application-specific behavior.
+
+\textbf{Input Field Component}
+
+Text input fields implement keyboard accessibility through semantic HTML with enhanced focus management for navigation mode transitions.
+
+\begin{lstlisting}[caption=Input Field Keyboard Navigation, label=lst:input-focus]
+// File: frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx
+
+// Make inputs focusable and handle Enter key
+const input = document.querySelector('input[type="text"]');
+if (input && isElementVisible(input)) {
+  input.setAttribute('tabindex', '0');
+  input.removeAttribute('disabled');
+  input.style.pointerEvents = 'auto';
+  
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !isTypingInInput()) {
+      e.preventDefault();
+      activeElement.click();
+    }
+  });
+}
+\end{lstlisting}
+
+Input fields differentiate between navigation mode (arrow keys move focus) and input mode (arrow keys move cursor), with Enter key toggling between these modes.
+
+\textbf{Code Editor Component}
+
+The code editor component utilizes CodeMirror's accessibility API, exposing keyboard shortcuts and focus management for code editing within the canvas.
+
+\begin{lstlisting}[caption=Code Editor Accessibility Configuration, label=lst:codeeditor-focus]
+// File: frontend/src/Editor/Components/CodeEditor.jsx
+
+const setupConfig = {
+  lineNumbers: enableLineNumber ?? true,
+  syntaxHighlighting: true,
+  bracketMatching: true,
+  foldGutter: true,
+  highlightActiveLine: false,
+  autocompletion: true,
+  completionKeymap: true,
+  searchKeymap: false,
+  tabIndex: disabledState ? -1 : 0,
+};
+
+return (
+  <CodeMirror
+    value={value}
+    height={editorHeight}
+    theme={theme}
+    extensions={[langExtention]}
+    basicSetup={setupConfig}
+    onChange={codeChanged}
+    editable={!disabledState}
+    aria-label="Code editor"
+    role="textbox"
+  />
+);
+\end{lstlisting}
+
+CodeMirror's internal keyboard handling manages code editing shortcuts (Ctrl+Z for undo, Ctrl+F for find), while the wrapper manages focus state and integration with the broader navigation system.
+
+\textbf{DatePicker Component}
+
+Date picker components implement keyboard accessibility through a combination of text input and calendar grid navigation, supporting both direct date entry and interactive selection.
+
+\begin{lstlisting}[caption=DatePicker Keyboard Support, label=lst:datepicker-focus]
+// File: frontend/src/AppBuilder/Widgets/Date/DatePickerV2.jsx
+
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (!textInputFocus) {
+      setIsCalendarOpen(true);
+      setTextInputFocus(true);
+    }
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    setIsCalendarOpen(false);
+    setTextInputFocus(false);
+  }
+};
+
+return (
+  <BaseDateComponent
+    datePickerRef={datePickerRef}
+    dateInputRef={dateInputRef}
+    onKeyDown={handleKeyDown}
+    tabIndex={disable ? -1 : 0}
+    aria-label={label || 'Date picker'}
+    aria-expanded={isCalendarOpen}
+  />
+);
+\end{lstlisting}
+
+The date picker enables Enter to open the calendar, arrow keys to navigate dates within the grid, and Escape to close the picker while maintaining focus on the input field.
+
+\textbf{Dynamic Component Properties}
+
+Dynamic components within the app builder's properties panel are made focusable through systematic DOM traversal and attribute injection.
+
+\begin{lstlisting}[caption=Dynamic Component Focusability, label=lst:dynamic-focus]
+// File: frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx
+
+const makeElementsFocusable = useCallback(() => {
+  const fileListItems = document.querySelectorAll(`
+    .list-group-item,
+    [data-cy*="list-card"],
+    [role="button"],
+    .application-card
+  `);
+
+  fileListItems.forEach(item => {
+    if (item.hasAttribute('tabindex') || item.hasAttribute('disabled')) 
+      return;
+    
+    const style = window.getComputedStyle(item);
+    const rect = item.getBoundingClientRect();
+
+    if (style.display !== 'none' && 
+        style.visibility !== 'hidden' &&
+        rect.width > 0 && rect.height > 0) {
+      item.setAttribute('tabindex', '0');
+      item.classList.add('keyboard-navigable');
+      
+      // Add Enter key handler
+      item.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          item.click();
+        }
+      });
+    }
+  });
+}, []);
+\end{lstlisting}
+
+This approach ensures that dynamically rendered components receive keyboard focus capabilities without requiring individual component modifications, maintaining consistency across the application.
+
+\subsubsection{Keyboard-Based Interactions}
+
+\textbf{Drag and Drop Keyboard Support}
+
+Keyboard-based component placement provides an alternative to mouse-based drag-and-drop operations, enabling users to add components to the canvas using arrow keys for positioning and Enter for confirmation.
+
+\begin{lstlisting}[caption=Keyboard Component Placement Implementation, label=lst:keyboard-dragdrop]
+// File: frontend/src/AppBuilder/RightSideBar/ComponentManagerTab/DragLayer.jsx
+
+const handleKeyDown = (e) => {
+  if (disabled) return;
+
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    
+    // Start keyboard placement mode
+    const startKeyboardPlacement = useStore.getState().startKeyboardPlacement;
+    startKeyboardPlacement(component);
+    
+    // Close sidebar if not pinned
+    if (!isRightSidebarPinned) {
+      toggleRightSidebar(false);
+    }
+  }
+};
+
+// File: frontend/src/AppBuilder/AppCanvas/KeyboardPlacementOverlay.jsx
+
+const handleKeyDown = useCallback((e) => {
+  if (!active) return;
+
+  // Arrow keys - move the component preview
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+    moveKeyboardPlacementPosition(e.key);
+    return;
+  }
+
+  // Enter - place the component at current position
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (component) {
+      const item = { componentType: component.component, component };
+      handleDrop(item, 'canvas');
+      cancelKeyboardPlacement();
+    }
+    return;
+  }
+
+  // Escape - cancel placement
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    cancelKeyboardPlacement();
+    return;
+  }
+}, [active, component]);
+\end{lstlisting}
+
+The keyboard placement system renders a visual overlay showing the component's preview position, which updates in real-time as users press arrow keys. This provides immediate visual feedback for precise positioning.
+
+\textbf{Component Resizing Shortcuts}
+
+Components support keyboard-based resizing through modifier keys combined with arrow keys, enabling precise dimensional adjustments without mouse interaction.
+
+\begin{lstlisting}[caption=Keyboard Resizing Implementation, label=lst:keyboard-resize]
+// File: frontend/src/AppBuilder/AppCanvas/WidgetWrapper.jsx
+
+const [resizeModifier, setResizeModifier] = useState(null);
+
+const handleKeyDown = (e) => {
+  if (!isWidgetActive || readOnly) return;
+
+  // = key for expanding
+  if (e.key === '=' || e.code === 'Equal') {
+    e.preventDefault();
+    setResizeModifier('expand');
+    setIsKeyboardResizing(true);
+    return;
+  } 
+  // - key for shrinking
+  else if (e.key === '-' || e.code === 'Minus') {
+    e.preventDefault();
+    setResizeModifier('shrink');
+    setIsKeyboardResizing(true);
+    return;
+  }
+
+  // Arrow keys with active modifier
+  if (isArrowKey && resizeModifier) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const { resizeComponentWithKeyboard } = useStore.getState();
+    resizeComponentWithKeyboard(e.key, resizeModifier === 'expand');
+    
+    // Screen reader feedback
+    const action = resizeModifier === 'expand' ? 'Expanding' : 'Shrinking';
+    const direction = e.key.replace('Arrow', '').toLowerCase();
+    speak(`${action} ${componentName} ${direction}`);
+  }
+};
+\end{lstlisting}
+
+The resizing mechanism prevents movement operations when a resize modifier is active, ensuring that arrow key presses modify dimensions rather than position.
+
+\textbf{Component Deletion}
+
+The Backspace key enables quick component removal with confirmation safeguards for destructive actions.
+
+\begin{lstlisting}[caption=Component Deletion with Backspace, label=lst:keyboard-delete]
+// File: frontend/src/Editor/EditorKeyHooks.jsx
+
+const handleHotKeysCallback = (key) => {
+  switch (key) {
+    case 'Backspace':
+      removeMultipleComponents();
+      break;
+    // ... other shortcuts
+  }
+};
+
+useKeyHooks(['backspace'], handleHotKeysCallback);
+
+// File: frontend/src/Editor/Container.jsx
+const removeMultipleComponents = () => {
+  const selectedComponents = useEditorStore.getState()?.selectedComponents;
+  
+  if (selectedComponents.length === 0) return;
+  
+  // Remove each selected component
+  selectedComponents.forEach(({ id }) => {
+    removeComponent(currentPageId, id, appDefinition, appDefinitionChanged);
+  });
+  
+  // Clear selection
+  useEditorStore.getState().setSelectedComponents([]);
+};
+\end{lstlisting}
+
+The deletion function operates on the current selection, supporting both single and multi-component removal operations while maintaining undo/redo compatibility.
+
+\textbf{Undo and Redo Operations}
+
+History management shortcuts follow platform conventions (Ctrl+Z for undo, Ctrl+Y and Ctrl+Shift+Z for redo) to maintain user expectation and muscle memory.
+
+\begin{lstlisting}[caption=Undo/Redo Keyboard Shortcuts, label=lst:keyboard-undoredo]
+// File: frontend/src/Editor/Container.jsx
+
+useHotkeys('meta+z, control+z', () => handleUndo(), { 
+  scopes: 'editor' 
+});
+
+useHotkeys('meta+shift+z, control+shift+z', () => handleRedo(), { 
+  scopes: 'editor' 
+});
+
+const handleUndo = () => {
+  if (isVersionReleased || isEditorFreezed) return;
+  
+  const { canUndo, undo } = useAppVersionStore.getState().actions;
+  if (canUndo()) {
+    undo();
+    toast.info('Undone last action');
+  }
+};
+
+const handleRedo = () => {
+  if (isVersionReleased || isEditorFreezed) return;
+  
+  const { canRedo, redo } = useAppVersionStore.getState().actions;
+  if (canRedo()) {
+    redo();
+    toast.info('Redone last action');
+  }
+};
+\end{lstlisting}
+
+The undo/redo system maintains a history stack of application state changes, enabling users to revert or reapply modifications to components, properties, and layout configurations.
+
+\textbf{Canvas Scroll Navigation}
+
+Ctrl+Arrow key combinations control canvas viewport scrolling independent of component movement or focus changes.
+
+\begin{lstlisting}[caption=Canvas Scroll Keyboard Control, label=lst:keyboard-scroll]
+// File: frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx
+
+useHotkeys('control+up, control+down, control+left, control+right', 
+  (e) => {
+    e.preventDefault();
+    
+    const canvas = document.querySelector('.real-canvas');
+    if (!canvas) return;
+    
+    const scrollAmount = 50; // pixels
+    
+    switch(e.key) {
+      case 'ArrowUp':
+        canvas.scrollTop -= scrollAmount;
+        break;
+      case 'ArrowDown':
+        canvas.scrollTop += scrollAmount;
+        break;
+      case 'ArrowLeft':
+        canvas.scrollLeft -= scrollAmount;
+        break;
+      case 'ArrowRight':
+        canvas.scrollLeft += scrollAmount;
+        break;
+    }
+    
+    speak(`Scrolled canvas ${e.key.replace('Arrow', '').toLowerCase()}`);
+  }, 
+  { enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'] }
+);
+\end{lstlisting}
+
+The scroll navigation remains functional even when input fields have focus, utilizing the \texttt{enableOnTags} option to override default behavior for these specific shortcuts.
+
+\subsubsection{Navigation Patterns}
+
+\textbf{Arrow Key Navigation in Tab Options}
+
+Tab-based interfaces within settings menus implement arrow key navigation for rapid movement between options, following ARIA authoring practices for tab panels.
+
+\begin{lstlisting}[caption=Tab Options Arrow Key Navigation, label=lst:arrow-tabs]
+// File: frontend/src/TooljetDatabase/Forms/RowForm.jsx
+
+const handleTabKeyDown = (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const tablist = e.currentTarget.parentElement;
+    const allTabs = Array.from(
+      tablist.querySelectorAll('[role="button"]')
+    );
+    const currentIdx = allTabs.indexOf(e.currentTarget);
+    
+    const nextIdx = e.key === 'ArrowRight'
+      ? (currentIdx + 1) % allTabs.length
+      : (currentIdx - 1 + allTabs.length) % allTabs.length;
+    
+    allTabs[nextIdx]?.focus();
+    
+    // Announce new tab
+    speak(`${allTabs[nextIdx].textContent} tab`);
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    speak(`${e.currentTarget.textContent} tab selected`);
+    handleTabClick(e.currentTarget.dataset.tabIndex);
+  }
+};
+
+return (
+  <div role="tablist" aria-label="Options">
+    {tabs.map((tab, index) => (
+      <div
+        key={index}
+        role="button"
+        tabIndex={activeTab === index ? 0 : -1}
+        aria-selected={activeTab === index}
+        onKeyDown={handleTabKeyDown}
+        onClick={() => handleTabClick(index)}
+      >
+        {tab.label}
+      </div>
+    ))}
+  </div>
+);
+\end{lstlisting}
+
+The tab navigation implements roving tabindex pattern, where only the active tab is in the tab sequence (\texttt{tabIndex=\{0\}}), while inactive tabs are removed (\texttt{tabIndex=\{-1\}}). Arrow keys move focus and update the roving tabindex.
+
+\textbf{Dynamic Component Navigation}
+
+The global keyboard navigation system automatically detects and integrates dynamically rendered components into the navigation sequence through continuous DOM observation.
+
+\begin{lstlisting}[caption=Dynamic Component Navigation Integration, label=lst:dynamic-navigation]
+// File: frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx
+
+const getFocusableElements = useCallback(() => {
+  const elements = [];
+  
+  // Sidebar navigation
+  const sidebarSelectors = [
+    '.tj-leftsidebar-icon-items[data-cy="icon-dashboard"]',
+    '.tj-leftsidebar-icon-items[data-cy="icon-workflows"]',
+    '.tj-leftsidebar-icon-items[data-cy="icon-database"]',
+  ];
+  
+  sidebarSelectors.forEach(selector => {
+    const el = document.querySelector(selector);
+    if (el && isElementVisible(el)) {
+      elements.push(el);
+    }
+  });
+  
+  // Dynamic component cards
+  const cards = document.querySelectorAll('.app-card, .homepage-app-card');
+  cards.forEach(card => {
+    if (isElementVisible(card)) {
+      elements.push(card);
+    }
+  });
+  
+  // Make new elements focusable
+  elements.forEach(el => {
+    if (!el.hasAttribute('tabindex')) {
+      el.setAttribute('tabindex', '0');
+      el.classList.add('keyboard-navigable');
+    }
+  });
+  
+  return elements;
+}, [isElementVisible]);
+
+// Update navigation elements when DOM changes
+useEffect(() => {
+  const observer = new MutationObserver(() => {
+    getFocusableElements();
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  return () => observer.disconnect();
+}, [getFocusableElements]);
+\end{lstlisting}
+
+The MutationObserver API monitors DOM changes, triggering updates to the focusable element list when components are added or removed, ensuring navigation sequences remain current.
+
+\subsubsection{Focus Management}
+
+\textbf{Focus Traps with ESC Key}
+
+Modal dialogs and dropdown menus implement focus trapping to constrain keyboard navigation within the active context, preventing focus from escaping to background elements.
+
+\begin{lstlisting}[caption=Menu Focus Trap Implementation, label=lst:focus-trap]
+// File: frontend/src/TooljetDatabase/TableListItem/ActionsPopover/index.jsx
+
+useEffect(() => {
+  if (!show) return;
+
+  // Focus first menu item
+  setTimeout(() => {
+    const firstOption = document.querySelector(
+      '.table-list-items [tabindex="0"]'
+    );
+    if (firstOption) {
+      firstOption.focus();
+    }
+  }, 100);
+
+  // Focus trap keyboard handler
+  const handleKeyDown = (e) => {
+    if (!document.activeElement?.closest('.table-list-items')) 
+      return;
+
+    const getFocusableElements = () => {
+      const popup = document.querySelector('.table-list-items');
+      if (!popup) return [];
+      
+      const selectors = [
+        '[tabindex="0"]',
+        'button:not([disabled])',
+        'a[href]:not([disabled])'
+      ].join(', ');
+      
+      return Array.from(popup.querySelectorAll(selectors))
+        .filter(el => el.offsetParent !== null);
+    };
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const items = getFocusableElements();
+      const currentIndex = items.indexOf(document.activeElement);
+      
+      // Shift+Tab: previous item (wrap around)
+      // Tab: next item (wrap around)
+      const nextIndex = e.shiftKey 
+        ? (currentIndex - 1 + items.length) % items.length
+        : (currentIndex + 1) % items.length;
+      
+      items[nextIndex]?.focus();
+      
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      speak('Closing menu');
+      setTimeout(() => {
+        setShow(false);
+        // Return focus to trigger button
+        triggerButtonRef.current?.focus();
+      }, 100);
+    }
+  };
+
+  // Use capture phase for priority handling
+  document.addEventListener('keydown', handleKeyDown, true);
+  return () => document.removeEventListener('keydown', handleKeyDown, true);
+}, [show]);
+\end{lstlisting}
+
+Focus traps prevent Tab from moving focus outside the menu, cycling through menu items instead. Escape closes the menu and returns focus to the triggering element, maintaining user context.
+
+\textbf{Visual Focus Indicators}
+
+CSS-based focus indicators provide visual feedback for keyboard navigation state, with distinct styling for navigation mode versus input mode.
+
+\begin{lstlisting}[caption=Keyboard Focus Visual Indicators, label=lst:focus-indicator]
+// File: frontend/src/_components/KeyboardNavigation/KeyboardNavigation.scss
+
+/* Universal focus outline for keyboard navigation */
+button:focus:not([disabled]),
+input:focus:not([disabled]):not(.input-mode-active),
+select:focus:not([disabled]),
+textarea:focus:not([disabled]),
+a:focus:not([disabled]),
+[role="button"]:focus:not([disabled]),
+[tabindex]:focus:not([tabindex="-1"]):not([disabled]),
+.app-card:focus,
+.tj-leftsidebar-icon-items:focus {
+  outline: 2px solid #3E63DD;
+  outline-offset: 2px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.15);
+}
+
+/* Input mode indicator (editing state) */
+input.input-mode-active:focus,
+textarea.input-mode-active:focus {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+}
+
+/* Dark mode focus indicators */
+.dark-mode button:focus:not([disabled]),
+.dark-mode [tabindex]:focus:not([tabindex="-1"]) {
+  outline: 2px solid #5B9BFF;
+  box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.2);
+}
+
+/* Ensure focusable elements are visible */
+[tabindex="0"] {
+  position: relative;
+}
+
+/* Smooth focus transitions */
+.tj-leftsidebar-icon-items,
+.app-card,
+.notification-center-nav-item {
+  transition: outline 0.2s ease-in-out, 
+              box-shadow 0.2s ease-in-out;
+}
+\end{lstlisting}
+
+The focus indicator styling differentiates navigation mode (blue outline) from input mode (green outline), providing immediate visual feedback about the current interaction state. Dark mode adaptations ensure sufficient contrast across themes.
+
+\subsubsection{Keyboard Shortcuts Reference}
+
+The following table summarizes all keyboard shortcuts implemented across the application's editor and app builder interfaces.
+
+\begin{table}[h]
+\centering
+\caption{Implemented Keyboard Shortcuts}
+\label{tab:keyboard-shortcuts}
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Shortcut} & \textbf{Context} & \textbf{Function} \\
+\hline
+Arrow Keys & Component & Move selected component on canvas grid \\
+\hline
+= + Arrows & Component & Expand component dimensions \\
+\hline
+- + Arrows & Component & Shrink component dimensions \\
+\hline
+Backspace & Component & Delete selected component(s) \\
+\hline
+Ctrl + Z & Editor & Undo last action \\
+\hline
+Ctrl + Y & Editor & Redo last undone action \\
+\hline
+Ctrl + Shift + Z & Editor & Redo last undone action (alternative) \\
+\hline
+Ctrl + C & Component & Copy selected component \\
+\hline
+Ctrl + V & Canvas & Paste component from clipboard \\
+\hline
+Ctrl + X & Component & Cut selected component \\
+\hline
+Ctrl + D & Component & Duplicate selected component \\
+\hline
+Ctrl + Arrow & Canvas & Scroll canvas viewport \\
+\hline
+Tab & Universal & Navigate to next focusable element \\
+\hline
+Shift + Tab & Universal & Navigate to previous focusable element \\
+\hline
+Enter & Universal & Activate focused element / Toggle input mode \\
+\hline
+Space & Button/Toggle & Activate focused button or toggle \\
+\hline
+Escape & Menu/Modal & Close menu/modal, return to previous context \\
+\hline
+Arrow Left/Right & Tabs & Navigate between tab options \\
+\hline
+\end{tabular}
+\end{table}
+
+These shortcuts follow established accessibility patterns and platform conventions, ensuring intuitive operation for users familiar with keyboard-driven interfaces. All shortcuts remain functional when input fields have focus where contextually appropriate, utilizing event capture phase and selective \texttt{preventDefault()} calls to maintain expected behavior.
