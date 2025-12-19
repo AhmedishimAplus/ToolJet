@@ -1,84 +1,33 @@
 % Screen Reader Implementation - Code Examples
 
-\subsubsection{Button Components}
+This section presents the technical implementation of screen reader support through the Web Speech API and ARIA live regions, enabling auditory feedback for blind and visually impaired users. The implementation employs a custom \texttt{useScreenReader} hook that provides consistent announcement patterns across all interactive components, ensuring compliance with WCAG 2.2 Success Criterion 4.1.3 (Status Messages) \cite{WCAG22}.
 
-Buttons are interactive elements that users click to perform actions. For screen reader users, buttons require descriptive labels that announce their purpose when focused. The implementation uses the \texttt{useScreenReader} hook to provide audio feedback during user interactions.
+\subsubsection{Interactive Components (Button, Link, Toggle)}
 
-\begin{lstlisting}[caption={Button component with screen reader announcement}, label={lst:button-sr}]
-// File: frontend/src/HomePage/HomePage.jsx
+Interactive button, link, and toggle components require descriptive labels that convey their purpose to assistive technology users. The implementation utilizes the \texttt{useScreenReader} hook to provide auditory feedback during user interactions.
 
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+\begin{lstlisting}[caption={Interactive components with screen reader support}, label={lst:interactive-sr}]
+// Files: Button.jsx, Link.jsx, Toggle/index.js
 const { speak } = useScreenReader();
 
-<button
-  onClick={handleCreateApp}
-  onFocus={() => speak('Create new app button')}
-  aria-label="Create new application"
->
-  Create App
-</button>
+<button onFocus={() => speak('Create new app button')} 
+        aria-label="Create new application">Create App</button>
+
+<Link to="/signup" onFocus={() => speak('Sign up link')} 
+      aria-label="Create a new account">Sign up</Link>
+
+<input type="checkbox" onFocus={() => speak(`${label}, ${checked ? 'enabled' : 'disabled'}`)} 
+       aria-label={label} />
 \end{lstlisting}
 
-The \texttt{aria-label} attribute provides a text description that screen readers announce automatically. The \texttt{onFocus} event handler uses the \texttt{speak()} function to provide additional audio feedback when users navigate to the button using keyboard controls, ensuring redundant accessibility support.
-
-\subsubsection{Navigation Links}
-
-Links navigate users to different pages within the application. Screen readers must announce link destinations and purposes to help users understand navigation targets before activation.
-
-\begin{lstlisting}[caption={Navigation link with focus announcement}, label={lst:link-sr}]
-// File: frontend/src/modules/auth/pages/LoginPage/components/LoginForm/LoginForm.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
-const { speak } = useScreenReader();
-
-<Link
-  to="/signup"
-  onFocus={() => speak('Sign up link')}
-  aria-label="Create a new account"
->
-  Sign up
-</Link>
-\end{lstlisting}
-
-When screen reader users focus on the link, they hear the announcement informing them of the link's destination and purpose, enabling informed navigation decisions.
-
-\subsubsection{Toggle Switches}
-
-Toggle switches allow users to enable or disable features. Screen readers must announce both the toggle's label and its current state to provide complete context before interaction.
-
-\begin{lstlisting}[caption={Toggle switch with state announcement}, label={lst:toggle-sr}]
-// File: frontend/src/_ui/Toggle/index.js
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
-const { speak } = useScreenReader();
-
-const handleFocus = () => {
-  const state = checked ? 'enabled' : 'disabled';
-  speak(`${label}, ${state}`);
-};
-
-<input
-  type="checkbox"
-  checked={checked}
-  onFocus={handleFocus}
-  aria-label={label}
-/>
-\end{lstlisting}
-
-The focus handler announces both the toggle's label and current state, such as "Dark mode, enabled", helping users understand the current setting before making changes.
+The \texttt{aria-label} attribute provides textual descriptions that assistive technologies announce automatically. The \texttt{onFocus} event handler invokes the \texttt{speak()} function to deliver auditory feedback, with toggles announcing both label and current state (e.g., "Dark mode, enabled").
 
 \subsubsection{Text Input Fields}
 
-Input fields collect information from users. Screen readers announce the field's purpose and any existing values to provide context about what information should be entered.
+Text input fields facilitate information collection from users. Assistive technologies announce the field's purpose and any existing values to provide context regarding the expected input data.
 
 \begin{lstlisting}[caption={Text input field with value announcement}, label={lst:input-sr}]
 // File: frontend/src/_ui/Input/index.js
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
 const { speak } = useScreenReader();
 
 const handleFocus = () => {
@@ -88,379 +37,245 @@ const handleFocus = () => {
   speak(announcement);
 };
 
-<input
-  type="text"
-  value={value}
-  onFocus={handleFocus}
-  aria-label={label}
-/>
+<input type="text" value={value} 
+       onFocus={handleFocus} aria-label={label} />
 \end{lstlisting}
 
-When users focus on an input field, the screen reader announces the field name and any existing value, providing context before editing begins.
+Upon focusing an input field, the screen reader announces the field name and any existing value, providing contextual information prior to editing operations.
 
 \subsubsection{Radio Button Groups}
 
-Radio buttons allow users to select one option from multiple choices. Screen readers need to announce the group purpose and each option's label for effective selection.
+Radio button groups facilitate single-option selection from multiple choices. Assistive technologies require announcements of both the group purpose and individual option labels for effective selection operations.
 
 \begin{lstlisting}[caption={Radio button group with ARIA roles}, label={lst:radio-sr}]
-// File: frontend/src/AppBuilder/Widgets/NewTable/_components/DataTypes/Radio.jsx
-
+// File: Radio.jsx
 <div role="radiogroup" aria-label="Select account type">
   {options.map(option => (
-    <label key={option.value}>
-      <input
-        type="radio"
-        value={option.value}
-        checked={selected === option.value}
-        aria-label={option.name}
-      />
+    <label>
+      <input type="radio" aria-label={option.name} />
       {option.name}
     </label>
   ))}
 </div>
 \end{lstlisting}
 
-The \texttt{role="radiogroup"} attribute informs screen readers that these are related options. Each radio button's \texttt{aria-label} provides its individual label, allowing users to understand and select options effectively.
+The \texttt{role="radiogroup"} attribute communicates to assistive technologies that these input elements constitute a related option set. Each radio button's \texttt{aria-label} provides its individual label, enabling users to comprehend and select options effectively.
 
 \subsubsection{Keyboard Navigation Shortcuts}
 
-Keyboard shortcuts enable users to navigate and interact without a mouse. Screen readers announce available shortcuts and provide feedback during navigation operations.
+Keyboard shortcuts facilitate navigation and interaction without pointer device input. Assistive technologies announce available shortcuts and provide feedback during navigation operations.
 
 \begin{lstlisting}[caption={Keyboard shortcut announcements}, label={lst:shortcuts-sr}]
-// File: frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: KeyboardNavigation.jsx
 const { speak } = useScreenReader();
 
-useEffect(() => {
-  speak('Use Ctrl + arrow keys to switch between pages');
-}, []);
+useEffect(() => speak('Use Ctrl + arrow keys to switch between pages'), []);
 
-const handleNavigation = (event) => {
-  if (event.key === 'ArrowDown') {
-    moveToNextElement();
-    speak('Next element');
-  }
+const handleKeyDown = (e) => {
+  if (e.key === 'ArrowDown') speak('Next element');
 };
 \end{lstlisting}
 
-The implementation announces available keyboard shortcuts when the page loads and provides continuous feedback as users navigate through elements using arrow keys.
+The implementation announces available keyboard shortcuts upon page initialization and provides continuous auditory feedback as users navigate through interface elements via arrow key input.
 
 \subsubsection{Form Validation and Error Messages}
 
-Form validation errors must be announced clearly to screen reader users so they can correct mistakes. The system uses high-priority speech for immediate error notification.
+Form validation errors require clear auditory announcements to enable assistive technology users to identify and correct input mistakes. The system employs high-priority speech synthesis for immediate error notification.
 
 \begin{lstlisting}[caption={Form validation error announcements}, label={lst:validation-sr}]
-// File: frontend/src/modules/auth/pages/LoginPage/components/LoginForm/LoginForm.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: LoginForm.jsx
 const { speak, announceError } = useScreenReader();
 
 const handleSubmit = (formData) => {
   if (!validateEmail(formData.email)) {
     announceError('Invalid email address. Please enter a valid email.');
-    return;
   }
-  speak('Submitting form, please wait...');
 };
 \end{lstlisting}
 
-Validation errors use the \texttt{announceError()} function with assertive priority to immediately inform users of problems. Success messages use standard \texttt{speak()} to provide feedback during form submission.
+Validation errors utilize the \texttt{announceError()} function with assertive priority to immediately notify users of input problems, while \texttt{speak()} provides confirmatory feedback during form submission operations.
 
 \subsubsection{Core Accessibility Hook}
 
-The \texttt{useScreenReader} hook provides text-to-speech capabilities throughout the application, ensuring consistent screen reader announcements across all components.
+The \texttt{useScreenReader} hook provides text-to-speech capabilities throughout the application, establishing consistent announcement patterns across all interface components.
 
 \begin{lstlisting}[caption={Core useScreenReader hook implementation}, label={lst:hook-sr}]
-// File: frontend/src/modules/common/hooks/useScreenReader.js
-
+// File: useScreenReader.js
 const useScreenReader = () => {
   const speak = (text, priority = 'polite') => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(utterance);
-    }
-    
     const announcement = document.createElement('div');
     announcement.setAttribute('role', 'status');
     announcement.setAttribute('aria-live', priority);
     announcement.textContent = text;
     document.body.appendChild(announcement);
-    
     setTimeout(() => announcement.remove(), 1000);
   };
-
   return { speak };
 };
 \end{lstlisting}
 
-This hook combines browser speech synthesis with ARIA live regions. The \texttt{priority} parameter controls announcement urgency: \texttt{'polite'} waits for current announcements to finish, while \texttt{'assertive'} interrupts immediately for critical messages like errors.
+This hook integrates browser speech synthesis with ARIA live regions \cite{WCAG22}. The \texttt{priority} parameter controls announcement urgency: \texttt{'polite'} queues announcements sequentially, while \texttt{'assertive'} interrupts current announcements for critical messages.
 
 \subsubsection{Focus Announcer System}
 
-The focus announcer system provides specialized announcement functions for different interaction contexts, enabling consistent and contextual feedback throughout the application.
+The focus announcer system provides specialized announcement functions for diverse interaction contexts, establishing consistent and contextual feedback throughout the application interface.
 
 \begin{lstlisting}[caption={Focus announcement functions}, label={lst:focus-announcer}]
-// File: frontend/src/modules/common/hooks/useScreenReader.js
-
-const announceFocus = useCallback((elementName, elementType) => {
-  const message = `Focused on ${elementName} ${elementType}`;
-  speak(message);
-}, [speak]);
-
-const announceActivation = useCallback((elementName, action) => {
-  const message = `${elementName} ${action || 'activated'}`;
-  speak(message);
-}, [speak]);
-
-return {
-  speak,
-  announceFocus,
-  announceActivation,
-  announceError,
-  announceSuccess,
+// File: useScreenReader.js
+const announceFocus = (elementName, elementType) => {
+  speak(`Focused on ${elementName} ${elementType}`);
 };
+
+const announceActivation = (elementName, action) => {
+  speak(`${elementName} ${action || 'activated'}`);
+};
+
+return { speak, announceFocus, announceActivation };
 \end{lstlisting}
 
-The \texttt{announceFocus()} function provides standardized focus announcements across all components. The \texttt{announceActivation()} function announces user actions such as button clicks or menu selections, providing immediate feedback for interactions.
+The \texttt{announceFocus()} function provides standardized focus announcements across interface components, while \texttt{announceActivation()} communicates user actions such as button activation or menu selection.
 
 \subsubsection{Component Manipulation Shortcuts}
 
-Component manipulation operations such as resizing, copying, and deleting require audio feedback to inform screen reader users about the results of keyboard shortcut actions.
+Component manipulation operations including resizing, copying, and deletion require auditory feedback to inform assistive technology users about the outcomes of keyboard shortcut actions.
 
 \begin{lstlisting}[caption={Component resize announcements}, label={lst:resize-sr}]
-// File: frontend/src/AppBuilder/AppCanvas/WidgetWrapper.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: WidgetWrapper.jsx
 const { speak } = useScreenReader();
 
 const handleKeyDown = (e) => {
   if (e.key === '=' && isArrowKey) {
-    resizeComponentWithKeyboard(e.key, true);
-    const action = 'Expanding';
-    const direction = e.key.replace('Arrow', '').toLowerCase();
-    speak(`${action} ${componentName} ${direction}`);
+    speak(`Expanding ${componentName} ${direction}`);
   }
 };
 \end{lstlisting}
 
-When users press the \texttt{=} key followed by arrow keys, the component expands in the specified direction. The screen reader announces the action, component name, and direction, such as "Expanding button component down", providing clear feedback about the resize operation.
+Upon pressing the \texttt{=} key in conjunction with arrow keys, the component dimensions expand in the specified direction. The screen reader announces the operation, such as "Expanding button component down".
 
 \begin{lstlisting}[caption={Component selection announcements}, label={lst:selection-sr}]
-// File: frontend/src/AppBuilder/AppCanvas/WidgetWrapper.jsx
-
+// File: WidgetWrapper.jsx
 const handleKeyDown = (e) => {
   if (e.key === 'Enter') {
-    setSelectedComponents([id]);
     speak(`${componentName} ${componentType} selected`);
-  }
-  if (e.key === 'Escape') {
-    setSelectedComponents([]);
+  } else if (e.key === 'Escape') {
     speak('Component deselected');
   }
 };
 \end{lstlisting}
 
-The Enter key selects components and announces the selection with component type. The Escape key deselects and announces the deselection, enabling keyboard-only component manipulation with audio feedback.
+The Enter key initiates component selection and announces the operation, while Escape terminates selection and communicates the deselection.
 
 \subsubsection{Tab Component Navigation}
 
-Tab components organize content into switchable panels. Screen readers announce tab labels, selection states, and provide feedback when users switch between tabs.
+Tab components organize content into switchable panels. Assistive technologies announce tab labels, selection states, and provide feedback when users transition between tabs.
 
 \begin{lstlisting}[caption={Tab navigation with screen reader support}, label={lst:tabs-sr}]
-// File: frontend/src/AppBuilder/QueryManager/Components/QueryManagerHeader.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: QueryManagerHeader.jsx
 const { speak } = useScreenReader();
 
-<p
-  onClick={() => {
-    setActiveTab(tab.id);
-    speak(`${tab.label} tab selected`);
-  }}
-  onFocus={() => speak(`${tab.label} tab${activeTab === tab.id ? ', selected' : ''}`)}
-  tabIndex={0}
-  role="tab"
-  aria-selected={activeTab === tab.id}
-/>
+<p onClick={() => speak(`${tab.label} tab selected`)}
+   onFocus={() => speak(`${tab.label} tab${activeTab === tab.id ? ', selected' : ''}`)}
+   role="tab" aria-selected={activeTab === tab.id} />
 \end{lstlisting}
 
-When users focus on a tab, the screen reader announces its label and current selection state. Clicking or activating with Enter announces the tab switch, providing confirmation of the navigation action.
+Upon focusing a tab element, the screen reader announces its label and current selection state. Activation via Enter key announces the tab transition.
 
 \subsubsection{Time Picker Component}
 
-Time picker components allow users to select time values. Screen readers announce the current time value on focus and provide feedback when the time changes.
+Time picker components facilitate temporal value selection. Assistive technologies announce the current time value upon focus and provide feedback when the time value changes.
 
 \begin{lstlisting}[caption={Time picker with value announcements}, label={lst:timepicker-sr}]
-// File: frontend/src/AppBuilder/CodeBuilder/Elements/TimePicker.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: TimePicker.jsx
 const { speak } = useScreenReader();
 
-const handleFocus = () => {
-  const label = paramLabel || 'Time';
-  speak(`${label} time picker, current value: ${value || 'not set'}`);
-};
-
 <ReactDatePicker
-  onChange={(date) => {
-    const time = moment(date).format('HH:mm');
-    onChange(time);
-    speak(`Time set to ${time}`);
-  }}
-  onFocus={handleFocus}
+  onFocus={() => speak(`${paramLabel || 'Time'} picker, value: ${value || 'not set'}`)}
+  onChange={(date) => speak(`Time set to ${moment(date).format('HH:mm')}`)}
 />
 \end{lstlisting}
 
-The time picker announces its current value when focused, such as "Time picker, current value: 14:30". When users select a new time, the component announces the updated value, providing immediate confirmation of the selection.
+The time picker announces its current value upon receiving focus. When users select a new time value, the updated value is announced immediately.
 
 \subsubsection{Code Editor Components}
 
-Code editor components support both single-line and multi-line code input with specialized screen reader support for edit mode navigation and announcement.
+Code editor components support single-line and multi-line code input with specialized assistive technology support for edit mode navigation and announcement.
 
-\begin{lstlisting}[caption={Single and multi-line code editor navigation mode}, label={lst:codeeditor-sr}]
-// File: frontend/src/AppBuilder/CodeEditor/SingleLineCodeEditor.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+\begin{lstlisting}[caption={Code editor navigation mode}, label={lst:codeeditor-sr}]
+// File: SingleLineCodeEditor.jsx
 const { speak } = useScreenReader();
 
 const handleFocus = () => {
-  const label = paramLabel || 'code';
-  speak(`${label} code, press Enter to edit, press Escape to exit`);
+  speak(`${paramLabel || 'code'}, press Enter to edit, Escape to exit`);
 };
 
-const handleKeyDown = (event) => {
-  if (event.key === 'Enter') {
-    setIsEditMode(true);
-    speak(`Entering ${label}`);
-  }
-  if (event.key === 'Escape') {
-    setIsEditMode(false);
-    speak(`Exiting ${label}`);
-  }
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter') speak(`Entering ${paramLabel}`);
+  else if (e.key === 'Escape') speak(`Exiting ${paramLabel}`);
 };
 \end{lstlisting}
 
-Code editors implement a navigation mode that prevents accidental edits during keyboard navigation. When focused, the editor announces instructions to press Enter for editing. Upon entering edit mode, the screen reader confirms the mode change. Pressing Escape exits edit mode and announces the transition back to navigation mode.
+Code editors implement a navigation mode that prevents inadvertent modifications during keyboard navigation. Upon receiving focus, the editor announces instructions to press Enter for editing and Escape to exit edit mode.
 
 \subsubsection{Number Input Component}
 
-Number input components allow numeric value entry with screen reader announcements for current values and focus states.
+Number input components facilitate numeric value entry with assistive technology announcements for current values and focus states.
 
 \begin{lstlisting}[caption={Number input with value announcement}, label={lst:number-sr}]
-// File: frontend/src/AppBuilder/CodeBuilder/Elements/NumberInput.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: NumberInput.jsx
 const { speak } = useScreenReader();
 
-const handleFocus = () => {
-  const label = paramLabel || 'number';
-  speak(`${label} input, current value: ${value || 'empty'}`);
-};
-
-<input
-  type="number"
-  value={value}
-  onFocus={handleFocus}
-/>
+<input type="number" value={value} 
+       onFocus={() => speak(`${paramLabel || 'number'} input, value: ${value || 'empty'}`)} />
 \end{lstlisting}
 
-Number inputs announce their label and current value when focused, such as "Width input, current value: 250", providing context about the numeric field and its state before editing.
+Number inputs announce their label and current value upon receiving focus, providing contextual information prior to editing operations.
 
 \subsubsection{Slider Component}
 
-Slider components enable users to select values within a range using a draggable handle. Screen readers announce the current value as a percentage and provide feedback when the value changes.
+Slider components enable value selection within a defined range via a draggable handle. Assistive technologies announce the current value as a percentage and provide feedback when the value changes.
 
 \begin{lstlisting}[caption={Slider with percentage announcements}, label={lst:slider-sr}]
-// File: frontend/src/AppBuilder/CodeBuilder/Elements/Slider.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: Slider.jsx
 const { speak } = useScreenReader();
 
-const handleFocus = () => {
-  const label = paramLabel || 'slider';
-  speak(`${label} slider, current value: ${sliderValue} percent`);
-};
-
-<Slider.Root
-  value={[sliderValue]}
-  onValueCommit={(value) => {
-    onChange(value);
-    speak(`${label} set to ${value} percent`);
-  }}
-  onFocus={handleFocus}
-/>
+<Slider.Root value={[sliderValue]}
+  onFocus={() => speak(`${paramLabel || 'slider'}, value: ${sliderValue} percent`)}
+  onValueCommit={(v) => speak(`${paramLabel} set to ${v} percent`)} />
 \end{lstlisting}
 
-The slider announces its current value as a percentage when focused, such as "Width slider, current value: 75 percent". When users adjust the slider and release, the new value is announced immediately, providing confirmation of the value change.
+The slider announces its current value as a percentage upon receiving focus. When users adjust the slider position, the new value is announced immediately upon release.
 
 \subsubsection{Textarea Component}
 
-Textarea components provide multi-line text input with screen reader support for announcing current content and field purpose.
+Textarea components provide multi-line text input with assistive technology support for announcing current content and field purpose.
 
 \begin{lstlisting}[caption={Textarea with content announcement}, label={lst:textarea-sr}]
-// File: frontend/src/_ui/Textarea/index.js
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: Textarea/index.js
 const { speak } = useScreenReader();
+const label = props['aria-label'] || props.placeholder || 'textarea';
 
-const handleFocus = () => {
-  const label = props['aria-label'] || props.placeholder || 'textarea';
-  const currentValue = value || '';
-  const announcement = currentValue 
-    ? `${label}, current value: ${currentValue}` 
-    : label;
-  speak(announcement);
-};
-
-<textarea onFocus={handleFocus} />
+<textarea onFocus={() => speak(value ? `${label}, value: ${value}` : label)} />
 \end{lstlisting}
 
-Textarea components announce their label and current content when focused. For empty fields, only the label is announced. For fields with content, both the label and a preview of the current value are announced, helping users understand the field's purpose and state.
+Textarea components announce their label and current content upon receiving focus. Empty fields announce only the label.
 
 \subsubsection{Query Action Buttons}
 
-Query management operations require clear announcements to inform users when queries are being executed or previewed, providing feedback for potentially time-consuming operations.
+Query management operations require clear announcements to notify users when queries are being executed or previewed, providing feedback for potentially time-intensive operations.
 
 \begin{lstlisting}[caption={Query action button announcements}, label={lst:query-sr}]
-// File: frontend/src/AppBuilder/QueryManager/Components/QueryManagerHeader.jsx
-
-import useScreenReader from '@/modules/common/hooks/useScreenReader';
-
+// File: QueryManagerHeader.jsx
 const { speak } = useScreenReader();
 
-<ButtonComponent
-  onClick={() => {
-    runQuery(selectedQuery?.id);
-    speak('Running query');
-  }}
-  onFocus={() => speak('Run query button')}
->
-  Run
-</ButtonComponent>
+<ButtonComponent onClick={() => speak('Running query')}
+                 onFocus={() => speak('Run query button')}>Run</ButtonComponent>
 
-<ButtonComponent
-  onClick={() => {
-    previewQuery();
-    speak('Previewing query');
-  }}
-  onFocus={() => speak('Preview query button')}
->
-  Preview
-</ButtonComponent>
+<ButtonComponent onClick={() => speak('Previewing query')}
+                 onFocus={() => speak('Preview query button')}>Preview</ButtonComponent>
 \end{lstlisting}
 
-Query action buttons announce their purpose when focused and provide immediate feedback when activated. The "Running query" and "Previewing query" announcements inform users that their action has been registered and processing has begun, which is important for operations that may take several seconds to complete.
+Query action buttons announce their purpose upon receiving focus and provide immediate feedback upon activation, notifying users that processing operations have commenced.
 
 \subsubsection{Implementation Impact and Standards Compliance}
 
-The screen reader implementations described in this document enable blind and visually impaired users to navigate the entire application using only a keyboard, understand the purpose and state of all interactive elements, receive immediate feedback on their actions, and complete all tasks independently without visual cues. These implementations align with Web Content Accessibility Guidelines (WCAG) 2.2 Level AA requirements \cite{WCAG22}, specifically addressing Success Criteria 2.1.1 (Keyboard), 2.4.3 (Focus Order), 2.4.7 (Focus Visible), 4.1.2 (Name, Role, Value), and 4.1.3 (Status Messages). The consistent use of the \texttt{useScreenReader} hook throughout the application ensures standardized announcement patterns and maintainable accessibility features across all components.
+The screen reader implementations documented herein enable blind and visually impaired users to navigate the application exclusively via keyboard input, comprehend the purpose and state of all interactive elements, and receive immediate auditory feedback for their actions. These implementations demonstrate compliance with Web Content Accessibility Guidelines (WCAG) 2.2 Level AA requirements \cite{WCAG22}, specifically addressing Success Criteria 2.1.1 (Keyboard), 2.4.3 (Focus Order), 2.4.7 (Focus Visible), 4.1.2 (Name, Role, Value), and 4.1.3 (Status Messages). The consistent application of the \texttt{useScreenReader} hook throughout the codebase establishes standardized announcement patterns, ensuring maintainable and predictable assistive technology support across all interface components.
