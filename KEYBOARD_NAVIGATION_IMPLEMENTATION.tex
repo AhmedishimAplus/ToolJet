@@ -43,51 +43,93 @@ const handleKeyDown = (e) => {
 <Select
   onKeyDown={handleKeyDown}
   styles={{ control: (base) => ({ tabIndex: disabledState ? -1 : 0 }) }}
+  components={{ MenuList: CustomMenuList }}
   aria-label={label}
 />
 \end{lstlisting}
 
-React-Select provides inherent keyboard support for arrow key navigation, Enter to select, and Escape to close, which is preserved while adding custom handlers for application-specific behavior.
+React-Select provides inherent keyboard support for arrow key navigation, Enter to select, and Escape to close. The custom \texttt{CustomMenuList} component ensures menu items are automatically focusable through React-Select's built-in option management, with each option receiving proper ARIA attributes and keyboard event handlers. When the menu opens, focus automatically moves to the search input (if enabled) or the first menu item, enabling immediate arrow key navigation through available options.
 
 \textbf{Input Field Component}
 
-Text input fields implement keyboard accessibility through semantic HTML with enhanced focus management for navigation mode transitions.
+Text input fields implement keyboard accessibility through semantic HTML elements with proper ARIA attributes.
 
-\begin{lstlisting}[caption=Input Field Keyboard Navigation, label=lst:input-focus]
-// frontend/src/_components/KeyboardNavigation/KeyboardNavigation.jsx
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !isTypingInInput()) {
-    e.preventDefault();
-    activeElement.click(); // Toggle to input mode
-  }
-});
+\begin{lstlisting}[caption=Input Field Accessibility, label=lst:input-focus]
+// frontend/src/TooljetDatabase/Forms/ColumnForm.jsx
+<input
+  type="text"
+  value={value}
+  placeholder="Enter value"
+  aria-label="Input field label"
+  onChange={(e) => setValue(e.target.value)}
+  onFocus={() => speak(value ? `Input field, current value: ${value}` : 'Input field')}
+  disabled={isDisabled}
+/>
 \end{lstlisting}
 
-Input fields differentiate between navigation mode (arrow keys move focus) and input mode (arrow keys move cursor), with Enter key toggling between these modes.
+Input fields utilize native HTML \texttt{<input>} elements which are inherently focusable without requiring explicit \texttt{tabIndex} attributes. Unlike interactive components that use \texttt{tabIndex=\{-1\}} to remove disabled elements from keyboard navigation, input fields rely on the native \texttt{disabled} attribute which automatically removes them from the tab sequence while also preventing user interaction. The \texttt{<input>} element implicitly provides \texttt{role="textbox"} to assistive technologies. Accessibility is ensured through \texttt{placeholder} for visual guidance, \texttt{aria-label} for screen reader identification, and \texttt{onFocus} callbacks that trigger screen reader announcements using the Web Speech API.
 
 \textbf{Code Editor Component}
 
-The code editor component utilizes CodeMirror's accessibility API, exposing keyboard shortcuts and focus management for code editing within the canvas.
+The code editor component utilizes the @uiw/react-codemirror library, which provides built-in keyboard accessibility for code editing within the canvas. For query panel code editors, we implemented Enter/Escape mode switching to enable keyboard navigation.
 
-For CodeEditor, DatePicker, and other complex input components, we ensured proper tabIndex management and ARIA attributes:
-
-\begin{lstlisting}[caption=Complex Input Components Accessibility, label=lst:complex-input-focus]
-// CodeEditor, DatePicker, etc.
-<Component
-  tabIndex={disabledState ? -1 : 0}
-  editable={!disabledState}
-  aria-label={label}
-  role="textbox" // or appropriate role
+\begin{lstlisting}[caption=Code Editor Component, label=lst:codeeditor-focus]
+// Canvas CodeMirror component
+<CodeMirror
+  value={value}
+  placeholder={placeholder}
+  theme={darkMode ? okaidia : githubLight}
+  extensions={[languageExtension]}
+  onChange={(value) => handleChange(value)}
+  basicSetup={{
+    lineNumbers: true,
+    syntaxHighlighting: true,
+    bracketMatching: true,
+    autocompletion: true
+  }}
+  indentWithTab={true}
 />
 
-// DatePicker specific: Enter/Escape handling
-const handleKeyDown = (e) => {
-  if (e.key === 'Enter') setIsCalendarOpen(true);
-  else if (e.key === 'Escape') setIsCalendarOpen(false);
+// Query panel code editor with mode switching
+const [isEditMode, setIsEditMode] = useState(false);
+
+const handleWrapperKeyDown = (e) => {
+  if (e.key === 'Enter' && !isEditMode) {
+    e.preventDefault();
+    setIsEditMode(true);
+    speak('Entering edit mode');
+    editorView.focus();
+  }
 };
+
+const keymap = [
+  {
+    key: 'Escape',
+    run: () => {
+      if (isEditMode) {
+        setIsEditMode(false);
+        speak('Exiting edit mode');
+        return true;
+      }
+    }
+  },
+  {
+    key: 'Tab',
+    run: () => {
+      if (!isEditMode) return false; // Browser handles Tab navigation
+      // Handle Tab indentation when in edit mode
+    }
+  }
+];
+
+<div
+  tabIndex={isEditMode ? -1 : 0}
+  onKeyDown={handleWrapperKeyDown}
+  aria-label="Code editor. Press Enter to edit, Escape to exit."
+/>
 \end{lstlisting}
 
-CodeMirror's internal keyboard handling manages code editing shortcuts (Ctrl+Z for undo, Ctrl+F for find), while DatePicker enables Enter to open the calendar, arrow keys to navigate dates within the grid, and Escape to close the picker.
+The CodeMirror library handles code editing shortcuts (Ctrl+Z, Ctrl+F) internally. Query panel editors add Enter to activate edit mode and Escape to exit, preventing Tab from indenting when navigating.
 
 \textbf{Dynamic Component Properties}
 
@@ -305,57 +347,29 @@ Focus traps prevent Tab from moving focus outside the menu, cycling through menu
 
 \textbf{Visual Focus Indicators}
 
-CSS-based focus indicators provide visual feedback for keyboard navigation state, with distinct styling for navigation mode versus input mode.
+To provide clear visual feedback for keyboard navigation, we implemented CSS-based focus indicators using the \texttt{outline} property with a \textbf{2px thickness}. When an element receives focus via keyboard navigation, a visible outline appears around it, meeting WCAG 2.1 Level AA requirements for focus visibility.
 
 \begin{lstlisting}[caption=Keyboard Focus Visual Indicators, label=lst:focus-indicator]
-// File: frontend/src/_components/KeyboardNavigation/KeyboardNavigation.scss
-
-/* Universal focus outline for keyboard navigation */
+/* Focus outline - blue (2px thickness) */
 button:focus:not([disabled]),
-input:focus:not([disabled]):not(.input-mode-active),
-select:focus:not([disabled]),
-textarea:focus:not([disabled]),
-a:focus:not([disabled]),
-[role="button"]:focus:not([disabled]),
+input:focus:not([disabled]),
 [tabindex]:focus:not([tabindex="-1"]):not([disabled]),
-.app-card:focus,
-.tj-leftsidebar-icon-items:focus {
+.app-card:focus {
   outline: 2px solid #3E63DD;
   outline-offset: 2px;
   border-radius: 4px;
   box-shadow: 0 0 0 4px rgba(62, 99, 221, 0.15);
 }
 
-/* Input mode indicator (editing state) */
-input.input-mode-active:focus,
-textarea.input-mode-active:focus {
-  outline: 2px solid #22c55e;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
-}
-
-/* Dark mode focus indicators */
+/* Dark mode - lighter blue outline (2px thickness) */
 .dark-mode button:focus:not([disabled]),
 .dark-mode [tabindex]:focus:not([tabindex="-1"]) {
   outline: 2px solid #5B9BFF;
   box-shadow: 0 0 0 4px rgba(91, 155, 255, 0.2);
 }
-
-/* Ensure focusable elements are visible */
-[tabindex="0"] {
-  position: relative;
-}
-
-/* Smooth focus transitions */
-.tj-leftsidebar-icon-items,
-.app-card,
-.notification-center-nav-item {
-  transition: outline 0.2s ease-in-out, 
-              box-shadow 0.2s ease-in-out;
-}
 \end{lstlisting}
 
-The focus indicator styling differentiates navigation mode (blue outline) from input mode (green outline), providing immediate visual feedback about the current interaction state. Dark mode adaptations ensure sufficient contrast across themes.
+The focus indicators use a consistent \textbf{2px solid outline} with \textbf{2px offset} from the element border, displaying a blue outline (\texttt{\#3E63DD}) for all focused elements. Dark mode employs a lighter blue (\texttt{\#5B9BFF}) to maintain sufficient contrast against darker backgrounds. A \textbf{4px box-shadow} with 15-20\% opacity provides additional visual emphasis, enhancing visibility for users with low vision.
 
 \subsubsection{Keyboard Shortcuts Reference}
 

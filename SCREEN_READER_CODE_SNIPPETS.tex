@@ -66,17 +66,31 @@ The \texttt{role="radiogroup"} attribute communicates to assistive technologies 
 Keyboard shortcuts facilitate navigation and interaction without pointer device input. Assistive technologies announce available shortcuts and provide feedback during navigation operations.
 
 \begin{lstlisting}[caption={Keyboard shortcut announcements}, label={lst:shortcuts-sr}]
-// File: KeyboardNavigation.jsx
+// File: BaseManageOrgConstants.jsx
 const { speak } = useScreenReader();
 
-useEffect(() => speak('Use Ctrl + arrow keys to switch between pages'), []);
+// Announce available shortcuts on page load
+useEffect(() => {
+  setTimeout(() => {
+    speak('Use Ctrl + left and right arrow keys to switch between pages');
+  }, 1000);
+}, []);
 
-const handleKeyDown = (e) => {
-  if (e.key === 'ArrowDown') speak('Next element');
+// Announce page navigation when shortcuts are used
+const handlePaginationShortcut = (e) => {
+  if (e.ctrlKey) {
+    if (e.key === 'ArrowRight' && currentPage < totalPages) {
+      speak(`Going to page ${currentPage + 1} of ${totalPages}`);
+      goToNextPage();
+    } else if (e.key === 'ArrowLeft' && currentPage > 1) {
+      speak(`Going to page ${currentPage - 1} of ${totalPages}`);
+      goToPreviousPage();
+    }
+  }
 };
 \end{lstlisting}
 
-The implementation announces available keyboard shortcuts upon page initialization and provides continuous auditory feedback as users navigate through interface elements via arrow key input.
+The implementation announces available keyboard shortcuts upon page initialization with a short delay to ensure the user's screen reader is ready. When users activate the shortcuts, the system announces the target page number before navigation occurs, providing immediate feedback about the navigation action.
 
 \subsubsection{Form Validation and Error Messages}
 
@@ -208,10 +222,52 @@ const handleFocus = () => {
   speak(`${paramLabel || 'code'}, press Enter to edit, Escape to exit`);
 };
 
-const handleKeyDown = (e) => {
-  if (e.key === 'Enter') speak(`Entering ${paramLabel}`);
-  else if (e.key === 'Escape') speak(`Exiting ${paramLabel}`);
+const handleEditorWrapperKeyDown = (event) => {
+  if (event.key === 'Enter' && !isEditMode) {
+    // Navigation logic for entering edit mode
+    // Announce entering edit mode
+    speak(`Entering ${paramLabel}`);
+  }
 };
+
+// Keymap for Tab and Escape handling
+const keymap = [
+  {
+    key: 'Tab',
+    run: () => {
+      // If not in edit mode, let browser handle Tab navigation
+      if (!isEditMode) {
+        return false;
+      }
+      // Tab indentation logic when in edit mode
+    }
+  },
+  {
+    key: 'Escape',
+    run: () => {
+      if (isEditMode) {
+        // Navigation logic for exiting edit mode
+        // Announce exiting edit mode
+        speak(`Exiting ${paramLabel}`);
+      }
+    }
+  }
+];
+
+const handleEditorWrapperFocus = () => {
+  // When wrapper gains focus via Tab
+  if (!isEditMode) {
+    handleFocus();
+  }
+};
+
+<div
+  tabIndex={isEditMode ? -1 : 0}
+  // Call handleEditorWrapperFocus when focused
+  onFocus={handleEditorWrapperFocus}
+  onKeyDown={handleEditorWrapperKeyDown}
+  aria-label="Code editor. Press Enter to edit, Escape to exit."
+/>
 \end{lstlisting}
 
 Code editors implement a navigation mode that prevents inadvertent modifications during keyboard navigation. Upon receiving focus, the editor announces instructions to press Enter for editing and Escape to exit edit mode.
