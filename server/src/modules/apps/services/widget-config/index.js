@@ -154,6 +154,7 @@ const universalProps = {
   generalStyles: {
     boxShadow: { type: 'boxShadow', displayName: 'Box Shadow' },
   },
+  exposedVariables: {},
   definition: {
     others: {},
     events: [],

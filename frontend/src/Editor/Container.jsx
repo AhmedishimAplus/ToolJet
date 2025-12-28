@@ -39,6 +39,7 @@ import toast from 'react-hot-toast';
 import { getSubpath } from '@/_helpers/routes';
 import { deepClone } from '@/_helpers/utilities/utils.helpers';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
+import { ChakraProvider } from '@chakra-ui/react';
 
 const deviceWindowWidth = EditorConstants.deviceWindowWidth;
 
@@ -140,11 +141,11 @@ export const Container = ({
         const mobLayout = newmMobLayouts.find((layout) => layout.i === id);
         updatedBoxes[id].layouts.mobile = mobLayout
           ? {
-              left: mobLayout.left,
-              height: mobLayout.height,
-              top: mobLayout.top,
-              width: mobLayout.width,
-            }
+            left: mobLayout.left,
+            height: mobLayout.height,
+            top: mobLayout.top,
+            width: mobLayout.width,
+          }
           : updatedBoxes[id].layouts.desktop;
       });
       setBoxes({ ...updatedBoxes });
@@ -200,11 +201,11 @@ export const Container = ({
         const mobLayout = newmMobLayouts.find((layout) => layout.i === id);
         updatedBoxes[id].layouts.mobile = mobLayout
           ? {
-              left: mobLayout.left,
-              height: mobLayout.height,
-              top: mobLayout.top,
-              width: mobLayout.width,
-            }
+            left: mobLayout.left,
+            height: mobLayout.height,
+            top: mobLayout.top,
+            width: mobLayout.width,
+          }
           : updatedBoxes[id].layouts.desktop;
       });
       setBoxes({ ...updatedBoxes });
@@ -570,7 +571,7 @@ export const Container = ({
           _width = Math.round(
             (copyOfBoxes[id]['layouts'][currentLayout].width *
               useGridStore.getState().subContainerWidths[boxes[id]['component']?.parent]) /
-              containerWidth
+            containerWidth
           );
         } else {
           _width = Math.round((boxes[id]['layouts'][currentLayout].width * gridWidth) / containerWidth);
@@ -854,170 +855,172 @@ export const Container = ({
   const showEmptyContainer = !appLoading && !isDragging && mode !== 'view';
 
   return (
-    <ContainerWrapper
-      showComments={showComments}
-      handleAddThread={handleAddThread}
-      containerRef={(el) => {
-        canvasRef.current = el;
-        drop(el);
-      }}
-      styles={styles}
-      isDropping={draggingState}
-      canvasHeight={canvasHeight}
-    >
-      {config.COMMENT_FEATURE_ENABLE && showComments && (
-        <>
-          <Comments socket={socket} newThread={newThread} canvasWidth={canvasWidth} currentPageId={currentPageId} />
-          {commentsPreviewList.map((previewComment, index) => (
-            <div
-              key={index}
-              style={{
-                transform: `translate(${(previewComment.x * canvasWidth) / 100}px, ${previewComment.y}px)`,
-                position: 'absolute',
-                zIndex: 2,
-              }}
-            >
-              <label className="form-selectgroup-item comment-preview-bubble">
-                <span
-                  className={cx(
-                    'comment comment-preview-bubble-border cursor-move avatar avatar-sm shadow-lg bg-white avatar-rounded'
-                  )}
-                >
-                  <Spinner />
-                </span>
-              </label>
-            </div>
-          ))}
-        </>
-      )}
-      <div className="root">
-        <div className="container-fluid rm-container p-0">
-          {Object.entries({
-            ...boxes,
-          })
-            .filter(([, box]) => isEmpty(box?.component?.parent))
-            .map(([id, box]) => {
-              return (
-                <WidgetWrapper
-                  isResizing={resizingComponentId === id}
-                  widget={box}
-                  key={id}
-                  id={id}
-                  gridWidth={gridWidth}
-                  currentLayout={currentLayout}
-                  mode={mode}
-                  propertiesDefinition={box?.component?.definition?.properties}
-                  stylesDefinition={box?.component?.definition?.styles}
-                  otherDefinition={box?.component?.definition?.others}
-                  componentType={box?.component?.component}
-                >
-                  <DraggableBox
-                    className={showComments && 'pointer-events-none'}
-                    canvasWidth={canvasWidth}
-                    onComponentClick={
-                      config.COMMENT_FEATURE_ENABLE && showComments ? handleAddThreadOnComponent : onComponentClick
-                    }
-                    onEvent={onEvent}
+    <ChakraProvider resetCSS={false}>
+      <ContainerWrapper
+        showComments={showComments}
+        handleAddThread={handleAddThread}
+        containerRef={(el) => {
+          canvasRef.current = el;
+          drop(el);
+        }}
+        styles={styles}
+        isDropping={draggingState}
+        canvasHeight={canvasHeight}
+      >
+        {config.COMMENT_FEATURE_ENABLE && showComments && (
+          <>
+            <Comments socket={socket} newThread={newThread} canvasWidth={canvasWidth} currentPageId={currentPageId} />
+            {commentsPreviewList.map((previewComment, index) => (
+              <div
+                key={index}
+                style={{
+                  transform: `translate(${(previewComment.x * canvasWidth) / 100}px, ${previewComment.y}px)`,
+                  position: 'absolute',
+                  zIndex: 2,
+                }}
+              >
+                <label className="form-selectgroup-item comment-preview-bubble">
+                  <span
+                    className={cx(
+                      'comment comment-preview-bubble-border cursor-move avatar avatar-sm shadow-lg bg-white avatar-rounded'
+                    )}
+                  >
+                    <Spinner />
+                  </span>
+                </label>
+              </div>
+            ))}
+          </>
+        )}
+        <div className="root">
+          <div className="container-fluid rm-container p-0">
+            {Object.entries({
+              ...boxes,
+            })
+              .filter(([, box]) => isEmpty(box?.component?.parent))
+              .map(([id, box]) => {
+                return (
+                  <WidgetWrapper
+                    isResizing={resizingComponentId === id}
+                    widget={box}
                     key={id}
-                    paramUpdated={paramUpdated}
                     id={id}
-                    {...box}
+                    gridWidth={gridWidth}
+                    currentLayout={currentLayout}
                     mode={mode}
-                    inCanvas={true}
-                    zoomLevel={zoomLevel}
-                    removeComponent={removeComponent}
-                    isSelectedComponent={
-                      mode === 'edit' ? selectedComponents.find((component) => component.id === id) : false
-                    }
-                    darkMode={darkMode}
-                    isMultipleComponentsSelected={selectedComponents?.length > 1 ? true : false}
-                    getContainerProps={getContainerProps}
-                    isVersionReleased={isVersionReleased}
-                    currentPageId={currentPageId}
-                    childComponents={childComponents[id]}
-                  />
-                </WidgetWrapper>
-              );
-            })}
-          <ResizeGhostWidget
-            resizingComponentId={resizingComponentId}
-            widgets={boxes}
-            currentLayout={currentLayout}
-            canvasWidth={canvasWidth}
-            gridWidth={gridWidth}
-          />
-          <DragGhostWidget />
-          <DragContainer
-            widgets={boxes}
-            onResizeStop={onResizeStop}
-            onDrag={onDragStop}
-            gridWidth={gridWidth}
-            selectedComponents={selectedComponents}
-            currentLayout={currentLayout}
-            currentPageId={currentPageId}
-            draggedSubContainer={draggedSubContainer}
-            mode={isVersionReleased ? 'view' : mode}
-          />
+                    propertiesDefinition={box?.component?.definition?.properties}
+                    stylesDefinition={box?.component?.definition?.styles}
+                    otherDefinition={box?.component?.definition?.others}
+                    componentType={box?.component?.component}
+                  >
+                    <DraggableBox
+                      className={showComments && 'pointer-events-none'}
+                      canvasWidth={canvasWidth}
+                      onComponentClick={
+                        config.COMMENT_FEATURE_ENABLE && showComments ? handleAddThreadOnComponent : onComponentClick
+                      }
+                      onEvent={onEvent}
+                      key={id}
+                      paramUpdated={paramUpdated}
+                      id={id}
+                      {...box}
+                      mode={mode}
+                      inCanvas={true}
+                      zoomLevel={zoomLevel}
+                      removeComponent={removeComponent}
+                      isSelectedComponent={
+                        mode === 'edit' ? selectedComponents.find((component) => component.id === id) : false
+                      }
+                      darkMode={darkMode}
+                      isMultipleComponentsSelected={selectedComponents?.length > 1 ? true : false}
+                      getContainerProps={getContainerProps}
+                      isVersionReleased={isVersionReleased}
+                      currentPageId={currentPageId}
+                      childComponents={childComponents[id]}
+                    />
+                  </WidgetWrapper>
+                );
+              })}
+            <ResizeGhostWidget
+              resizingComponentId={resizingComponentId}
+              widgets={boxes}
+              currentLayout={currentLayout}
+              canvasWidth={canvasWidth}
+              gridWidth={gridWidth}
+            />
+            <DragGhostWidget />
+            <DragContainer
+              widgets={boxes}
+              onResizeStop={onResizeStop}
+              onDrag={onDragStop}
+              gridWidth={gridWidth}
+              selectedComponents={selectedComponents}
+              currentLayout={currentLayout}
+              currentPageId={currentPageId}
+              draggedSubContainer={draggedSubContainer}
+              mode={isVersionReleased ? 'view' : mode}
+            />
+          </div>
         </div>
-      </div>
-      {Object.keys(boxes).length === 0 && showEmptyContainer && (
-        <div style={{ paddingTop: '10%' }}>
-          <div className="row empty-box-cont">
-            <div className="col-md-4 dotted-cont">
-              <div className="box-icon">
-                <BulkIcon name="addtemplate" width="25" viewBox="0 0 28 28" />
+        {Object.keys(boxes).length === 0 && showEmptyContainer && (
+          <div style={{ paddingTop: '10%' }}>
+            <div className="row empty-box-cont">
+              <div className="col-md-4 dotted-cont">
+                <div className="box-icon">
+                  <BulkIcon name="addtemplate" width="25" viewBox="0 0 28 28" />
+                </div>
+                <div className={`title-text`} data-cy="empty-editor-text">
+                  Drag and drop a component
+                </div>
+                <div className="title-desc">
+                  Choose a component from the right side panel or use our pre-built templates to get started quickly!
+                </div>
               </div>
-              <div className={`title-text`} data-cy="empty-editor-text">
-                Drag and drop a component
+              <div className="col-md-4 dotted-cont">
+                <div className="box-icon">
+                  <SolidIcon name="datasource" fill="#3E63DD" width="25" />
+                </div>
+                <div className={`title-text`}>Create a Query</div>
+                <div className="title-desc">{queryBoxText}</div>
+                {!!sampleDataSource && (
+                  <div className="box-link">
+                    <div className="child">
+                      <a className="link-but" onClick={handleConnectSampleDB}>
+                        Connect to sample data source{' '}
+                      </a>
+                    </div>
+
+                    <div>
+                      <BulkIcon name="arrowright" fill="#3E63DD" />
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="title-desc">
-                Choose a component from the right side panel or use our pre-built templates to get started quickly!
-              </div>
-            </div>
-            <div className="col-md-4 dotted-cont">
-              <div className="box-icon">
-                <SolidIcon name="datasource" fill="#3E63DD" width="25" />
-              </div>
-              <div className={`title-text`}>Create a Query</div>
-              <div className="title-desc">{queryBoxText}</div>
-              {!!sampleDataSource && (
+
+              <div className="col-md-4 dotted-cont">
+                <div className="box-icon">
+                  <BulkIcon name="invitecollab" width="25" viewBox="0 0 28 28" />
+                </div>
+                <div className={`title-text `}>Share your application!</div>
+                <div className="title-desc">
+                  Invite users to collaborate in real-time with multiplayer editing and comments for seamless development.
+                </div>
                 <div className="box-link">
                   <div className="child">
-                    <a className="link-but" onClick={handleConnectSampleDB}>
-                      Connect to sample data source{' '}
+                    <a className="link-but" onClick={openAddUserWorkspaceSetting}>
+                      Invite collaborators{' '}
                     </a>
                   </div>
-
                   <div>
                     <BulkIcon name="arrowright" fill="#3E63DD" />
                   </div>
                 </div>
-              )}
-            </div>
-
-            <div className="col-md-4 dotted-cont">
-              <div className="box-icon">
-                <BulkIcon name="invitecollab" width="25" viewBox="0 0 28 28" />
-              </div>
-              <div className={`title-text `}>Share your application!</div>
-              <div className="title-desc">
-                Invite users to collaborate in real-time with multiplayer editing and comments for seamless development.
-              </div>
-              <div className="box-link">
-                <div className="child">
-                  <a className="link-but" onClick={openAddUserWorkspaceSetting}>
-                    Invite collaborators{' '}
-                  </a>
-                </div>
-                <div>
-                  <BulkIcon name="arrowright" fill="#3E63DD" />
-                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </ContainerWrapper>
+        )}
+      </ContainerWrapper>
+    </ChakraProvider>
   );
 };
 
@@ -1091,9 +1094,8 @@ const WidgetWrapper = ({
         className={
           isGhostComponent
             ? `ghost-target`
-            : `target widget-target target1 ele-${id} moveable-box ${isResizing ? 'resizing-target' : ''} ${
-                isWidgetActive ? 'active-target' : ''
-              } ${isDragging ? 'opacity-0' : ''}`
+            : `target widget-target target1 ele-${id} moveable-box ${isResizing ? 'resizing-target' : ''} ${isWidgetActive ? 'active-target' : ''
+            } ${isDragging ? 'opacity-0' : ''}`
         }
         data-id={`${parent}`}
         id={id}

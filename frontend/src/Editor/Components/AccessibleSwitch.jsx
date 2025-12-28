@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChakraProvider, Switch, FormControl, FormLabel } from '@chakra-ui/react';
+import { Switch, FormControl, FormLabel } from '@chakra-ui/react';
 
 export const AccessibleSwitch = ({
     height,
@@ -10,8 +10,8 @@ export const AccessibleSwitch = ({
     darkMode,
     dataCy,
 }) => {
-    const { label, checked, ariaLabel, visibility, disabledState } = properties;
-    const { colorScheme = 'blue', size = 'md' } = styles;
+    const { label = '', checked = false, ariaLabel = '', visibility = true, disabledState = false } = properties || {};
+    const { colorScheme = 'blue', size = 'md' } = styles || {};
 
     const [isChecked, setIsChecked] = useState(checked || false);
 
@@ -20,37 +20,41 @@ export const AccessibleSwitch = ({
     }, [checked]);
 
     useEffect(() => {
-        setExposedVariable('value', isChecked);
+        if (setExposedVariable) {
+            setExposedVariable('value', isChecked);
+        }
     }, [isChecked, setExposedVariable]);
 
     const handleChange = (e) => {
         const newValue = e.target.checked;
         setIsChecked(newValue);
-        setExposedVariable('value', newValue);
-        fireEvent('onChange');
+        if (setExposedVariable) {
+            setExposedVariable('value', newValue);
+        }
+        if (fireEvent) {
+            fireEvent('onChange');
+        }
     };
 
     if (!visibility) return null;
 
     return (
-        <ChakraProvider>
-            <FormControl display="flex" alignItems="center" height={`${height}px`}>
-                <Switch
-                    id={`switch-${dataCy}`}
-                    isChecked={isChecked}
-                    onChange={handleChange}
-                    colorScheme={colorScheme}
-                    size={size}
-                    isDisabled={disabledState}
-                    aria-label={ariaLabel || label}
-                    data-cy={dataCy}
-                />
-                {label && (
-                    <FormLabel htmlFor={`switch-${dataCy}`} mb="0" ml="2">
-                        {label}
-                    </FormLabel>
-                )}
-            </FormControl>
-        </ChakraProvider>
+        <FormControl display="flex" alignItems="center" height={`${height}px`}>
+            <Switch
+                id={`switch-${dataCy}`}
+                isChecked={isChecked}
+                onChange={handleChange}
+                colorScheme={colorScheme}
+                size={size}
+                isDisabled={disabledState}
+                aria-label={ariaLabel || label}
+                data-cy={dataCy}
+            />
+            {label && (
+                <FormLabel htmlFor={`switch-${dataCy}`} mb="0" ml="2">
+                    {label}
+                </FormLabel>
+            )}
+        </FormControl>
     );
 };
