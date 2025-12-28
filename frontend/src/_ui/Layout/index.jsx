@@ -155,7 +155,7 @@ function Layout({
           toggleCollapsibleSidebar={toggleCollapsibleSidebar}
           licenseStatus={licenseStatus}
         />
-        <div style={{ paddingTop: 48 }}>{children}</div>
+        <main style={{ paddingTop: 48 }} id="main-content" tabIndex="-1">{children}</main>
       </div>
       <ConfirmDialog
         title={'Unsaved Changes'}
