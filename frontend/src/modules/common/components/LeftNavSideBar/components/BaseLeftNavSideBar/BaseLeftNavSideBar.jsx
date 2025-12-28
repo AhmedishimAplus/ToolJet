@@ -6,7 +6,7 @@ import { getPrivateRoute } from '@/_helpers/routes';
 import { Link } from 'react-router-dom';
 import { SettingsMenu } from '@/modules/dashboard/components';
 import useScreenReader from '@/modules/common/hooks/useScreenReader';
-import KeyboardShortcutsHint from '@/modules/common/components/KeyboardShortcutsHint';
+import { KeyboardShortcutsHint } from '@/modules/common/components/KeyboardShortcutsHint';
 
 const BaseLeftNavSideBar = ({
   checkForUnsavedChanges,

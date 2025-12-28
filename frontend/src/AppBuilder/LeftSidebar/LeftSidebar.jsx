@@ -5,7 +5,7 @@ import cx from 'classnames';
 import { shallow } from 'zustand/shallow';
 import { DarkModeToggle } from '@/_components';
 import Popover from '@/_ui/Popover';
-import KeyboardShortcutsHint from '@/modules/common/components/KeyboardShortcutsHint';
+import { KeyboardShortcutsHint } from '@/modules/common/components/KeyboardShortcutsHint';
 // import { PageMenu } from './PageMenu';
 import LeftSidebarInspector from './LeftSidebarInspector/LeftSidebarInspector';
 import GlobalSettings from './GlobalSettings';
