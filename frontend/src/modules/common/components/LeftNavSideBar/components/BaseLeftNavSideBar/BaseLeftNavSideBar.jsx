@@ -172,9 +172,8 @@ const BaseLeftNavSideBar = ({
               data-cy="mode-switch-button"
               tabIndex="0"
               role="button"
-              aria-label="Toggle dark mode"
-              onFocus={() => speak(darkMode ? 'Toggle light mode button' : 'Toggle dark mode button')}
-              onMouseEnter={() => speak('Theme toggle')}
+              aria-label={`Theme toggle, activate ${darkMode ? 'light' : 'dark'} mode`}
+              onFocus={() => speak(`Theme toggle button, activate ${darkMode ? 'light' : 'dark'} mode`)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
