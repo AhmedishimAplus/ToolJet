@@ -8,6 +8,7 @@ import useStore from '@/AppBuilder/_stores/store';
 import { shallow } from 'zustand/shallow';
 import useAppDarkMode from '@/_hooks/useAppDarkMode';
 import posthogHelper from '@/modules/common/helpers/posthogHelper';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 export const DarkModeToggle = function DarkModeToggle({
   darkMode = false,
@@ -20,6 +21,7 @@ export const DarkModeToggle = function DarkModeToggle({
   const setGlobalSettings = useStore((state) => state.setGlobalSettings, shallow);
   const globalSettings = useStore((state) => state.globalSettings, shallow);
   const [appLevelDarkMode, setAppLevelDarkMode] = useState(false);
+  const { speak } = useScreenReader();
 
   const { onAppModeChange, appMode } = useAppDarkMode();
 
@@ -29,11 +31,14 @@ export const DarkModeToggle = function DarkModeToggle({
       setResolvedGlobals('theme', { name: exposedTheme });
       setAppLevelDarkMode(!appLevelDarkMode);
       switchDarkMode(!darkMode);
+      speak(`Switched to ${exposedTheme} mode`);
     } else {
       posthogHelper.captureEvent('darkMode', { mode: !darkMode ? 'dark' : 'white' });
+      const newMode = !darkMode ? 'dark' : 'light';
       switchDarkMode(!darkMode);
+      speak(`Switched to ${newMode} mode`);
       if (appMode === 'auto') {
-        setResolvedGlobals('theme', { name: !darkMode ? 'dark' : 'light' });
+        setResolvedGlobals('theme', { name: newMode });
       }
     }
   };
@@ -89,6 +94,20 @@ export const DarkModeToggle = function DarkModeToggle({
       <div
         className={classnames('unstyled-button dark-theme-toggle-btn  sidebar-svg-icon  left-sidebar-item')}
         onClick={toggleDarkMode}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleDarkMode();
+          }
+        }}
+        onFocus={() => {
+          const isDark = darkMode || (appMode === 'dark' && toggleForCanvas);
+          const actionMode = isDark ? 'light' : 'dark';
+          speak(`Theme toggle button, activate ${actionMode} mode`);
+        }}
+        tabIndex={0}
+        role="button"
+        aria-label={`Theme toggle, activate ${(darkMode || (appMode === 'dark' && toggleForCanvas)) ? 'light' : 'dark'} mode`}
       >
         <animated.svg
           xmlns="http://www.w3.org/2000/svg"
