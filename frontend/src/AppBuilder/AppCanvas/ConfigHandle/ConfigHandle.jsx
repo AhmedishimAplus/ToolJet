@@ -101,8 +101,8 @@ export const ConfigHandle = ({
           componentType === 'Modal' && isModalOpen
             ? '0px'
             : position === 'top'
-            ? '-20px'
-            : `${height - (CONFIG_HANDLE_HEIGHT + BUFFER_HEIGHT)}px`,
+              ? '-20px'
+              : `${height - (CONFIG_HANDLE_HEIGHT + BUFFER_HEIGHT)}px`,
         visibility: _showHandle || visibility === false ? 'visible' : 'hidden',
         left: '-1px',
       }}
@@ -142,6 +142,8 @@ export const ConfigHandle = ({
             visibility === false ? '#c6cad0' : componentType === 'Modal' && isModalOpen ? '#c6cad0' : '#4D72FA',
           border: position === 'bottom' ? '1px solid white' : 'none',
           color: visibility === false && 'var(--text-placeholder)',
+          display: 'flex',
+          alignItems: 'center',
         }}
         className="badge handle-content"
       >
@@ -161,7 +163,7 @@ export const ConfigHandle = ({
               setActiveRightSideBarTab(RIGHT_SIDE_BAR_TAB.CONFIGURATION);
               setRightSidebarOpen(true);
             }}
-            style={{ cursor: 'pointer', marginRight: '5px' }}
+            style={{ cursor: 'pointer', marginRight: '5px', display: 'flex', alignItems: 'center' }}
           >
             <SolidIcon
               name="propertiesstyles"
@@ -185,7 +187,7 @@ export const ConfigHandle = ({
         </div>
         {/* Delete Button */}
         {!isMultipleComponentsSelected && !shouldFreeze && (
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             <img
               style={{ cursor: 'pointer', marginLeft: '5px' }}
               src="assets/images/icons/inspect.svg"
@@ -199,7 +201,7 @@ export const ConfigHandle = ({
             />
             {!isModuleContainer && (
               <span
-                style={{ cursor: 'pointer', marginLeft: '5px' }}
+                style={{ cursor: 'pointer', marginLeft: '5px', display: 'flex', alignItems: 'center' }}
                 onClick={() => {
                   deleteComponents([id]);
                 }}
