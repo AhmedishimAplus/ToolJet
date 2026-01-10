@@ -7,6 +7,7 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import AppLogo from '@/_components/AppLogo';
 import { hasBuilderRole } from '@/_helpers/utils';
 import { isWorkflowsFeatureEnabled } from '@/modules/common/helpers/utils';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' }) => {
   const { admin } = authenticationService?.currentSessionValue ?? {};
@@ -15,6 +16,7 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
+  const { speak } = useScreenReader();
 
   /** Redirect back to dashboard or workflows **/
   const handleBackClick = (e) => {
@@ -51,8 +53,11 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
 
       if (e.key === 'Escape') {
         e.preventDefault();
-        setIsOpen(false);
-        triggerRef.current?.focus();
+        speak('Closing menu');
+        setTimeout(() => {
+          setIsOpen(false);
+          triggerRef.current?.focus();
+        }, 1000);
       } else if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault();
         const nextIndex = (currentIndex + 1) % visibleItems.length;
@@ -95,12 +100,32 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
   const handleTriggerKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      setIsOpen((prev) => !prev);
+      if (!isOpen) {
+        speak('Opening menu');
+        setTimeout(() => {
+          setIsOpen(true);
+        }, 300);
+      } else {
+        speak('Closing menu');
+        setTimeout(() => {
+          setIsOpen(false);
+        }, 1000);
+      }
     }
   };
   const handleTriggerClick = (e) => {
     e.preventDefault();
-    setIsOpen((prev) => !prev);
+    if (!isOpen) {
+      speak('Opening menu');
+      setTimeout(() => {
+        setIsOpen(true);
+      }, 300);
+    } else {
+      speak('Closing menu');
+      setTimeout(() => {
+        setIsOpen(false);
+      }, 1000);
+    }
   };
 
   const handleToggle = (nextShow) => {
@@ -131,7 +156,11 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
         <Link
           className="dropdown-item tj-text tj-text-xsm"
           data-cy="back-to-app-option"
-          onClick={handleBackClick}
+          onClick={(e) => {
+            handleBackClick(e);
+            speak(`Navigating back to ${isWorkflows ? 'workflows' : 'apps'}`);
+          }}
+          onFocus={() => speak(`Back to ${isWorkflows ? 'workflows' : 'apps'}`)}
           tabIndex={0}
           {...backToLinkProps}
         >
@@ -163,6 +192,8 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
             className="dropdown-item tj-text tj-text-xsm"
             data-cy="database-option"
             tabIndex={0}
+            onFocus={() => speak('Database')}
+            onClick={() => speak('Navigating to Database')}
           >
             <SolidIcon name="table" width="20" />
             <span>Database</span>
@@ -176,6 +207,8 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
             className="dropdown-item tj-text tj-text-xsm"
             data-cy="data-source-option"
             tabIndex={0}
+            onFocus={() => speak('Data sources')}
+            onClick={() => speak('Navigating to Data sources')}
           >
             <SolidIcon name="datasource" width="20" />
             <span>Data sources</span>
@@ -188,6 +221,8 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
           className="dropdown-item tj-text tj-text-xsm"
           data-cy="workspace-constants-option"
           tabIndex={0}
+          onFocus={() => speak('Workspace constants')}
+          onClick={() => speak('Navigating to Workspace constants')}
         >
           <SolidIcon name="workspaceconstants" width="20" />
           <span>Workspace constants</span>
@@ -215,6 +250,7 @@ const BaseLogoNavDropdown = ({ darkMode, showWorkflows = false, type = 'apps' })
         aria-haspopup="menu"
         onKeyDown={handleTriggerKeyDown}
         onClick={handleTriggerClick}
+        onFocus={() => speak('Navigation menu button')}
       >
         <AppLogo isLoadingFromHeader={false} />
       </div>
