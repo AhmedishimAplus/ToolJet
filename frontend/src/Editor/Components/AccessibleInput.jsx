@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from '@chakra-ui/react';
+import { ChakraProvider, Input } from '@chakra-ui/react';
 
 export const AccessibleInput = ({
     height,
@@ -51,20 +51,22 @@ export const AccessibleInput = ({
     if (!visibility) return null;
 
     return (
-        <Input
-            value={inputValue}
-            onChange={handleChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            variant={variant}
-            size={size}
-            isDisabled={disabledState}
-            isReadOnly={readOnly}
-            aria-label={ariaLabel || placeholder}
-            data-cy={dataCy}
-            width="100%"
-            height={`${height}px`}
-        />
+        <ChakraProvider>
+            <Input
+                value={inputValue}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                placeholder={placeholder}
+                variant={variant}
+                size={size}
+                isDisabled={disabledState}
+                isReadOnly={readOnly}
+                aria-label={ariaLabel || placeholder}
+                data-cy={dataCy}
+                width="100%"
+                height={`${height}px`}
+            />
+        </ChakraProvider>
     );
 };

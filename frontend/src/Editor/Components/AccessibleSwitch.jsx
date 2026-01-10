@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Switch, FormControl, FormLabel } from '@chakra-ui/react';
+import { ChakraProvider, Switch, FormControl, FormLabel } from '@chakra-ui/react';
 
 export const AccessibleSwitch = ({
     height,
@@ -39,22 +39,24 @@ export const AccessibleSwitch = ({
     if (!visibility) return null;
 
     return (
-        <FormControl display="flex" alignItems="center" height={`${height}px`}>
-            <Switch
-                id={`switch-${dataCy}`}
-                isChecked={isChecked}
-                onChange={handleChange}
-                colorScheme={colorScheme}
-                size={size}
-                isDisabled={disabledState}
-                aria-label={ariaLabel || label}
-                data-cy={dataCy}
-            />
-            {label && (
-                <FormLabel htmlFor={`switch-${dataCy}`} mb="0" ml="2">
-                    {label}
-                </FormLabel>
-            )}
-        </FormControl>
+        <ChakraProvider>
+            <FormControl display="flex" alignItems="center" height={`${height}px`}>
+                <Switch
+                    id={`switch-${dataCy}`}
+                    isChecked={isChecked}
+                    onChange={handleChange}
+                    colorScheme={colorScheme}
+                    size={size}
+                    isDisabled={disabledState}
+                    aria-label={ariaLabel || label}
+                    data-cy={dataCy}
+                />
+                {label && (
+                    <FormLabel htmlFor={`switch-${dataCy}`} mb="0" ml="2">
+                        {label}
+                    </FormLabel>
+                )}
+            </FormControl>
+        </ChakraProvider>
     );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@chakra-ui/react';
+import { ChakraProvider, Button } from '@chakra-ui/react';
 
 export const AccessibleButton = ({
     height,
@@ -22,19 +22,21 @@ export const AccessibleButton = ({
     if (!visibility) return null;
 
     return (
-        <Button
-            onClick={handleClick}
-            variant={variant}
-            colorScheme={colorScheme}
-            size={size}
-            isLoading={loadingState}
-            isDisabled={disabledState}
-            aria-label={ariaLabel || text}
-            data-cy={dataCy}
-            width="100%"
-            height={`${height}px`}
-        >
-            {text}
-        </Button>
+        <ChakraProvider>
+            <Button
+                onClick={handleClick}
+                variant={variant}
+                colorScheme={colorScheme}
+                size={size}
+                isLoading={loadingState}
+                isDisabled={disabledState}
+                aria-label={ariaLabel || text}
+                data-cy={dataCy}
+                width="100%"
+                height={`${height}px`}
+            >
+                {text}
+            </Button>
+        </ChakraProvider>
     );
 };
