@@ -9,7 +9,9 @@ export default function styles(darkMode, width = 224, height = 32, styles = {}, 
     control: (provided, state) => ({
       ...provided,
       border: state.isDisabled && darkMode ? 'none' : styles.border ?? '1px solid var(--slate7)',
-      boxShadow: 'none',
+      boxShadow: state.isFocused ? '0 0 0 2px var(--indigo8)' : 'none',
+      outline: state.isFocused ? '2px solid var(--indigo8)' : 'none',
+      outlineOffset: '2px',
       '&:hover': {
         backgroundColor: darkMode ? '' : '#F8F9FA',
         border: styles.border ?? '1px solid hsl(0, 0%, 80%)',
@@ -19,10 +21,10 @@ export default function styles(darkMode, width = 224, height = 32, styles = {}, 
           ? '#1f2936'
           : '#f4f6fa'
         : darkMode
-        ? '#2b3547'
-        : state.menuIsOpen
-        ? '#F1F3F5'
-        : '#fff',
+          ? '#2b3547'
+          : state.menuIsOpen
+            ? '#F1F3F5'
+            : '#fff',
       height: height,
       minHeight: height,
       cursor: styles.cursor ?? 'pointer',

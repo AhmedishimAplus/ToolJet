@@ -1,11 +1,15 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import cx from 'classnames';
 import { Tooltip } from 'react-tooltip';
 import { shallow } from 'zustand/shallow';
 import SolidIcon from '@/_ui/Icon/SolidIcons';
 import useStore from '@/AppBuilder/_stores/store';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
+  const { speak } = useScreenReader();
+  const desktopButtonRef = useRef(null);
+  const mobileButtonRef = useRef(null);
   const {
     currentLayout,
     canUndo,
@@ -37,6 +41,24 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
       element.classList.remove('active-target');
     }
   }, []);
+
+  // Handle arrow key navigation between view mode buttons
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (document.activeElement === desktopButtonRef.current || document.activeElement === mobileButtonRef.current) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (document.activeElement === desktopButtonRef.current) {
+            mobileButtonRef.current?.focus();
+          } else {
+            desktopButtonRef.current?.focus();
+          }
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
   return (
     <div className={cx('editor-header-actions', { 'w-100': showFullWidth })} data-cy="header-actions">
       {showToggleLayoutBtn && (
@@ -62,6 +84,7 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
             data-cy="layout-toggle-buttons"
           >
             <button
+              ref={desktopButtonRef}
               className={cx('btn border-0 p-1', {
                 'bg-transparent': currentLayout !== 'desktop',
                 'bg-white opacity-100': currentLayout === 'desktop',
@@ -71,13 +94,23 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
               style={{ height: 20 }}
               role="tab"
               type="button"
-              aria-selected="true"
+              aria-selected={currentLayout === 'desktop'}
               aria-label="Switch to desktop layout"
               tabIndex="0"
               onClick={() => {
                 toggleCurrentLayout('desktop');
                 clearSelectionBorder();
+                speak('Desktop view is active');
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleCurrentLayout('desktop');
+                  clearSelectionBorder();
+                  speak('Desktop view is active');
+                }
+              }}
+              onFocus={() => speak(`Desktop view ${currentLayout === 'desktop' ? 'currently active' : 'currently not active'}`)}
               data-cy={`button-change-layout-to-desktop`}
             >
               <SolidIcon
@@ -87,6 +120,7 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
               />
             </button>
             <button
+              ref={mobileButtonRef}
               className={cx('btn border-0 p-1', {
                 'bg-transparent': currentLayout !== 'mobile',
                 'bg-white opacity-100': currentLayout === 'mobile',
@@ -96,13 +130,23 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
               role="tab"
               type="button"
               style={{ height: 20 }}
-              aria-selected="false"
+              aria-selected={currentLayout === 'mobile'}
               aria-label="Switch to mobile layout"
-              tabIndex="-1"
+              tabIndex="0"
               onClick={() => {
                 toggleCurrentLayout('mobile');
                 clearSelectionBorder();
+                speak('Mobile view is active');
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleCurrentLayout('mobile');
+                  clearSelectionBorder();
+                  speak('Mobile view is active');
+                }
+              }}
+              onFocus={() => speak(`Mobile view ${currentLayout === 'mobile' ? 'currently active' : 'currently not active'}`)}
               data-cy={`button-change-layout-to-mobile`}
             >
               <SolidIcon
@@ -119,7 +163,9 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
           <button
             onClick={() => {
               handleUndo();
+              speak('Undone');
             }}
+            onFocus={() => speak('Undo')}
             className="tj-ghost-black-btn"
             data-tooltip-id="tooltip-for-undo"
             data-tooltip-content="Undo"
@@ -141,7 +187,9 @@ const HeaderActions = function HeaderActions({ darkMode, showFullWidth }) {
           <button
             onClick={() => {
               handleRedo();
+              speak('Redone');
             }}
+            onFocus={() => speak('Redo')}
             className="tj-ghost-black-btn"
             data-tooltip-id="tooltip-for-redo"
             data-tooltip-content="Redo"

@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import useStore from '@/AppBuilder/_stores/store';
 import { shallow } from 'zustand/shallow';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 function EditAppName() {
   const { moduleId } = useModuleContext();
@@ -23,6 +24,7 @@ function EditAppName() {
   );
 
   const darkMode = localStorage.getItem('darkMode') === 'true';
+  const { speak } = useScreenReader();
   const [name, setName] = useState(appName);
   const [isValid, setIsValid] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -101,6 +103,7 @@ function EditAppName() {
   const handleFocus = () => {
     setIsValid(true);
     setIsEditing(true);
+    speak(`App name: ${name}`);
   };
 
   const handleInput = (e) => {

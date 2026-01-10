@@ -9,6 +9,7 @@ import EditWhite from '@assets/images/icons/edit-white.svg';
 import { defaultAppEnvironments, decodeEntities } from '@/_helpers/utils';
 import { CreateVersionModal } from '@/modules/Appbuilder/components';
 import useStore from '@/AppBuilder/_stores/store';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 // TODO: edit version modal and add version modal
 const Menu = (props) => {
@@ -132,8 +133,28 @@ export const SingleValue = ({ selectProps }) => {
 export const CustomSelect = ({ currentEnvironment, onSelectVersion, ...props }) => {
   const [showEditAppVersion, setShowEditAppVersion] = useState(false);
   const [showCreateAppVersion, setShowCreateAppVersion] = useState(false);
+  const { speak } = useScreenReader();
 
   const { deleteVersion, deleteAppVersion, resetDeleteModal, isEditable } = props;
+
+  const handleMenuOpen = () => {
+    speak('Opening version menu');
+    if (props.onMenuOpen) {
+      props.onMenuOpen();
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !props.menuIsOpen) {
+      event.preventDefault();
+      handleMenuOpen();
+    }
+  };
+
+  // Get the current version name for aria-label
+  const selectedOption = props.options?.find(option => option.value === props.value);
+  const currentVersionName = selectedOption?.appVersionName ? decodeEntities(selectedOption.appVersionName) : 'No version';
+
   return (
     <>
       {isEditable && showCreateAppVersion && (
@@ -178,6 +199,9 @@ export const CustomSelect = ({ currentEnvironment, onSelectVersion, ...props }) 
         setShowEditAppVersion={setShowEditAppVersion}
         setShowCreateAppVersion={setShowCreateAppVersion}
         styles={{ border: 0 }}
+        onMenuOpen={handleMenuOpen}
+        onKeyDown={handleKeyDown}
+        aria-label={`Version dropdown, ${currentVersionName}`}
         {...props}
       />
     </>

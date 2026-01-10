@@ -9,6 +9,7 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import useStore from '@/AppBuilder/_stores/store';
 import { PromoteReleaseButton } from '@/modules/Appbuilder/components';
 import { useModuleContext } from '@/AppBuilder/_contexts/ModuleContext';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const RightTopHeaderButtons = ({ isModuleEditor }) => {
   return (
@@ -23,6 +24,7 @@ const RightTopHeaderButtons = ({ isModuleEditor }) => {
 
 const PreviewAndShareIcons = () => {
   const { moduleId } = useModuleContext();
+  const { speak } = useScreenReader();
   const {
     featureAccess,
     currentPageHandle,
@@ -94,6 +96,8 @@ const PreviewAndShareIcons = () => {
           rel="noreferrer"
           data-cy="preview-link-button"
           className="editor-header-icon tj-secondary-btn"
+          onFocus={() => speak('Preview button')}
+          onClick={() => speak('Opening preview in new tab')}
         >
           <SolidIcon name="eyeopen" width="14" fill="#3E63DD" />
         </Link>

@@ -16,6 +16,7 @@ import { useAppDataStore } from '@/_stores/appDataStore';
 import { retrieveWhiteLabelText } from '@white-label/whiteLabelling';
 import InfoIcon from '@assets/images/icons/info.svg';
 import useStore from '@/AppBuilder/_stores/store';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 class ManageAppUsersComponent extends React.Component {
   constructor(props) {
@@ -199,12 +200,15 @@ class ManageAppUsersComponent extends React.Component {
           onClick={() => {
             this.validateThePreExistingSlugs();
             this.setState({ showModal: true });
+            this.props.speak('Opening share dialog');
           }}
+          onFocus={() => this.props.speak('Share button')}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               this.validateThePreExistingSlugs();
               this.setState({ showModal: true });
+              this.props.speak('Opening share dialog');
             }
           }}
         >
@@ -466,4 +470,7 @@ class ManageAppUsersComponent extends React.Component {
   }
 }
 
-export const ManageAppUsers = withTranslation()(ManageAppUsersComponent);
+export const ManageAppUsers = withTranslation()((props) => {
+  const { speak } = useScreenReader();
+  return <ManageAppUsersComponent {...props} speak={speak} />;
+});
