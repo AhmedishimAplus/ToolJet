@@ -11,6 +11,7 @@ import { staticDataSources } from '../QueryManager/constants';
 import { Tooltip } from 'react-tooltip';
 import { PillButton } from '../QueryManager/Components/ParameterDetails';
 import useStore from '@/AppBuilder/_stores/store';
+import useScreenReader from '@/modules/common/hooks/useScreenReader';
 
 const FilterandSortPopup = ({ darkMode, selectedDataSources, onFilterDatasourcesChange, clearSelectedDataSources }) => {
   const [showMenu, setShowMenu] = useShowPopover(false, '#query-sort-filter-popover', '#query-sort-filter-popover-btn');
@@ -18,6 +19,7 @@ const FilterandSortPopup = ({ darkMode, selectedDataSources, onFilterDatasources
   const [action, setAction] = useState();
   const [search, setSearch] = useState('');
   const sortDataQueries = useStore((state) => state.dataQuery.sortDataQueries);
+  const { speak } = useScreenReader();
   const dataSources = useStore((state) => state.dataSources);
   const sortBy = useStore((state) => state.dataQuery.sortBy);
   const sortOrder = useStore((state) => state.dataQuery.sortOrder);
@@ -203,6 +205,7 @@ const FilterandSortPopup = ({ darkMode, selectedDataSources, onFilterDatasources
           onClick={(e) => {
             e.stopPropagation();
             setShowMenu((showMenu) => !showMenu);
+            speak(showMenu ? 'Closed sort and filter menu' : 'Opened sort and filter menu');
           }}
           className={cx('position-relative  btn-query-panel-header', {
             active: showMenu,
@@ -212,6 +215,16 @@ const FilterandSortPopup = ({ darkMode, selectedDataSources, onFilterDatasources
           data-tooltip-content="Show sort/filter"
           data-cy={`query-filter-button`}
           aria-label="Show sort and filter options"
+          onFocus={() => speak('Sort and filter button')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowMenu((showMenu) => !showMenu);
+              speak(showMenu ? 'Closed sort and filter menu' : 'Opened sort and filter menu');
+            }
+          }}
+          tabIndex={0}
         >
           <Filter width="14" height="14" fill="var(--icons-default)" />
           {selectedDataSources.length > 0 && <div className="notification-dot"></div>}

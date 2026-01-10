@@ -101,6 +101,8 @@ export const QueryDataPane = ({ darkMode }) => {
     showSearchBox && !storedSearchTerm && searchBoxRef.current.focus();
   }, [showSearchBox]);
 
+  const { speak } = useScreenReader();
+
   return (
     <div className="data-pane">
       <div className={`queries-container ${darkMode && 'theme-dark'} d-flex flex-column h-100`}>
@@ -116,6 +118,7 @@ export const QueryDataPane = ({ darkMode }) => {
               onClick={() => {
                 showSearchBox && setSearchTermForFilters('');
                 setShowSearchBox((showSearchBox) => !showSearchBox);
+                speak(showSearchBox ? 'Closed quick search' : 'Opened quick search');
               }}
               className={cx('btn-query-panel-header', {
                 active: showSearchBox,
@@ -124,6 +127,16 @@ export const QueryDataPane = ({ darkMode }) => {
               data-tooltip-content="Open quick search"
               data-cy="query-search-button"
               aria-label="Open quick search"
+              onFocus={() => speak('Quick search button')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  showSearchBox && setSearchTermForFilters('');
+                  setShowSearchBox((showSearchBox) => !showSearchBox);
+                  speak(showSearchBox ? 'Closed quick search' : 'Opened quick search');
+                }
+              }}
+              tabIndex={0}
             >
               <Search width="14" height="14" fill="var(--icons-default)" />
             </button>

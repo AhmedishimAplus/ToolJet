@@ -3,6 +3,7 @@ import React, { forwardRef, useState } from 'react';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
 import { useTranslation } from 'react-i18next';
+import { useScreenReader } from '@/modules/common/hooks';
 
 // TODO: remove refs and related dependancies
 export const SidebarItem = forwardRef(
@@ -21,6 +22,7 @@ export const SidebarItem = forwardRef(
     ref
   ) => {
     const { t } = useTranslation();
+    const { speak } = useScreenReader();
     const [showTooltip, setShowTooltip] = useState(false);
     const [target, setTarget] = useState(null);
     const tooltipTimerRef = React.useRef(null);
@@ -32,6 +34,7 @@ export const SidebarItem = forwardRef(
       e.stopPropagation();
       if (onClick) {
         onClick(e);
+        speak(`${tip || text || icon} opened`);
       }
     };
 
@@ -69,6 +72,7 @@ export const SidebarItem = forwardRef(
         setTarget(e.currentTarget);
         // Show immediately on keyboard focus for accessibility
         setShowTooltip(true);
+        speak(`${tip} button`);
       }
     };
 

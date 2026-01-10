@@ -12,6 +12,7 @@ import SectionCollapse from '@/_ui/Icon/solidIcons/SectionCollapse';
 import SectionExpand from '@/_ui/Icon/solidIcons/SectionExpand';
 import { shallow } from 'zustand/shallow';
 import QueryKeyHooks from './QueryKeyHooks';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const MemoizedQueryDataPane = memo(QueryDataPane);
 const MemoizedQueryManager = memo(QueryManager);
@@ -22,6 +23,7 @@ export const QueryPanel = ({ darkMode }) => {
   const setIsDraggingQueryPane = useStore((state) => state.queryPanel.setIsDraggingQueryPane, shallow);
   const isQueryPaneExpanded = useStore((state) => state.queryPanel.isQueryPaneExpanded, shallow);
   const setIsQueryPaneExpanded = useStore((state) => state.queryPanel.setIsQueryPaneExpanded, shallow);
+  const { speak } = useScreenReader();
 
   const queryManagerPreferences = useRef(
     JSON.parse(localStorage.getItem('queryManagerPreferences')) ?? {
@@ -205,7 +207,22 @@ export const QueryPanel = ({ darkMode }) => {
             <button
               data-cy="query-manager-toggle-button"
               className="d-flex items-center justify-start mb-0 font-weight-500 text-dark select-none query-manager-toggle-button gap-1"
-              onClick={toggleQueryEditor}
+              onClick={() => {
+                toggleQueryEditor();
+                speak(isQueryPaneExpanded ? 'Collapsed queries panel' : 'Expanded queries panel');
+              }}
+              onFocus={() => speak('Queries panel toggle button')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleQueryEditor();
+                  speak(isQueryPaneExpanded ? 'Collapsed queries panel' : 'Expanded queries panel');
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Queries panel, ${isQueryPaneExpanded ? 'expanded' : 'collapsed'}`}
+              aria-expanded={isQueryPaneExpanded}
             >
               <span>{isQueryPaneExpanded ? <SectionCollapse width="13.33" /> : <SectionExpand width="13.33" />}</span>
               <span>Queries</span>
