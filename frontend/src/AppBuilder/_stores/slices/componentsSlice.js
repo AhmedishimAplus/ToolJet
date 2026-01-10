@@ -27,6 +27,13 @@ import { getDateTimeFormat } from '@/AppBuilder/Widgets/Table/Datepicker';
 import { findHighestLevelofSelection } from '@/AppBuilder/AppCanvas/Grid/gridUtils';
 import { INPUT_COMPONENTS_FOR_FORM } from '@/AppBuilder/RightSideBar/Inspector/Components/Form/constants';
 
+let speakFunction = null;
+if (typeof window !== 'undefined') {
+  import('@/modules/common/hooks/useScreenReader').then((module) => {
+    speakFunction = module.useScreenReader().speak;
+  });
+}
+
 // TODO: page id to index mapping to be created and used across the state for current page access
 const initialState = {
   modules: {
@@ -1098,6 +1105,14 @@ export const createComponentsSlice = (set, get) => ({
                 toast(deleteMsg, {
                   icon: '🗑️',
                 });
+
+                // Screen reader announcement
+                if (window.speechSynthesis) {
+                  const componentName = componentNames[0] || 'Component';
+                  const announcement = `${componentName} deleted successfully, press ctrl + z to undo`;
+                  const utterance = new SpeechSynthesisUtterance(announcement);
+                  window.speechSynthesis.speak(utterance);
+                }
               }
             })
             .catch((error) => {

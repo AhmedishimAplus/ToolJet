@@ -86,9 +86,11 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
   const deleteComponents = () => {
     const selectedComponents = getSelectedComponents();
     if (selectedComponents.length > 0) {
-      setWidgetDeleteConfirmation(true);
       const count = selectedComponents.length;
-      speak(`Deleting ${count} ${count === 1 ? 'component' : 'components'}`);
+      speak('Opening delete confirmation menu');
+      setTimeout(() => {
+        setWidgetDeleteConfirmation(true);
+      }, 1600);
     }
   };
 
