@@ -218,8 +218,10 @@ export const Folders = function Folders({
   };
 
   const closeModal = () => {
-    setErrorText('');
-    showUpdateForm ? setShowUpdateForm(false) : setShowForm(false);
+    setTimeout(() => {
+      setErrorText('');
+      showUpdateForm ? setShowUpdateForm(false) : setShowForm(false);
+    }, 1600);
   };
 
   function handleClose() {
@@ -263,13 +265,22 @@ export const Folders = function Folders({
                     iconOnly
                     aria-label="Create new folder"
                     onClick={() => {
-                      posthogHelper.captureEvent('create_new_folder', {
-                        workspace_id:
-                          authenticationService?.currentUserValue?.organization_id ||
-                          authenticationService?.currentSessionValue?.current_organization_id,
-                      });
-                      setNewFolderName('');
-                      setShowForm(true);
+                      // Use Web Speech API to announce the action
+                      if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance('opening create folder menu');
+                        window.speechSynthesis.speak(utterance);
+                      }
+
+                      // Delay form opening by 1600ms
+                      setTimeout(() => {
+                        posthogHelper.captureEvent('create_new_folder', {
+                          workspace_id:
+                            authenticationService?.currentUserValue?.organization_id ||
+                            authenticationService?.currentSessionValue?.current_organization_id,
+                        });
+                        setNewFolderName('');
+                        setShowForm(true);
+                      }, 1600);
                     }}
                     onFocus={() => speak('Create new folder button')}
                     data-cy="create-new-folder-button"
@@ -431,6 +442,14 @@ export const Folders = function Folders({
               maxLength={50}
               data-cy="folder-name-input"
               onKeyPress={handleKeyPress}
+              onFocus={(e) => {
+                if ('speechSynthesis' in window) {
+                  const fieldName = showUpdateForm ? 'Edit folder name' : 'Folder name';
+                  const currentValue = e.target.value ? `current value: ${e.target.value}` : 'empty';
+                  const utterance = new SpeechSynthesisUtterance(`${fieldName} input field, ${currentValue}`);
+                  window.speechSynthesis.speak(utterance);
+                }
+              }}
               autoFocus
             />
             <label className="tj-input-error">{errorText || ''}</label>
