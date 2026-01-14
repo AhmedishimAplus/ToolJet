@@ -1065,11 +1065,22 @@ class HomePageComponent extends React.Component {
   };
 
   openCreateAppModal = () => {
-    this.setState({ showCreateAppModal: true });
+    // Use Web Speech API to announce the action
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance('opening create app menu');
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Delay modal opening by 1600ms
+    setTimeout(() => {
+      this.setState({ showCreateAppModal: true });
+    }, 1600);
   };
 
   closeCreateAppModal = () => {
-    this.setState({ showCreateAppModal: false });
+    setTimeout(() => {
+      this.setState({ showCreateAppModal: false });
+    }, 1600);
   };
 
   openImportAppModal = async () => {
@@ -1722,11 +1733,7 @@ class HomePageComponent extends React.Component {
                         <Button
                           disabled={getDisabledState()}
                           className={`create-new-app-button col-11 ${creatingApp ? 'btn-loading' : ''}`}
-                          onClick={() =>
-                            this.setState({
-                              showCreateAppModal: true,
-                            })
-                          }
+                          onClick={this.openCreateAppModal}
                           onFocus={() => {
                             const appTypeName = this.props.appType === 'workflow' ? 'workflow' : this.props.appType === 'module' ? 'module' : 'app';
                             this.speak(`Create new ${appTypeName} button`);
