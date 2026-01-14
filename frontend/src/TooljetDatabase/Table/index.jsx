@@ -32,9 +32,11 @@ import {
   getLocalTimeZone,
   getUTCOffset,
 } from '@/Editor/QueryManager/QueryEditors/TooljetDatabase/util';
+import { useScreenReader } from '@/modules/common/hooks';
 import './styles.scss';
 
 const Table = ({ collapseSidebar }) => {
+  const { speak } = useScreenReader();
   const {
     organizationId,
     columns,
@@ -121,7 +123,7 @@ const Table = ({ collapseSidebar }) => {
           if (error) {
             toast.error(
               error?.message ??
-                `Failed to fetch table "${foreignKeys?.length > 0 && foreignKeys[currentIndex].referenced_table_name}"`
+              `Failed to fetch table "${foreignKeys?.length > 0 && foreignKeys[currentIndex].referenced_table_name}"`
             );
             return reject(error);
           }
@@ -451,15 +453,15 @@ const Table = ({ collapseSidebar }) => {
       loading
         ? Array(10).fill({})
         : selectedTableData.map((data) => {
-            return Object.entries(data).reduce((accumulator, [key, value]) => {
-              if (tableColumnTypes?.[key] === 'jsonb' && value !== null) {
-                accumulator[key] = JSON.stringify(value);
-              } else {
-                accumulator[key] = value;
-              }
-              return accumulator;
-            }, {});
-          }),
+          return Object.entries(data).reduce((accumulator, [key, value]) => {
+            if (tableColumnTypes?.[key] === 'jsonb' && value !== null) {
+              accumulator[key] = JSON.stringify(value);
+            } else {
+              accumulator[key] = value;
+            }
+            return accumulator;
+          }, {});
+        }),
     [loading, selectedTableData]
   );
 
@@ -1013,9 +1015,8 @@ const Table = ({ collapseSidebar }) => {
                     <div className="d-flex align-item-center justify-content-between mt-2 custom-tooltip-style">
                       <span>{isMatchingForeignKeyColumnDetails(column.Header)?.column_names[0]}</span>
                       <ArrowRight />
-                      <span>{`${isMatchingForeignKeyColumnDetails(column.Header)?.referenced_table_name}.${
-                        isMatchingForeignKeyColumnDetails(column.Header)?.referenced_column_names[0]
-                      }`}</span>
+                      <span>{`${isMatchingForeignKeyColumnDetails(column.Header)?.referenced_table_name}.${isMatchingForeignKeyColumnDetails(column.Header)?.referenced_column_names[0]
+                        }`}</span>
                     </div>
                   </div>
                 ) : null
@@ -1056,9 +1057,8 @@ const Table = ({ collapseSidebar }) => {
                 <div className="d-flex align-item-center justify-content-between mt-2 custom-tooltip-style">
                   <span>{isMatchingForeignKeyColumnDetails(column.Header)?.column_names[0]}</span>
                   <ArrowRight />
-                  <span>{`${isMatchingForeignKeyColumnDetails(column.Header)?.referenced_table_name}.${
-                    isMatchingForeignKeyColumnDetails(column.Header)?.referenced_column_names[0]
-                  }`}</span>
+                  <span>{`${isMatchingForeignKeyColumnDetails(column.Header)?.referenced_table_name}.${isMatchingForeignKeyColumnDetails(column.Header)?.referenced_column_names[0]
+                    }`}</span>
                 </div>
               </div>
             ) : dataType === 'timestamp with time zone' ? (
@@ -1135,7 +1135,7 @@ const Table = ({ collapseSidebar }) => {
         setIsDirectRowExpand={setIsDirectRowExpand}
         referencedColumnDetails={referencedColumnDetails}
         setReferencedColumnDetails={setReferencedColumnDetails}
-        // getForeignKeyDetails={getForeignKeyDetails}
+      // getForeignKeyDetails={getForeignKeyDetails}
       />
       <div
         style={{
@@ -1153,9 +1153,8 @@ const Table = ({ collapseSidebar }) => {
         />
         {loadingState ? (
           <table
-            className={`table card-table loading-table table-vcenter text-nowrap datatable ${
-              darkMode && 'dark-background'
-            }`}
+            className={`table card-table loading-table table-vcenter text-nowrap datatable ${darkMode && 'dark-background'
+              }`}
             style={{ position: 'relative', top: '-32px' }}
           >
             <thead>
@@ -1198,9 +1197,8 @@ const Table = ({ collapseSidebar }) => {
               {headerGroups.map((headerGroup, index) => (
                 <tr className="tj-database-column-row" {...headerGroup.getHeaderGroupProps()} key={index}>
                   <th
-                    className={`${
-                      darkMode ? 'table-header-dark' : 'table-header'
-                    } tj-database-column-header tj-text-xsm`}
+                    className={`${darkMode ? 'table-header-dark' : 'table-header'
+                      } tj-database-column-header tj-text-xsm`}
                     style={{ width: '66px', height: index === 0 ? '32px' : '' }}
                   >
                     <div>
@@ -1215,14 +1213,13 @@ const Table = ({ collapseSidebar }) => {
                         }
                         onChange={() => toggleSelectOrDeSelectAllRows(rows.length)}
                         style={{
-                          backgroundColor: `${
-                            (!isDirectRowExpand &&
+                          backgroundColor: `${(!isDirectRowExpand &&
                               Object.keys(selectedRowIds).length > 0 &&
                               Object.keys(selectedRowIds).length < rows.length) ||
-                            (!isDirectRowExpand && Object.keys(selectedRowIds).length === rows.length && rows.length)
+                              (!isDirectRowExpand && Object.keys(selectedRowIds).length === rows.length && rows.length)
                               ? '#3E63DD'
                               : 'var(--base)'
-                          }`,
+                            }`,
                         }}
                       />
                     </div>
@@ -1237,10 +1234,10 @@ const Table = ({ collapseSidebar }) => {
                         darkMode
                           ? 'table-header-dark tj-database-column-header tj-text-xsm'
                           : !darkMode
-                          ? 'table-header tj-database-column-header tj-text-xsm'
-                          : editColumnHeader?.clickedColumn === index && editColumnHeader?.columnEditPopover === true
-                          ? 'table-header-click tj-database-column-header tj-text-xsm'
-                          : 'table-header tj-database-column-header tj-text-xsm'
+                            ? 'table-header tj-database-column-header tj-text-xsm'
+                            : editColumnHeader?.clickedColumn === index && editColumnHeader?.columnEditPopover === true
+                              ? 'table-header-click tj-database-column-header tj-text-xsm'
+                              : 'table-header tj-database-column-header tj-text-xsm'
                       }
                       data-cy={`${String(column.Header).toLocaleLowerCase().replace(/\s+/g, '-')}-column-header`}
                       {...column.getHeaderProps()}
@@ -1276,9 +1273,26 @@ const Table = ({ collapseSidebar }) => {
                     </th>
                   ))}
                   <th
+                    role="button"
+                    aria-label="Add new column"
+                    tabIndex="0"
                     onClick={() => {
-                      resetCellAndRowSelection();
-                      setIsCreateColumnDrawerOpen(true);
+                      speak('Opening add column form');
+                      setTimeout(() => {
+                        resetCellAndRowSelection();
+                        setIsCreateColumnDrawerOpen(true);
+                      }, 1600);
+                    }}
+                    onFocus={() => speak('Add new column button')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        speak('Opening add column form');
+                        setTimeout(() => {
+                          resetCellAndRowSelection();
+                          setIsCreateColumnDrawerOpen(true);
+                        }, 1600);
+                      }
                     }}
                     className={darkMode ? 'add-icon-column-dark' : 'add-icon-column'}
                   >
@@ -1323,10 +1337,21 @@ const Table = ({ collapseSidebar }) => {
                           />
 
                           <div
+                            role="button"
+                            aria-label={`Expand row ${row.id}`}
+                            tabIndex="0"
                             onClick={() => {
                               replaceToggleSelectedRow(row.id);
                               setTimeout(() => setIsEditRowDrawerOpen(true), 100);
                               // getForeignKeyDetails(0);
+                            }}
+                            onFocus={() => speak(`Expand row ${row.id} button`)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                replaceToggleSelectedRow(row.id);
+                                setTimeout(() => setIsEditRowDrawerOpen(true), 100);
+                              }
                             }}
                             className="tjdb-checkbox-cell"
                             data-cy="edit-cell-expand"
@@ -1349,26 +1374,25 @@ const Table = ({ collapseSidebar }) => {
                             {...cell.getCellProps()}
                             key={`cell.value-${index}`}
                             className={cx(
-                              `${
-                                editColumnHeader?.clickedColumn === index &&
+                              `${editColumnHeader?.clickedColumn === index &&
                                 editColumnHeader?.columnEditPopover === true &&
                                 !darkMode
-                                  ? `table-columnHeader-click`
-                                  : editColumnHeader?.clickedColumn === index &&
-                                    editColumnHeader?.columnEditPopover === true &&
-                                    darkMode
+                                ? `table-columnHeader-click`
+                                : editColumnHeader?.clickedColumn === index &&
+                                  editColumnHeader?.columnEditPopover === true &&
+                                  darkMode
                                   ? `table-columnHeader-click-dark`
                                   : editColumnHeader?.hoveredColumn === index && !darkMode
-                                  ? 'table-cell-hover-background'
-                                  : editColumnHeader?.hoveredColumn === index && darkMode
-                                  ? 'table-cell-hover-background-dark'
-                                  : cellClick.rowIndex === rIndex &&
-                                    cellClick.cellIndex === index &&
-                                    cellClick.editable === true
-                                  ? 'table-editable-parent-cell'
-                                  : darkMode
-                                  ? `table-cell table-cell-dark`
-                                  : `table-cell`
+                                    ? 'table-cell-hover-background'
+                                    : editColumnHeader?.hoveredColumn === index && darkMode
+                                      ? 'table-cell-hover-background-dark'
+                                      : cellClick.rowIndex === rIndex &&
+                                        cellClick.cellIndex === index &&
+                                        cellClick.editable === true
+                                        ? 'table-editable-parent-cell'
+                                        : darkMode
+                                          ? `table-cell table-cell-dark`
+                                          : `table-cell`
                               }`,
                               {
                                 'table-cell-selected': selectedRowIds[row.id] ?? false,
@@ -1383,14 +1407,14 @@ const Table = ({ collapseSidebar }) => {
                               message={getTooltipTextForCell(
                                 cell.column.dataType == 'timestamp with time zone'
                                   ? convertDateToTimeZoneFormatted(
-                                      cell.value,
-                                      getConfigurationProperty(cell.column.Header, 'timezone', getLocalTimeZone())
-                                    )
+                                    cell.value,
+                                    getConfigurationProperty(cell.column.Header, 'timezone', getLocalTimeZone())
+                                  )
                                   : cell.column.dataType === 'jsonb' &&
                                     typeof cell?.value !== 'string' &&
                                     cell?.value !== null
-                                  ? JSON.stringify(cell?.value)
-                                  : cell?.value,
+                                    ? JSON.stringify(cell?.value)
+                                    : cell?.value,
                                 index
                               )}
                               placement="bottom"
@@ -1408,24 +1432,23 @@ const Table = ({ collapseSidebar }) => {
                               tooltipClassName="tooltip-table-dashboard"
                             >
                               <div
-                                className={`${
-                                  cellClick.rowIndex === rIndex &&
-                                  cellClick.cellIndex === index &&
-                                  cellClick.errorState === true
+                                className={`${cellClick.rowIndex === rIndex &&
+                                    cellClick.cellIndex === index &&
+                                    cellClick.errorState === true
                                     ? 'tjdb-cell-error'
                                     : cellClick.rowIndex === rIndex &&
                                       cellClick.cellIndex === index &&
                                       cellClick.editable === true &&
                                       !isCellUpdateInProgress
-                                    ? 'tjdb-selected-cell'
-                                    : 'tjdb-column-select-border'
-                                }`}
+                                      ? 'tjdb-selected-cell'
+                                      : 'tjdb-column-select-border'
+                                  }`}
                                 id={`tjdb-cell-row${rIndex}-column${index}`}
                               >
                                 <div className={cx('tjdb-td-wrapper')}>
                                   {cellClick.editable &&
-                                  cellClick.rowIndex === rIndex &&
-                                  cellClick.cellIndex === index ? (
+                                    cellClick.rowIndex === rIndex &&
+                                    cellClick.cellIndex === index ? (
                                     <CellEditMenu
                                       show={shouldOpenCellEditMenu(index) ? editPopover : false}
                                       close={() => {
@@ -1625,7 +1648,7 @@ const Table = ({ collapseSidebar }) => {
                                             {isBoolean(cell?.value)
                                               ? cell?.value?.toString()
                                               : cell.column?.dataType === 'timestamp with time zone'
-                                              ? convertDateToTimeZoneFormatted(
+                                                ? convertDateToTimeZoneFormatted(
                                                   cell?.value,
                                                   getConfigurationProperty(
                                                     cell.column.Header,
@@ -1633,7 +1656,7 @@ const Table = ({ collapseSidebar }) => {
                                                     getLocalTimeZone()
                                                   )
                                                 )
-                                              : cell.render('Cell')}
+                                                : cell.render('Cell')}
                                           </div>
                                           {/* <ToolTip
                                             message={'Open referenced table'}
@@ -1652,9 +1675,9 @@ const Table = ({ collapseSidebar }) => {
                                     </>
                                   )}
                                   {shouldOpenCellEditMenu(index) &&
-                                  cellClick.rowIndex === rIndex &&
-                                  cellClick.cellIndex === index &&
-                                  isCellUpdateInProgress ? (
+                                    cellClick.rowIndex === rIndex &&
+                                    cellClick.cellIndex === index &&
+                                    isCellUpdateInProgress ? (
                                     <div>
                                       <progress
                                         className="progress progress-sm tjdb-cell-save-progress"
@@ -1677,9 +1700,26 @@ const Table = ({ collapseSidebar }) => {
             </tbody>
             {rows.length > 0 && (
               <div
+                role="button"
+                aria-label="Add new row"
+                tabIndex="0"
                 onClick={() => {
-                  resetCellAndRowSelection();
-                  setIsCreateRowDrawerOpen(true);
+                  speak('Opening add row form');
+                  setTimeout(() => {
+                    resetCellAndRowSelection();
+                    setIsCreateRowDrawerOpen(true);
+                  }, 1600);
+                }}
+                onFocus={() => speak('Add new row button')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    speak('Opening add row form');
+                    setTimeout(() => {
+                      resetCellAndRowSelection();
+                      setIsCreateRowDrawerOpen(true);
+                    }, 1600);
+                  }
                 }}
                 className={darkMode ? 'add-icon-row-dark' : 'add-icon-row'}
                 style={{
@@ -1740,9 +1780,26 @@ const Table = ({ collapseSidebar }) => {
         />
         {rows.length === 0 && !loadingState && (
           <div
+            role="button"
+            aria-label="Add new row"
+            tabIndex="0"
             onClick={() => {
-              resetCellAndRowSelection();
-              setIsCreateRowDrawerOpen(true);
+              speak('Opening add row form');
+              setTimeout(() => {
+                resetCellAndRowSelection();
+                setIsCreateRowDrawerOpen(true);
+              }, 1600);
+            }}
+            onFocus={() => speak('Add new row button')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                speak('Opening add row form');
+                setTimeout(() => {
+                  resetCellAndRowSelection();
+                  setIsCreateRowDrawerOpen(true);
+                }, 1600);
+              }
             }}
             className={darkMode ? 'add-icon-row-dark' : 'add-icon-row'}
             style={{

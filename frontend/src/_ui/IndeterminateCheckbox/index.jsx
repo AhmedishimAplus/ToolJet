@@ -19,6 +19,16 @@ const IndeterminateCheckbox = React.forwardRef(({ indeterminate, className = '',
           data-cy="checkbox-input"
           ref={resolvedRef}
           className={className + ' cursor-pointer form-check-input'}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              e.currentTarget.click();
+            }
+            // Call the custom onKeyDown handler if provided
+            if (rest.onKeyDown) {
+              rest.onKeyDown(e);
+            }
+          }}
           {...rest}
         />
       </div>
