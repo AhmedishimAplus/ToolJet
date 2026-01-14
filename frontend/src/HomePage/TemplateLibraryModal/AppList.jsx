@@ -27,7 +27,13 @@ export default function AppList(props) {
             action
             selectedItem={app.id === selectedApp?.id}
             onClick={() => selectApp(app)}
-            onFocus={() => speak && speak(`${app.name} template`)}
+            onFocus={() => speak && speak(`${app.name} template${app.id === selectedApp?.id ? ', selected' : ''}`)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectApp(app);
+              }
+            }}
             dataCy={`${String(app.id).toLowerCase().replace(/\s+/g, '-')}`}
           >
             {app.name}

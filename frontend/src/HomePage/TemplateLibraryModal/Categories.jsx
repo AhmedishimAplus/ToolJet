@@ -31,7 +31,19 @@ export default function Categories(props) {
             });
             selectCategory(category);
           }}
-          onFocus={() => speak && speak(`${categoryTitles[category.id]} category`)}
+          onFocus={() => speak && speak(`${categoryTitles[category.id]} category${category.id === selectedCategory.id ? ', selected' : ''}`)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              posthogHelper.captureEvent('click_template_category', {
+                workspace_id:
+                  authenticationService?.currentUserValue?.organization_id ||
+                  authenticationService?.currentSessionValue?.current_organization_id,
+                template_category_id: category.id,
+              });
+              selectCategory(category);
+            }
+          }}
           key={category.id}
           dataCy={`${String(categoryTitles[category.id]).toLowerCase().replace(/\s+/g, '-')}`}
         >

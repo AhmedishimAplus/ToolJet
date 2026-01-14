@@ -63,6 +63,13 @@ export default function TemplateLibraryModal(props) {
       });
   }, []);
 
+  // Announce when modal opens
+  useEffect(() => {
+    if (props.show) {
+      speak('Opening Select template menu');
+    }
+  }, [props.show]);
+
   const [deploying, setDeploying] = useState(false);
 
   return (
@@ -109,10 +116,9 @@ export default function TemplateLibraryModal(props) {
                       <ButtonSolid
                         variant="tertiary"
                         onClick={() => {
-                          speak('Exiting Select template menu');
-                          setTimeout(() => props.onCloseButtonClick(), 1500);
+                          speak('Closing Select template menu');
+                          setTimeout(() => props.onCloseButtonClick(), 1600);
                         }}
-                        onFocus={() => speak('Cancel button')}
                         data-cy="cancel-button"
                       >
                         {t('globals.cancel', 'Cancel')}
@@ -133,9 +139,8 @@ export default function TemplateLibraryModal(props) {
                               button_name: 'create_application_from_template',
                               previous_action_button_name: props.fromButton,
                             });
-                          }, 1000);
+                          }, 1600);
                         }}
-                        onFocus={() => speak('Create application from template button')}
                         isLoading={deploying}
                         className="ms-2"
                         disabled={props.appCreationDisabled}
