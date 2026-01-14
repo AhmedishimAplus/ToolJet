@@ -12,6 +12,7 @@ import SolidIcon from '@/_ui/Icon/SolidIcons';
 import { ToolTip } from '@/_components/ToolTip';
 import './styles.scss';
 import cx from 'classnames';
+import { useScreenReader } from '@/modules/common/hooks';
 // import Maximize from '@/TooljetDatabase/Icons/maximize.svg';
 // import { Link } from 'react-router-dom';
 // import { getPrivateRoute } from '@/_helpers/routes';
@@ -55,10 +56,12 @@ const EditRowForm = ({
   referencedColumnDetails,
   setReferencedColumnDetails,
   initiator,
+  firstInputRef,
 }) => {
   const darkMode = localStorage.getItem('darkMode') === 'true';
   const { organizationId, selectedTable, columns, foreignKeys, getConfigurationProperty } =
     useContext(TooljetDatabaseContext);
+  const { speak } = useScreenReader();
   const inputRefs = useRef({});
   const [fetching, setFetching] = useState(false);
   const [activeTab, setActiveTab] = useState(Array.isArray(columns) ? columns.map(() => 'Custom') : []);
@@ -80,6 +83,11 @@ const EditRowForm = ({
     if (currentValue) {
       const keysWithNullValues = Object.keys(currentValue).filter((key) => currentValue[key] === null);
       const keysWithDefaultValues = Object.keys(currentValue).filter((key, index) => {
+        const column = columns[index];
+        // Only consider it a default value if column actually has a default AND the value matches it
+        if (!column.column_default) {
+          return false; // No default value defined for this column
+        }
         if (columns[index].dataType === 'jsonb') {
           try {
             return compareValueInObject(currentValue[key], columns[index].column_default);
@@ -114,24 +122,24 @@ const EditRowForm = ({
 
       const initialInputValues = currentValue
         ? Object.keys(currentValue).map((key, index) => {
-            const isJsonDataType = columns[index].dataType === 'jsonb';
-            let isJsonbCurrentAndDefaultValueEqual = false;
-            if (isJsonDataType) {
-              isJsonbCurrentAndDefaultValueEqual = compareValueInObject(
-                currentValue[key],
-                columns[index].column_default
-              );
-            }
-            const value = currentValue[key] === null ? null : currentValue[key] ? currentValue[key] : '';
-            const disabledValue =
-              currentValue[key] === null ||
+          const isJsonDataType = columns[index].dataType === 'jsonb';
+          let isJsonbCurrentAndDefaultValueEqual = false;
+          if (isJsonDataType) {
+            isJsonbCurrentAndDefaultValueEqual = compareValueInObject(
+              currentValue[key],
+              columns[index].column_default
+            );
+          }
+          const value = currentValue[key] === null ? null : currentValue[key] ? currentValue[key] : '';
+          const disabledValue =
+            currentValue[key] === null ||
               (isJsonDataType
                 ? isJsonbCurrentAndDefaultValueEqual
                 : currentValue[key]?.toString() === columns[index].column_default)
-                ? true
-                : false;
-            return { value: value, disabled: disabledValue, label: value };
-          })
+              ? true
+              : false;
+          return { value: value, disabled: disabledValue, label: value };
+        })
         : [];
 
       setInputValues(initialInputValues);
@@ -214,6 +222,13 @@ const EditRowForm = ({
     }
 
     setInputValues(newInputValues);
+
+    // Announce tab selection and input field with current value
+    const valueToAnnounce = newInputValues[index].value === null ? 'null' :
+      newInputValues[index].value === '' ? 'empty' :
+        newInputValues[index].value;
+    speak(`${columnName} input field, current value: ${valueToAnnounce}`);
+
     if (dataType === 'boolean') {
       setRowData({
         ...rowData,
@@ -221,14 +236,14 @@ const EditRowForm = ({
           newInputValues[index].value === null
             ? null
             : newInputValues[index].value === actualDefaultVal
-            ? defaultValue === 'true'
-              ? true
-              : false
-            : newInputValues[index].value === currentValue
-            ? currentValue
-            : currentValue === null && customBooleanVal === false
-            ? null
-            : null,
+              ? defaultValue === 'true'
+                ? true
+                : false
+              : newInputValues[index].value === currentValue
+                ? currentValue
+                : currentValue === null && customBooleanVal === false
+                  ? null
+                  : null,
       });
     } else if (dataType === 'jsonb') {
       setRowData({
@@ -237,12 +252,12 @@ const EditRowForm = ({
           newInputValues[index].value === null
             ? null
             : compareValueInObject(newInputValues[index].value, defaultValue)
-            ? defaultValue
-            : _.isEqual(newInputValues[index].value, currentValue)
-            ? currentValue
-            : currentValue === null && customVal === ''
-            ? ''
-            : null,
+              ? defaultValue
+              : _.isEqual(newInputValues[index].value, currentValue)
+                ? currentValue
+                : currentValue === null && customVal === ''
+                  ? ''
+                  : null,
       });
     } else {
       setRowData({
@@ -251,12 +266,12 @@ const EditRowForm = ({
           newInputValues[index].value === null
             ? null
             : newInputValues[index].value === defaultValue
-            ? defaultValue
-            : newInputValues[index].value === currentValue
-            ? currentValue
-            : currentValue === null && customVal === ''
-            ? ''
-            : null,
+              ? defaultValue
+              : newInputValues[index].value === currentValue
+                ? currentValue
+                : currentValue === null && customVal === ''
+                  ? ''
+                  : null,
       });
     }
   };
@@ -419,16 +434,21 @@ const EditRowForm = ({
                 //defaultValue={currentValue}
                 value={inputValues[index]?.value !== null && inputValues[index]?.value}
                 type="text"
-                ref={(input) => (inputRefs.current[columnName] = input)}
+                ref={(input) => {
+                  inputRefs.current[columnName] = input;
+                  // Set as first input ref if not already set and not disabled
+                  if (firstInputRef && !firstInputRef.current && input && !input.disabled) {
+                    firstInputRef.current = input;
+                  }
+                }}
                 disabled={inputValues[index]?.disabled || shouldInputBeDisabled}
                 onChange={(e) => handleInputChange(index, e.target.value, columnName)}
                 placeholder={inputValues[index]?.value !== null ? 'Enter a value' : null}
-                className={`${!darkMode ? 'form-control' : 'form-control dark-form-row'} ${
-                  errorMap[columnName] ? 'input-error-border' : ''
-                }`}
+                className={`${!darkMode ? 'form-control' : 'form-control dark-form-row'} ${errorMap[columnName] ? 'input-error-border' : ''
+                  }`}
                 data-cy={`${String(columnName).toLocaleLowerCase().replace(/\s+/g, '-')}-input-field`}
                 autoComplete="off"
-                // onFocus={onFocused}
+              // onFocus={onFocused}
               />
             )}
             {(inputValues[index]?.disabled || shouldInputBeDisabled) && (
@@ -765,9 +785,8 @@ const EditRowForm = ({
                                 <div className="d-flex align-item-center justify-content-between mt-2 custom-tooltip-style">
                                   <span>{isMatchingForeignKeyColumnDetails(Header)?.column_names[0]}</span>
                                   <ArrowRight />
-                                  <span>{`${isMatchingForeignKeyColumnDetails(Header)?.referenced_table_name}.${
-                                    isMatchingForeignKeyColumnDetails(Header)?.referenced_column_names[0]
-                                  }`}</span>
+                                  <span>{`${isMatchingForeignKeyColumnDetails(Header)?.referenced_table_name}.${isMatchingForeignKeyColumnDetails(Header)?.referenced_column_names[0]
+                                    }`}</span>
                                 </div>
                               </div>
                             ) : null
@@ -787,28 +806,41 @@ const EditRowForm = ({
                     </div>
 
                     <div
-                      className={`${
-                        darkMode ? 'row-tabs-dark' : 'row-tabs'
-                      } d-flex align-items-center justify-content-start gap-2`}
+                      role="tablist"
+                      className={`${darkMode ? 'row-tabs-dark' : 'row-tabs'
+                        } d-flex align-items-center justify-content-start gap-2`}
                     >
                       {isNullable && !isPrimaryKey && (
                         <div
+                          role="tab"
+                          tabIndex="0"
+                          aria-selected={activeTab[index] === 'Null'}
                           onClick={() =>
                             handleTabClick(index, 'Null', column_default, isNullable, accessor, dataType, currentValue)
                           }
+                          onFocus={() => {
+                            const isSelected = activeTab[index] === 'Null';
+                            speak(`Null tab, ${isSelected ? 'selected' : 'not selected'}`);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleTabClick(index, 'Null', column_default, isNullable, accessor, dataType, currentValue);
+                            }
+                          }}
                           style={{
                             backgroundColor:
                               activeTab[index] === 'Null' && !darkMode
                                 ? 'white'
                                 : activeTab[index] === 'Null' && darkMode
-                                ? '#242f3c'
-                                : 'transparent',
+                                  ? '#242f3c'
+                                  : 'transparent',
                             color:
                               activeTab[index] === 'Null' && !darkMode
                                 ? '#3E63DD'
                                 : activeTab[index] === 'Null' && darkMode
-                                ? 'white'
-                                : '#687076',
+                                  ? 'white'
+                                  : '#687076',
                           }}
                           className="row-tab-content"
                         >
@@ -817,6 +849,9 @@ const EditRowForm = ({
                       )}
                       {column_default !== null && !isSerialDataTypeColumn && !isPrimaryKey && (
                         <div
+                          role="tab"
+                          tabIndex="0"
+                          aria-selected={activeTab[index] === 'Default'}
                           onClick={() =>
                             handleTabClick(
                               index,
@@ -828,19 +863,37 @@ const EditRowForm = ({
                               currentValue
                             )
                           }
+                          onFocus={() => {
+                            const isSelected = activeTab[index] === 'Default';
+                            speak(`Default value tab, ${isSelected ? 'selected' : 'not selected'}`);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleTabClick(
+                                index,
+                                'Default',
+                                column_default,
+                                isNullable,
+                                accessor,
+                                dataType,
+                                currentValue
+                              );
+                            }
+                          }}
                           style={{
                             backgroundColor:
                               activeTab[index] === 'Default' && !darkMode
                                 ? 'white'
                                 : activeTab[index] === 'Default' && darkMode
-                                ? '#242f3c'
-                                : 'transparent',
+                                  ? '#242f3c'
+                                  : 'transparent',
                             color:
                               activeTab[index] === 'Default' && !darkMode
                                 ? '#3E63DD'
                                 : activeTab[index] === 'Default' && darkMode
-                                ? 'white'
-                                : '#687076',
+                                  ? 'white'
+                                  : '#687076',
                           }}
                           className="row-tab-content"
                         >
@@ -849,6 +902,9 @@ const EditRowForm = ({
                       )}
                       {!isSerialDataTypeColumn && !isPrimaryKey && (
                         <div
+                          role="tab"
+                          tabIndex="0"
+                          aria-selected={activeTab[index] === 'Custom'}
                           onClick={() =>
                             handleTabClick(
                               index,
@@ -860,19 +916,37 @@ const EditRowForm = ({
                               currentValue
                             )
                           }
+                          onFocus={() => {
+                            const isSelected = activeTab[index] === 'Custom';
+                            speak(`Custom tab, ${isSelected ? 'selected' : 'not selected'}`);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleTabClick(
+                                index,
+                                'Custom',
+                                column_default,
+                                isNullable,
+                                accessor,
+                                dataType,
+                                currentValue
+                              );
+                            }
+                          }}
                           style={{
                             backgroundColor:
                               activeTab[index] === 'Custom' && !darkMode
                                 ? 'white'
                                 : activeTab[index] === 'Custom' && darkMode
-                                ? '#242f3c'
-                                : 'transparent',
+                                  ? '#242f3c'
+                                  : 'transparent',
                             color:
                               activeTab[index] === 'Custom' && !darkMode
                                 ? '#3E63DD'
                                 : activeTab[index] === 'Custom' && darkMode
-                                ? 'white'
-                                : '#687076',
+                                  ? 'white'
+                                  : '#687076',
                           }}
                           className="row-tab-content"
                         >
@@ -886,8 +960,8 @@ const EditRowForm = ({
                       isSerialDataTypeColumn
                         ? 'Serial data type values cannot be modified'
                         : constraints_type?.is_primary_key
-                        ? 'Cannot edit primary key values'
-                        : null
+                          ? 'Cannot edit primary key values'
+                          : null
                     }
                     placement="top"
                     tooltipClassName="tootip-table"

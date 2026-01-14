@@ -20,9 +20,8 @@ const Footer = ({ darkMode, dataLoading, tableDataLength, collapseSidebar }) => 
     useContext(TooljetDatabaseContext);
 
   const totalPage = Math.ceil(totalRecords / pageSize);
-  const pageRange = `${(pageCount - 1) * pageSize + 1} - ${
-    pageCount * pageSize > totalRecords ? totalRecords : pageCount * pageSize
-  }`;
+  const pageRange = `${(pageCount - 1) * pageSize + 1} - ${pageCount * pageSize > totalRecords ? totalRecords : pageCount * pageSize
+    }`;
 
   const handleSelectChange = (value) => {
     setPageSize(value);
@@ -81,9 +80,8 @@ const Footer = ({ darkMode, dataLoading, tableDataLength, collapseSidebar }) => 
 
   return (
     <div
-      className={`${
-        collapseSidebar ? 'toojet-db-table-footer-collapse' : 'toojet-db-table-footer'
-      } card-footer d-flex align-items-center jet-table-footer justify-content-center col-12`}
+      className={`${collapseSidebar ? 'toojet-db-table-footer-collapse' : 'toojet-db-table-footer'
+        } card-footer d-flex align-items-center jet-table-footer justify-content-center col-12`}
     >
       {tableDataLength > 0 && (
         <div
@@ -98,13 +96,7 @@ const Footer = ({ darkMode, dataLoading, tableDataLength, collapseSidebar }) => 
               <div className="rightNav-parent-container">
                 <RightNav style={{ verticalAlign: 'baseline' }} width={8} height={8} />
               </div>
-              <div className="navigate-title fs-10">Navigate</div>
-            </div>
-            <div className="enter-keyActions">
-              <div className="editEnter-parent-container">
-                <Enter style={{ verticalAlign: 'baseline' }} width={8} height={8} />
-              </div>
-              <div className="navigate-title fs-10">Enter to edit</div>
+              <div className="navigate-title" style={{ fontSize: '14px' }}>Tab and Shift+Tab to navigate and Enter or Space to edit</div>
             </div>
           </div>
           <div className="fs-12">

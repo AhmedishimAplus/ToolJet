@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useRef } from 'react';
 import Drawer from '@/_ui/Drawer';
 import { toast } from 'react-hot-toast';
 import EditRowForm from '../../Forms/EditRowForm';
@@ -7,6 +7,7 @@ import { tooljetDatabaseService } from '@/_services';
 import { ButtonSolid } from '@/_ui/AppButton/AppButton';
 import { listAllPrimaryKeyColumns } from '../../constants';
 import PostgrestQueryBuilder from '@/_helpers/postgrestQueryBuilder';
+import { useScreenReader } from '@/modules/common/hooks';
 
 const EditRowDrawer = ({
   isEditRowDrawerOpen,
@@ -17,6 +18,8 @@ const EditRowDrawer = ({
   referencedColumnDetails,
   setReferencedColumnDetails,
 }) => {
+  const firstInputRef = useRef(null);
+  const { speak } = useScreenReader();
   const {
     organizationId,
     selectedTable,
@@ -36,15 +39,43 @@ const EditRowDrawer = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handle ESC key to close drawer with announcement and delay
+  React.useEffect(() => {
+    if (!isEditRowDrawerOpen) return;
+
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleCloseDrawer();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    return () => document.removeEventListener('keydown', handleEscKey);
+  }, [isEditRowDrawerOpen]);
+
+  const handleOpenDrawer = () => {
+    speak('Opening edit row drawer');
+    setTimeout(() => {
+      setIsEditRowDrawerOpen(true);
+    }, 1600);
+  };
+
+  const handleCloseDrawer = () => {
+    speak('Closing edit row drawer');
+    setTimeout(() => {
+      setIsEditRowDrawerOpen(false);
+    }, 1600);
+  };
+
   return (
     <>
       {!isDirectRowExpand && (
         <ButtonSolid
           variant="tertiary"
           size="sm"
-          onClick={() => {
-            setIsEditRowDrawerOpen(!isEditRowDrawerOpen);
-          }}
+          onClick={handleOpenDrawer}
           className="gap-0"
           data-cy="edit-row-button-"
           style={{
@@ -74,11 +105,14 @@ const EditRowDrawer = ({
       )}
       <Drawer
         isOpen={isEditRowDrawerOpen}
-        onClose={() => setIsEditRowDrawerOpen(false)}
+        onClose={handleCloseDrawer}
         position="right"
         className="tj-db-drawer"
+        initialFocusRef={firstInputRef}
       >
         <EditRowForm
+          key={isEditRowDrawerOpen ? 'open' : 'closed'}
+          firstInputRef={firstInputRef}
           onEdit={() => {
             const limit = pageSize;
             const pageRange = `${(pageCount - 1) * pageSize + 1}`;

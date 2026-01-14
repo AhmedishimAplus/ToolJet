@@ -1214,11 +1214,11 @@ const Table = ({ collapseSidebar }) => {
                         onChange={() => toggleSelectOrDeSelectAllRows(rows.length)}
                         style={{
                           backgroundColor: `${(!isDirectRowExpand &&
-                              Object.keys(selectedRowIds).length > 0 &&
-                              Object.keys(selectedRowIds).length < rows.length) ||
-                              (!isDirectRowExpand && Object.keys(selectedRowIds).length === rows.length && rows.length)
-                              ? '#3E63DD'
-                              : 'var(--base)'
+                            Object.keys(selectedRowIds).length > 0 &&
+                            Object.keys(selectedRowIds).length < rows.length) ||
+                            (!isDirectRowExpand && Object.keys(selectedRowIds).length === rows.length && rows.length)
+                            ? '#3E63DD'
+                            : 'var(--base)'
                             }`,
                         }}
                       />
@@ -1333,7 +1333,18 @@ const Table = ({ collapseSidebar }) => {
                         >
                           <IndeterminateCheckbox
                             checked={!isDirectRowExpand ? selectedRowIds[row.id] ?? false : false}
-                            onChange={() => toggleRowSelection(row.id)}
+                            onChange={() => {
+                              const isCurrentlySelected = selectedRowIds[row.id] ?? false;
+                              toggleRowSelection(row.id);
+                              setTimeout(() => {
+                                if (!isCurrentlySelected) {
+                                  speak(`Row ${rIndex + 1} is selected`);
+                                } else {
+                                  speak(`Row ${rIndex + 1} is deselected`);
+                                }
+                              }, 100);
+                            }}
+                            onFocus={() => speak(`Focusing on row ${rIndex + 1}`)}
                           />
 
                           <div
@@ -1433,15 +1444,15 @@ const Table = ({ collapseSidebar }) => {
                             >
                               <div
                                 className={`${cellClick.rowIndex === rIndex &&
+                                  cellClick.cellIndex === index &&
+                                  cellClick.errorState === true
+                                  ? 'tjdb-cell-error'
+                                  : cellClick.rowIndex === rIndex &&
                                     cellClick.cellIndex === index &&
-                                    cellClick.errorState === true
-                                    ? 'tjdb-cell-error'
-                                    : cellClick.rowIndex === rIndex &&
-                                      cellClick.cellIndex === index &&
-                                      cellClick.editable === true &&
-                                      !isCellUpdateInProgress
-                                      ? 'tjdb-selected-cell'
-                                      : 'tjdb-column-select-border'
+                                    cellClick.editable === true &&
+                                    !isCellUpdateInProgress
+                                    ? 'tjdb-selected-cell'
+                                    : 'tjdb-column-select-border'
                                   }`}
                                 id={`tjdb-cell-row${rIndex}-column${index}`}
                               >

@@ -25,15 +25,30 @@ const Drawer = ({
   removeWhenClosed = true,
   drawerStyle,
   isForeignKeyRelation = false,
+  initialFocusRef = null,
 }) => {
   const bodyRef = useRef(document.querySelector('body'));
   const portalRootRef = useRef(document.getElementById('tooljet-drawer-root') || createPortalRoot());
   const isTransitioning = useMountTransition(isOpen, 300);
+  const [focusTrapActive, setFocusTrapActive] = React.useState(false);
 
   // Append portal root on mount
   useEffect(() => {
     bodyRef.current.appendChild(portalRootRef.current);
   }, []);
+
+  // Delay focus trap activation to allow initialFocusRef to be set
+  useEffect(() => {
+    if (isOpen) {
+      // Delay activation to ensure refs are ready
+      const timer = setTimeout(() => {
+        setFocusTrapActive(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setFocusTrapActive(false);
+    }
+  }, [isOpen]);
 
   // Prevent page scrolling when the drawer is open
   useEffect(() => {
@@ -79,7 +94,7 @@ const Drawer = ({
       <FocusTrap
         // The allowOutsideClick option is used to enable or disable clicks outside the popover for functions that are inside the popover but not within the focus trap. On the other hand, clickOutsideDeactivates is used to unfocus the last focused element which is outside the popover.
         focusTrapOptions={{
-          initialFocus: false,
+          initialFocus: initialFocusRef ? () => initialFocusRef.current : false,
           fallbackFocus: () => document.querySelector('.drawer'),
           allowOutsideClick: (e) => {
             // Allow clicks/focus on popovers and overlays that are rendered outside the drawer
@@ -116,7 +131,7 @@ const Drawer = ({
             return Promise.all(results);
           }
         }}
-        active={isOpen && !disableFocus}
+        active={focusTrapActive && !disableFocus}
       >
         <div
           aria-hidden={`${!isOpen}`}
