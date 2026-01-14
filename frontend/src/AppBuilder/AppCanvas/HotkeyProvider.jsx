@@ -31,7 +31,7 @@ export const HotkeyProvider = ({ children, mode, currentLayout, canvasMaxWidth }
     handleUndo();
     speak('Undo');
   }, { enabled: mode === 'edit' });
-  useHotkeys('meta+shift+z, control+shift+z', () => {
+  useHotkeys('meta+shift+z, control+shift+z, meta+y, control+y', () => {
     handleRedo();
     speak('Redo');
   }, { enabled: mode === 'edit' });

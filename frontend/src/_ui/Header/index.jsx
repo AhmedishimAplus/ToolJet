@@ -163,7 +163,7 @@ function Header({
             <div
               className={cx('tw-ml-auto tj-version tj-text-xsm tw-flex tw-items-center tw-gap-3', {
                 'color-white': darkMode,
-                'color-disabled': !darkMode,
+                'text-black-000': !darkMode,
               })}
               data-cy="version-label"
             >

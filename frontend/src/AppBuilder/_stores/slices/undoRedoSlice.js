@@ -133,6 +133,12 @@ export const createUndoRedoSlice = (set, get) => {
         return;
       }
 
+      // Announce the redo action
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance('Redoing last action');
+        window.speechSynthesis.speak(utterance);
+      }
+
       const [patches, inversePatches] = redoStack.pop();
 
       try {
