@@ -1156,9 +1156,10 @@ const Table = ({ collapseSidebar }) => {
             className={`table card-table loading-table table-vcenter text-nowrap datatable ${darkMode && 'dark-background'
               }`}
             style={{ position: 'relative', top: '-32px' }}
+            role="table"
           >
-            <thead>
-              <tr>
+            <thead role="rowgroup">
+              <tr role="row">
                 {emptyHeader.map((element, index) => (
                   <th key={index} width={index === 0 ? 66 : 230}>
                     <div className="d-flex align-items-center justify-content-between tjdb-loader-parent">
@@ -1172,16 +1173,17 @@ const Table = ({ collapseSidebar }) => {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {emptyTableData.map((element, rowIdex) => (
                 <tr
                   className={cx(`tjdb-table-row row-tj tjdb-empty-row`, {
                     'dark-bg': darkMode,
                   })}
                   key={rowIdex} // row Index
+                  role="row"
                 >
                   {emptyHeader.map((elem, i) => (
-                    <td key={i} className={cx('table-cell')}></td>
+                    <td key={i} className={cx('table-cell')} role="cell"></td>
                   ))}
                 </tr>
               ))}
@@ -1192,10 +1194,11 @@ const Table = ({ collapseSidebar }) => {
             {...getTableProps()}
             className={`table card-table table-vcenter text-nowrap datatable ${darkMode && 'dark-background'}`}
             style={{ position: 'relative', top: '-32px' }}
+            role="table"
           >
-            <thead>
+            <thead role="rowgroup">
               {headerGroups.map((headerGroup, index) => (
-                <tr className="tj-database-column-row" {...headerGroup.getHeaderGroupProps()} key={index}>
+                <tr className="tj-database-column-row" {...headerGroup.getHeaderGroupProps()} key={index} role="row">
                   <th
                     className={`${darkMode ? 'table-header-dark' : 'table-header'
                       } tj-database-column-header tj-text-xsm`}
@@ -1230,6 +1233,7 @@ const Table = ({ collapseSidebar }) => {
                       width={230}
                       style={{ height: index === 0 ? '32px' : '' }}
                       title={column?.constraints_type?.is_primary_key ?? false ? '' : column?.Header}
+                      role="columnheader"
                       className={
                         darkMode
                           ? 'table-header-dark tj-database-column-header tj-text-xsm'
@@ -1273,7 +1277,7 @@ const Table = ({ collapseSidebar }) => {
                     </th>
                   ))}
                   <th
-                    role="button"
+                    role="columnheader"
                     aria-label="Add new column"
                     tabIndex="0"
                     onClick={() => {
@@ -1307,6 +1311,7 @@ const Table = ({ collapseSidebar }) => {
                 'fs-12': true,
               })}
               {...getTableBodyProps()}
+              role="rowgroup"
             >
               {rows.map((row, rIndex) => {
                 prepareRow(row);
@@ -1319,11 +1324,13 @@ const Table = ({ collapseSidebar }) => {
                       })}
                       {...row.getRowProps()}
                       key={rIndex} // row Index
+                      role="row"
                     >
                       <td
                         className={cx('table-cell', {
                           'table-cell-selected': selectedRowIds[row.id] ?? false,
                         })}
+                        role="cell"
                       >
                         <div
                           className="d-flex align-items-center"
@@ -1384,6 +1391,7 @@ const Table = ({ collapseSidebar }) => {
                           <td
                             {...cell.getCellProps()}
                             key={`cell.value-${index}`}
+                            role="cell"
                             className={cx(
                               `${editColumnHeader?.clickedColumn === index &&
                                 editColumnHeader?.columnEditPopover === true &&
@@ -1706,41 +1714,40 @@ const Table = ({ collapseSidebar }) => {
                     </tr>
                   </>
                 );
-              })}
-              <div />
+              })}              <div />
             </tbody>
-            {rows.length > 0 && (
-              <div
-                role="button"
-                aria-label="Add new row"
-                tabIndex="0"
-                onClick={() => {
-                  speak('Opening add row form');
-                  setTimeout(() => {
-                    resetCellAndRowSelection();
-                    setIsCreateRowDrawerOpen(true);
-                  }, 1600);
-                }}
-                onFocus={() => speak('Add new row button')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    speak('Opening add row form');
-                    setTimeout(() => {
-                      resetCellAndRowSelection();
-                      setIsCreateRowDrawerOpen(true);
-                    }, 1600);
-                  }
-                }}
-                className={darkMode ? 'add-icon-row-dark' : 'add-icon-row'}
-                style={{
-                  zIndex: 3,
-                }}
-              >
-                +
-              </div>
-            )}
           </table>
+        )}
+        {!loadingState && rows.length > 0 && (
+          <div
+            role="button"
+            aria-label="Add new row"
+            tabIndex="0"
+            onClick={() => {
+              speak('Opening add row form');
+              setTimeout(() => {
+                resetCellAndRowSelection();
+                setIsCreateRowDrawerOpen(true);
+              }, 1600);
+            }}
+            onFocus={() => speak('Add new row button')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                speak('Opening add row form');
+                setTimeout(() => {
+                  resetCellAndRowSelection();
+                  setIsCreateRowDrawerOpen(true);
+                }, 1600);
+              }
+            }}
+            className={darkMode ? 'add-icon-row-dark' : 'add-icon-row'}
+            style={{
+              zIndex: 3,
+            }}
+          >
+            +
+          </div>
         )}
         {rows.length === 0 && !loadingState && (
           <div className="empty-table-container">
