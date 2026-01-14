@@ -1206,6 +1206,7 @@ const Table = ({ collapseSidebar }) => {
                   >
                     <div>
                       <IndeterminateCheckbox
+                        aria-label="Select all rows"
                         indeterminate={
                           isDirectRowExpand
                             ? false
@@ -1339,6 +1340,7 @@ const Table = ({ collapseSidebar }) => {
                           }}
                         >
                           <IndeterminateCheckbox
+                            aria-label={`Select row ${rIndex + 1}`}
                             checked={!isDirectRowExpand ? selectedRowIds[row.id] ?? false : false}
                             onChange={() => {
                               const isCurrentlySelected = selectedRowIds[row.id] ?? false;
