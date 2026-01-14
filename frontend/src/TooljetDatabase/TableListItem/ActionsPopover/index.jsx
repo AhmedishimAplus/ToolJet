@@ -272,6 +272,7 @@ export const ListItemPopover = ({
         data-cy="table-kebab-icon"
         tabIndex="0"
         role="button"
+        aria-label="Table options menu"
         onFocus={() => speak('Table options menu')}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
